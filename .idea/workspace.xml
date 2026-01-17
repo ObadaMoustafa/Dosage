@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="dd08c50e-2710-4723-a52d-47f5fc233012" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/symfony-app/src/Controller/Api/TestApiController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/symfony-app/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/symfony-app/composer.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/symfony-app/composer.lock" beforeDir="false" afterPath="$PROJECT_DIR$/symfony-app/composer.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/symfony-app/config/bundles.php" beforeDir="false" afterPath="$PROJECT_DIR$/symfony-app/config/bundles.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/symfony-app/config/reference.php" beforeDir="false" afterPath="$PROJECT_DIR$/symfony-app/config/reference.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/symfony-app/symfony.lock" beforeDir="false" afterPath="$PROJECT_DIR$/symfony-app/symfony.lock" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings" synchronizationState="SYNCHRONIZE">
+    <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
+    <execution>
+      <phar pharPath="$PROJECT_DIR$/composer.phar" interpreterId="3b065079-b26d-43a7-bc99-5dd0ed88432a" />
+    </execution>
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_/home/aethyal/Code/Turfje" value="36R1qNfiYtdFyjEtEA65h0ZGQ6A" />
+    </persistenceIdMap>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="PHP File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/symfony-app" />
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP 8.3">
+    <include_path>
+      <path value="$PROJECT_DIR$/vendor/composer" />
+      <path value="$PROJECT_DIR$/vendor/symfony/flex" />
+    </include_path>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="36R1qNfiYtdFyjEtEA65h0ZGQ6A" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/aethyal/Documents/School/Turfje/turfje&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;/home/aethyal/Code/Turfje/frontend/node_modules/typescript/lib&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-php-predefined-a98d8de5180a-0e0d91225499-com.jetbrains.php.sharedIndexes-PS-253.29346.257" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="dd08c50e-2710-4723-a52d-47f5fc233012" name="Changes" comment="" />
+      <created>1764954759452</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1764954759452</updated>
+      <workItem from="1764954768955" duration="11000" />
+      <workItem from="1765381801852" duration="250000" />
+      <workItem from="1765459159508" duration="10000" />
+      <workItem from="1765459206535" duration="10000" />
+      <workItem from="1765459534324" duration="78000" />
+      <workItem from="1768482292642" duration="11000" />
+      <workItem from="1768484358533" duration="505000" />
+      <workItem from="1768485121613" duration="814000" />
+      <workItem from="1768503802509" duration="2000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>
