@@ -1,0 +1,14 @@
+{
+  "name": "turfje-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "npm install && cd backend && composer install && cd ../frontend && npm install",
+    "dev": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev\"",
+    "db:up": "cd backend && php bin/console doctrine:migrations:migrate --no-interaction",
+    "clear:cache": "cd backend && php bin/console cache:clear"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
