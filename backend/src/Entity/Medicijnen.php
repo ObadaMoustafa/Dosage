@@ -40,9 +40,60 @@ class Medicijnen
         $this->aangemaakt_op = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
     }
 
-    public function getId(): ?Uuid { return $this->id; }
-    public function getNaam(): ?string { return $this->naam; }
-    public function setNaam(string $naam): static { $this->naam = $naam; return $this; }
-    // Getters/Setters omitted for brevity, you can generate them or use public props if preferred for simple DTOs, 
-    // but standard requires getters/setters. Assuming basic usage for now.
+    public function getId(): ?Uuid
+    {
+        return $this->id;
+    }
+    public function getNaam(): ?string
+    {
+        return $this->naam;
+    }
+    public function setNaam(string $naam): static
+    {
+        $this->naam = $naam;
+        return $this;
+    }
+
+    public function getToedieningsvorm()
+    {
+        return $this->toedieningsvorm;
+    }
+
+    public function setToedieningsvorm($toedieningsvorm)
+    {
+        $this->toedieningsvorm = $toedieningsvorm;
+        return $this;
+    }
+
+    public function getSterkte()
+    {
+        return $this->sterkte;
+    }
+
+    public function setSterkte($sterkte)
+    {
+        $this->sterkte = $sterkte;
+        return $this;
+    }
+    public function getBeschrijving()
+    {
+        return $this->beschrijving;
+    }
+
+    public function setBeschrijving($beschrijving)
+    {
+        $this->beschrijving = $beschrijving;
+        return $this;
+    }
+
+    public function getBijsluiter()
+    {
+        return $this->bijsluiter;
+    }
+
+    public function setBijsluiter($bijsluiter)
+    {
+        $this->bijsluiter = $bijsluiter;
+        return $this;
+    }
 }
