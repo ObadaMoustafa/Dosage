@@ -66,6 +66,12 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "make-mig": "php bin/console make:migration",
+        "do-mig": "php bin/console doctrine:migrations:migrate --no-interaction",
+        "migrate": [
+            "@make-mig",
+            "@do-mig"
         ]
     },
     "conflict": {

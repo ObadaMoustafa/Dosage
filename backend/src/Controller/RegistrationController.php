@@ -29,6 +29,11 @@ class RegistrationController extends AbstractController
         // save names
         $profile->setVoornaam($data['first_name']);
         $profile->setAchternaam($data['last_name']);
+        // Generate Random Avatar based on name
+        $fullName = "{$data['first_name']}+{$data['last_name']}";
+        $avatarUrl = "https://ui-avatars.com/api/?name={$fullName}&background=random&color=fff&size=128&bold=true&rounded=true&format=png";
+        
+        $profile->setAvatarUrl($avatarUrl);
 
         // Role should be: patient, behandelaar, or admin
         $profile->setRol($data['role']); 

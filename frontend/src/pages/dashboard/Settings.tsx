@@ -17,7 +17,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 type ProfileForm = {
   firstName: string;
   lastName: string;
-  avatarUrl: string;
+  email: string;
+  avatarUrl?: string;
 };
 
 export default function DashboardSettings() {
@@ -25,6 +26,7 @@ export default function DashboardSettings() {
   const [profile, setProfile] = useState<ProfileForm>({
     firstName: '',
     lastName: '',
+    email: '',
     avatarUrl: '',
   });
   const [passwords, setPasswords] = useState({
@@ -40,13 +42,28 @@ export default function DashboardSettings() {
     setProfile({
       firstName: auth.user.first_name ?? '',
       lastName: auth.user.last_name ?? '',
+      email: auth.user.email ?? '',
       avatarUrl: auth.user.avatar_url ?? '',
     });
   }, [auth]);
 
+  // Check if current form values differ from initial auth user values
+  const hasChanges =
+    auth.status === 'authed' &&
+    (profile.firstName !== (auth.user.first_name ?? '') ||
+      profile.lastName !== (auth.user.last_name ?? '') ||
+      profile.email !== (auth.user.email ?? ''));
+
   const handleProfileSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const token = localStorage.getItem('auth_token');
+
+    // Check for changes before proceeding
+    if (!hasChanges) {
+      toast.info('Geen wijzigingen om op te slaan.'); // No changes to save
+      return;
+    }
+
+    const token = localStorage.getItem('token');
     if (!token) {
       toast('Je bent niet ingelogd.');
       return;
@@ -59,7 +76,7 @@ export default function DashboardSettings() {
 
     setSavingProfile(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/me`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +85,7 @@ export default function DashboardSettings() {
         body: JSON.stringify({
           first_name: profile.firstName,
           last_name: profile.lastName,
-          avatar_url: profile.avatarUrl || null,
+          email: profile.email || null,
         }),
       });
 
@@ -89,50 +106,62 @@ export default function DashboardSettings() {
 
   const handlePasswordSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-      toast('Je bent niet ingelogd.');
-      return;
-    }
 
-    if (!passwords.currentPassword || !passwords.newPassword) {
-      toast('Vul je huidige en nieuwe wachtwoord in.');
+    // 1. Basic Validation
+    if (
+      !passwords.currentPassword ||
+      !passwords.newPassword ||
+      !passwords.confirmPassword
+    ) {
+      toast.error('Vul alle velden in.'); // Fill all fields
       return;
     }
 
     if (passwords.newPassword !== passwords.confirmPassword) {
-      toast('Nieuwe wachtwoorden komen niet overeen.');
+      toast.error('Nieuwe wachtwoorden komen niet overeen.'); // Passwords do not match
+      return;
+    }
+
+    if (passwords.newPassword.length < 6) {
+      toast.error('Wachtwoord moet minimaal 6 tekens zijn.');
       return;
     }
 
     setSavingPassword(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const token = localStorage.getItem('token');
+      // 2. API Call
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/change-password`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            current_password: passwords.currentPassword,
+            new_password: passwords.newPassword,
+          }),
         },
-        body: JSON.stringify({
-          current_password: passwords.currentPassword,
-          new_password: passwords.newPassword,
-        }),
-      });
+      );
+
+      const data = await res.json();
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        toast(data?.error ?? 'Wachtwoord wijzigen mislukt');
+        toast.error(data?.error || 'Wachtwoord wijzigen mislukt');
         return;
       }
 
+      // 3. Success: Clear form
+      toast.success('Wachtwoord succesvol gewijzigd');
       setPasswords({
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
       });
-      toast('Wachtwoord gewijzigd');
+    } catch (error) {
+      toast.error('Er is een fout opgetreden.');
     } finally {
       setSavingPassword(false);
     }
@@ -196,24 +225,20 @@ export default function DashboardSettings() {
                 />
               </div>
               <div className="settings-field">
-                <Label>Avatar URL</Label>
+                <Label>Email Address</Label>
                 <Input
-                  value={profile.avatarUrl}
+                  value={profile.email}
                   onChange={(e) =>
                     setProfile((prev) => ({
                       ...prev,
-                      avatarUrl: e.target.value,
+                      email: e.target.value,
                     }))
                   }
                   placeholder="https://..."
                 />
               </div>
-              <Button
-                className="settings-submit"
-                type="submit"
-                disabled={savingProfile}
-              >
-                {savingProfile ? 'Opslaan...' : 'Opslaan'}
+              <Button type="submit" disabled={savingProfile || !hasChanges}>
+                {savingProfile ? 'Bezig met opslaan...' : 'Wijzigingen opslaan'}
               </Button>
             </form>
           </CardContent>

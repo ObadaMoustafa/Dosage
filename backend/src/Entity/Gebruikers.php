@@ -27,6 +27,9 @@ class Gebruikers
     #[ORM\Column(length: 20)]
     private ?string $rol = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $avatar_url = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $publieke_sleutel = null;
 
@@ -82,6 +85,18 @@ class Gebruikers
     public function setRol(string $rol): static
     {
         $this->rol = $rol;
+        return $this;
+    }
+
+    public function getAvatarUrl(): ?string
+    {
+        return $this->avatar_url;
+    }
+
+    public function setAvatarUrl(?string $avatar_url): static
+    {
+        $this->avatar_url = $avatar_url;
+
         return $this;
     }
 
