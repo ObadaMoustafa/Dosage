@@ -5,7 +5,8 @@ type AuthUser = {
   first_name: string;
   last_name: string;
   email: string;
-  roles: string[];
+  role: string;
+  profile_id?: number | null;
   avatar_url?: string | null;
   created_at: string;
 };
