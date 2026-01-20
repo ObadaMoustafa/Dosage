@@ -28,12 +28,12 @@ class MeController extends AbstractController
         return $this->json([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'first_name' => $profile ?->getVoornaam(),
-            'last_name' => $profile ?->getAchternaam(),
-            'role' => $profile ?->getRol(),
-            'avatar_url' => $profile ?->getAvatarUrl(),
-            'profile_id' => $profile ?->getId(),
-            'created_at' => $profile ?->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'first_name' => $profile?->getVoornaam(),
+            'last_name' => $profile?->getAchternaam(),
+            'role' => $profile?->getRol(),
+            'avatar_url' => $profile?->getAvatarUrl(),
+            'profile_id' => $profile?->getId(),
+            'created_at' => $profile?->getAangemaaktOp()->format('Y-m-d H:i:s'),
         ]);
     }
 
@@ -116,6 +116,28 @@ class MeController extends AbstractController
         $entityManager->flush();
 
         return $this->json(['message' => 'Password changed successfully']);
+    }
+
+    #[Route('/api/auth/delete-account', name: 'api_me_delete', methods: ['DELETE'])]
+    public function deleteAccount(EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var GebruikerAuth|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // Optional: Remove the associated profile explicitly if cascade isn't configured
+        $profile = $user->getGebruiker();
+        if ($profile) {
+            $entityManager->remove($profile);
+        }
+
+        $entityManager->remove($user);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Account deleted successfully']);
     }
 
 }

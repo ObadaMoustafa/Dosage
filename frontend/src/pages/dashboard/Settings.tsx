@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
-  CardFooter,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -13,6 +13,17 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useAuth } from '@/auth/AuthProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'; // <-- Import Alert Dialog
 
 type ProfileForm = {
   firstName: string;
@@ -22,7 +33,7 @@ type ProfileForm = {
 };
 
 export default function DashboardSettings() {
-  const { auth, refreshAuth } = useAuth();
+  const { auth, refreshAuth, logout } = useAuth();
   const [profile, setProfile] = useState<ProfileForm>({
     firstName: '',
     lastName: '',
@@ -34,8 +45,11 @@ export default function DashboardSettings() {
     newPassword: '',
     confirmPassword: '',
   });
+
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // <-- Modal State
 
   useEffect(() => {
     if (auth.status !== 'authed') return;
@@ -47,7 +61,6 @@ export default function DashboardSettings() {
     });
   }, [auth]);
 
-  // Check if current form values differ from initial auth user values
   const hasChanges =
     auth.status === 'authed' &&
     (profile.firstName !== (auth.user.first_name ?? '') ||
@@ -56,21 +69,19 @@ export default function DashboardSettings() {
 
   const handleProfileSubmit = async (event: FormEvent) => {
     event.preventDefault();
-
-    // Check for changes before proceeding
     if (!hasChanges) {
-      toast.info('Geen wijzigingen om op te slaan.'); // No changes to save
+      toast.info('Geen wijzigingen om op te slaan.');
       return;
     }
 
     const token = localStorage.getItem('token');
     if (!token) {
-      toast('Je bent niet ingelogd.');
+      toast.error('Je bent niet ingelogd.');
       return;
     }
 
     if (!profile.firstName || !profile.lastName) {
-      toast('Voornaam en achternaam zijn verplicht.');
+      toast.error('Voornaam en achternaam zijn verplicht.');
       return;
     }
 
@@ -93,12 +104,12 @@ export default function DashboardSettings() {
         const data = (await res.json().catch(() => null)) as {
           error?: string;
         } | null;
-        toast(data?.error ?? 'Opslaan mislukt');
+        toast.error(data?.error ?? 'Opslaan mislukt');
         return;
       }
 
       await refreshAuth();
-      toast('Profiel bijgewerkt');
+      toast.success('Profiel bijgewerkt');
     } finally {
       setSavingProfile(false);
     }
@@ -107,18 +118,17 @@ export default function DashboardSettings() {
   const handlePasswordSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    // 1. Basic Validation
     if (
       !passwords.currentPassword ||
       !passwords.newPassword ||
       !passwords.confirmPassword
     ) {
-      toast.error('Vul alle velden in.'); // Fill all fields
+      toast.error('Vul alle velden in.');
       return;
     }
 
     if (passwords.newPassword !== passwords.confirmPassword) {
-      toast.error('Nieuwe wachtwoorden komen niet overeen.'); // Passwords do not match
+      toast.error('Nieuwe wachtwoorden komen niet overeen.');
       return;
     }
 
@@ -130,7 +140,6 @@ export default function DashboardSettings() {
     setSavingPassword(true);
     try {
       const token = localStorage.getItem('token');
-      // 2. API Call
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/auth/change-password`,
         {
@@ -153,7 +162,6 @@ export default function DashboardSettings() {
         return;
       }
 
-      // 3. Success: Clear form
       toast.success('Wachtwoord succesvol gewijzigd');
       setPasswords({
         currentPassword: '',
@@ -167,38 +175,74 @@ export default function DashboardSettings() {
     }
   };
 
-  return (
-    <div className="dashboard-section">
-      <div className="dashboard-heading">
-        <h1>Settings</h1>
-        <p>Werk je profiel en wachtwoord bij.</p>
-      </div>
+  const handleDeleteAccount = async (e: FormEvent) => {
+    e.preventDefault();
+    setDeletingAccount(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/auth/delete-account`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
-      <div className="settings-grid">
+      if (!res.ok) {
+        toast.error('Fout bij verwijderen account.');
+        setDeletingAccount(false); // Reset loading only on error
+        return;
+      }
+
+      toast.success('Account verwijderd. Tot ziens!');
+      logout();
+    } catch (error) {
+      toast.error('Er is een fout opgetreden.');
+      setDeletingAccount(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 p-6 pb-16">
+      <div className="space-y-0.5">
+        <h1 className="text-2xl font-bold tracking-tight">Instellingen</h1>
+        <p className="text-muted-foreground">
+          Beheer je profielinstellingen en wachtwoord.
+        </p>
+      </div>
+      <Separator className="my-6" />
+
+      <div className="flex flex-col gap-8">
+        {/* Profile Card */}
         <Card>
           <CardHeader>
             <CardTitle>Profiel</CardTitle>
+            <CardDescription>
+              Dit is hoe anderen je zien op de site.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="settings-avatar-row">
-              <Avatar className="settings-avatar">
+            <div className="flex items-center gap-6 mb-8">
+              <Avatar className="h-20 w-20">
                 <AvatarImage src={profile.avatarUrl || undefined} />
-                <AvatarFallback>
+                <AvatarFallback className="text-lg">
                   {`${profile.firstName?.[0] ?? ''}${profile.lastName?.[0] ?? ''}`.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="settings-avatar-name">
+              <div className="space-y-1">
+                <p className="font-medium text-lg">
                   {`${profile.firstName} ${profile.lastName}`.trim() ||
                     'Jouw profiel'}
                 </p>
-                <p className="settings-avatar-subtitle">
-                  Preview van je avatar
+                <p className="text-sm text-muted-foreground">
+                  Je avatar wordt automatisch gegenereerd.
                 </p>
               </div>
             </div>
-            <form className="settings-form" onSubmit={handleProfileSubmit}>
-              <div className="settings-field">
+            <form className="space-y-4" onSubmit={handleProfileSubmit}>
+              <div className="grid gap-2">
                 <Label>Voornaam</Label>
                 <Input
                   value={profile.firstName}
@@ -211,7 +255,7 @@ export default function DashboardSettings() {
                   placeholder="Voornaam"
                 />
               </div>
-              <div className="settings-field">
+              <div className="grid gap-2">
                 <Label>Achternaam</Label>
                 <Input
                   value={profile.lastName}
@@ -224,33 +268,38 @@ export default function DashboardSettings() {
                   placeholder="Achternaam"
                 />
               </div>
-              <div className="settings-field">
-                <Label>Email Address</Label>
+              <div className="grid gap-2">
+                <Label>Emailadres</Label>
                 <Input
                   value={profile.email}
                   onChange={(e) =>
-                    setProfile((prev) => ({
-                      ...prev,
-                      email: e.target.value,
-                    }))
+                    setProfile((prev) => ({ ...prev, email: e.target.value }))
                   }
-                  placeholder="https://..."
+                  placeholder="Email"
                 />
               </div>
-              <Button type="submit" disabled={savingProfile || !hasChanges}>
-                {savingProfile ? 'Bezig met opslaan...' : 'Wijzigingen opslaan'}
-              </Button>
+              <div className="pt-2">
+                <Button type="submit" disabled={savingProfile || !hasChanges}>
+                  {savingProfile
+                    ? 'Bezig met opslaan...'
+                    : 'Wijzigingen opslaan'}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
 
+        {/* Password Card */}
         <Card>
           <CardHeader>
             <CardTitle>Wachtwoord</CardTitle>
+            <CardDescription>
+              Wijzig je wachtwoord om je account veilig te houden.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="settings-form" onSubmit={handlePasswordSubmit}>
-              <div className="settings-field">
+            <form className="space-y-4" onSubmit={handlePasswordSubmit}>
+              <div className="grid gap-2">
                 <Label>Huidig wachtwoord</Label>
                 <Input
                   type="password"
@@ -263,7 +312,7 @@ export default function DashboardSettings() {
                   }
                 />
               </div>
-              <div className="settings-field">
+              <div className="grid gap-2">
                 <Label>Nieuw wachtwoord</Label>
                 <Input
                   type="password"
@@ -276,7 +325,7 @@ export default function DashboardSettings() {
                   }
                 />
               </div>
-              <div className="settings-field">
+              <div className="grid gap-2">
                 <Label>Bevestig nieuw wachtwoord</Label>
                 <Input
                   type="password"
@@ -289,19 +338,69 @@ export default function DashboardSettings() {
                   }
                 />
               </div>
-              <Button
-                className="settings-submit"
-                type="submit"
-                disabled={savingPassword}
-              >
-                {savingPassword ? 'Opslaan...' : 'Wachtwoord opslaan'}
-              </Button>
+              <div className="pt-2">
+                <Button type="submit" disabled={savingPassword}>
+                  {savingPassword ? 'Opslaan...' : 'Wachtwoord opslaan'}
+                </Button>
+              </div>
             </form>
           </CardContent>
-          <CardFooter className="settings-footer">
-            <Separator />
-            <p>Na het wijzigen blijf je ingelogd met je huidige token.</p>
-          </CardFooter>
+        </Card>
+
+        {/* Danger Zone */}
+        <Card className="border-red-200 dark:border-red-900">
+          <CardHeader>
+            <CardTitle className="text-red-600 dark:text-red-400">
+              Gevarenzone
+            </CardTitle>
+            <CardDescription>
+              Acties die niet ongedaan kunnen worden gemaakt.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="font-medium">Account verwijderen</p>
+                <p className="text-sm text-muted-foreground">
+                  Hiermee verwijder je je account en al je gegevens permanent.
+                </p>
+              </div>
+
+              {/* New Alert Dialog Implementation */}
+              <AlertDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">Account verwijderen</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Deze actie kan niet ongedaan worden gemaakt. Je account en
+                      al je gegevens worden permanent verwijderd van onze
+                      servers.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={deletingAccount}>
+                      Annuleren
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      disabled={deletingAccount}
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      {deletingAccount
+                        ? 'Bezig met verwijderen...'
+                        : 'Ja, verwijder account'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>
