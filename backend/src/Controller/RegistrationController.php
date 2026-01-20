@@ -19,13 +19,17 @@ class RegistrationController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        // 1. Validate input
-        if (!isset($data['email']) || !isset($data['password']) || !isset($data['role'])) {
-            return $this->json(['message' => 'Missing email, password, or role'], 400);
+        // 1. Validate input (Updated)
+        if (!isset($data['email']) || !isset($data['password']) || !isset($data['role']) || !isset($data['first_name']) || !isset($data['last_name'])) {
+            return $this->json(['message' => 'Missing required fields'], 400);
         }
 
         // 2. Create Profile (Gebruikers) first
         $profile = new Gebruikers();
+        // save names
+        $profile->setVoornaam($data['first_name']);
+        $profile->setAchternaam($data['last_name']);
+
         // Role should be: patient, behandelaar, or admin
         $profile->setRol($data['role']); 
         // Set created_at time to Europe/Amsterdam

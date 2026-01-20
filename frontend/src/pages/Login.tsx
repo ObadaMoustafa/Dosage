@@ -1,9 +1,9 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState, type FormEvent } from "react";
-import { useAuth } from "../auth/AuthProvider";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, type FormEvent } from 'react';
+import { useAuth } from '../auth/AuthProvider';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
@@ -11,47 +11,47 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation() as any;
   const { refreshAuth } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const from = location.state?.from?.pathname ?? "/";
+  const from = location.state?.from?.pathname ?? '/';
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast("Vul je email en wachtwoord in");
+      toast('Vul je email en wachtwoord in');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       if (!res.ok) {
-        toast("Login failed");
+        toast('Login failed');
         return;
       }
 
       const data = (await res.json()) as { token?: string };
       if (!data.token) {
-        toast("Missing token");
+        toast('Missing token');
         return;
       }
 
-      localStorage.setItem("auth_token", data.token);
+      localStorage.setItem('token', data.token);
       await refreshAuth();
       navigate(from, { replace: true });
     } finally {
@@ -118,19 +118,19 @@ export default function Login() {
                     type="submit"
                     disabled={loading}
                   >
-                    {loading ? "Bezig..." : "Inloggen"}
+                    {loading ? 'Bezig...' : 'Inloggen'}
                   </Button>
                 </form>
               </CardContent>
               <CardFooter className="auth-footer">
                 <Separator className="auth-seperator" />
                 <Link className="auth-link" to="/register">
-                  Nog geen account?{" "}
+                  Nog geen account?{' '}
                   <span className="auth-inline-link">Registreer hier</span>
                 </Link>
                 <p>
-                  Door in te loggen ga je akkoord met onze{" "}
-                  <span className="auth-inline-link">voorwaarden</span> en{" "}
+                  Door in te loggen ga je akkoord met onze{' '}
+                  <span className="auth-inline-link">voorwaarden</span> en{' '}
                   <span className="auth-inline-link">privacy policy</span>.
                 </p>
               </CardFooter>

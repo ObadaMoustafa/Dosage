@@ -1,12 +1,18 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
-import { useAuth } from "@/auth/AuthProvider";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useState, type FormEvent } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
+import { useAuth } from '@/auth/AuthProvider';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type ProfileForm = {
   firstName: string;
@@ -17,46 +23,46 @@ type ProfileForm = {
 export default function DashboardSettings() {
   const { auth, refreshAuth } = useAuth();
   const [profile, setProfile] = useState<ProfileForm>({
-    firstName: "",
-    lastName: "",
-    avatarUrl: "",
+    firstName: '',
+    lastName: '',
+    avatarUrl: '',
   });
   const [passwords, setPasswords] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
-    if (auth.status !== "authed") return;
+    if (auth.status !== 'authed') return;
     setProfile({
-      firstName: auth.user.first_name ?? "",
-      lastName: auth.user.last_name ?? "",
-      avatarUrl: auth.user.avatar_url ?? "",
+      firstName: auth.user.first_name ?? '',
+      lastName: auth.user.last_name ?? '',
+      avatarUrl: auth.user.avatar_url ?? '',
     });
   }, [auth]);
 
   const handleProfileSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem('auth_token');
     if (!token) {
-      toast("Je bent niet ingelogd.");
+      toast('Je bent niet ingelogd.');
       return;
     }
 
     if (!profile.firstName || !profile.lastName) {
-      toast("Voornaam en achternaam zijn verplicht.");
+      toast('Voornaam en achternaam zijn verplicht.');
       return;
     }
 
     setSavingProfile(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/me`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -67,13 +73,15 @@ export default function DashboardSettings() {
       });
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        toast(data?.error ?? "Opslaan mislukt");
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        toast(data?.error ?? 'Opslaan mislukt');
         return;
       }
 
       await refreshAuth();
-      toast("Profiel bijgewerkt");
+      toast('Profiel bijgewerkt');
     } finally {
       setSavingProfile(false);
     }
@@ -81,28 +89,28 @@ export default function DashboardSettings() {
 
   const handlePasswordSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem('auth_token');
     if (!token) {
-      toast("Je bent niet ingelogd.");
+      toast('Je bent niet ingelogd.');
       return;
     }
 
     if (!passwords.currentPassword || !passwords.newPassword) {
-      toast("Vul je huidige en nieuwe wachtwoord in.");
+      toast('Vul je huidige en nieuwe wachtwoord in.');
       return;
     }
 
     if (passwords.newPassword !== passwords.confirmPassword) {
-      toast("Nieuwe wachtwoorden komen niet overeen.");
+      toast('Nieuwe wachtwoorden komen niet overeen.');
       return;
     }
 
     setSavingPassword(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/password`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -112,17 +120,19 @@ export default function DashboardSettings() {
       });
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        toast(data?.error ?? "Wachtwoord wijzigen mislukt");
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        toast(data?.error ?? 'Wachtwoord wijzigen mislukt');
         return;
       }
 
       setPasswords({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
       });
-      toast("Wachtwoord gewijzigd");
+      toast('Wachtwoord gewijzigd');
     } finally {
       setSavingPassword(false);
     }
@@ -145,14 +155,17 @@ export default function DashboardSettings() {
               <Avatar className="settings-avatar">
                 <AvatarImage src={profile.avatarUrl || undefined} />
                 <AvatarFallback>
-                  {`${profile.firstName?.[0] ?? ""}${profile.lastName?.[0] ?? ""}`.toUpperCase()}
+                  {`${profile.firstName?.[0] ?? ''}${profile.lastName?.[0] ?? ''}`.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <p className="settings-avatar-name">
-                  {`${profile.firstName} ${profile.lastName}`.trim() || "Jouw profiel"}
+                  {`${profile.firstName} ${profile.lastName}`.trim() ||
+                    'Jouw profiel'}
                 </p>
-                <p className="settings-avatar-subtitle">Preview van je avatar</p>
+                <p className="settings-avatar-subtitle">
+                  Preview van je avatar
+                </p>
               </div>
             </div>
             <form className="settings-form" onSubmit={handleProfileSubmit}>
@@ -160,7 +173,12 @@ export default function DashboardSettings() {
                 <Label>Voornaam</Label>
                 <Input
                   value={profile.firstName}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, firstName: e.target.value }))}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      firstName: e.target.value,
+                    }))
+                  }
                   placeholder="Voornaam"
                 />
               </div>
@@ -168,7 +186,12 @@ export default function DashboardSettings() {
                 <Label>Achternaam</Label>
                 <Input
                   value={profile.lastName}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, lastName: e.target.value }))}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      lastName: e.target.value,
+                    }))
+                  }
                   placeholder="Achternaam"
                 />
               </div>
@@ -176,12 +199,21 @@ export default function DashboardSettings() {
                 <Label>Avatar URL</Label>
                 <Input
                   value={profile.avatarUrl}
-                  onChange={(e) => setProfile((prev) => ({ ...prev, avatarUrl: e.target.value }))}
+                  onChange={(e) =>
+                    setProfile((prev) => ({
+                      ...prev,
+                      avatarUrl: e.target.value,
+                    }))
+                  }
                   placeholder="https://..."
                 />
               </div>
-              <Button className="settings-submit" type="submit" disabled={savingProfile}>
-                {savingProfile ? "Opslaan..." : "Opslaan"}
+              <Button
+                className="settings-submit"
+                type="submit"
+                disabled={savingProfile}
+              >
+                {savingProfile ? 'Opslaan...' : 'Opslaan'}
               </Button>
             </form>
           </CardContent>
@@ -199,7 +231,10 @@ export default function DashboardSettings() {
                   type="password"
                   value={passwords.currentPassword}
                   onChange={(e) =>
-                    setPasswords((prev) => ({ ...prev, currentPassword: e.target.value }))
+                    setPasswords((prev) => ({
+                      ...prev,
+                      currentPassword: e.target.value,
+                    }))
                   }
                 />
               </div>
@@ -209,7 +244,10 @@ export default function DashboardSettings() {
                   type="password"
                   value={passwords.newPassword}
                   onChange={(e) =>
-                    setPasswords((prev) => ({ ...prev, newPassword: e.target.value }))
+                    setPasswords((prev) => ({
+                      ...prev,
+                      newPassword: e.target.value,
+                    }))
                   }
                 />
               </div>
@@ -219,12 +257,19 @@ export default function DashboardSettings() {
                   type="password"
                   value={passwords.confirmPassword}
                   onChange={(e) =>
-                    setPasswords((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                    setPasswords((prev) => ({
+                      ...prev,
+                      confirmPassword: e.target.value,
+                    }))
                   }
                 />
               </div>
-              <Button className="settings-submit" type="submit" disabled={savingPassword}>
-                {savingPassword ? "Opslaan..." : "Wachtwoord opslaan"}
+              <Button
+                className="settings-submit"
+                type="submit"
+                disabled={savingPassword}
+              >
+                {savingPassword ? 'Opslaan...' : 'Wachtwoord opslaan'}
               </Button>
             </form>
           </CardContent>

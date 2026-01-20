@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type AuthUser = {
   id: number;
@@ -11,9 +11,9 @@ type AuthUser = {
 };
 
 type AuthState =
-  | { status: "loading" }
-  | { status: "authed"; user: AuthUser }
-  | { status: "unauthed" };
+  | { status: 'loading' }
+  | { status: 'authed'; user: AuthUser }
+  | { status: 'unauthed' };
 
 type AuthContextValue = {
   auth: AuthState;
@@ -24,15 +24,15 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function fetchMe() {
-  const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem('token');
   if (!token) return null;
 
   // Kies jouw Symfony endpoint:
   // Vaak: GET /api/me of /api/user of /api/profile
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/me`, {
-    method: "GET",
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+    method: 'GET',
     headers: {
-      Accept: "application/json",
+      Accept: 'application/json',
       Authorization: `Bearer ${token}`,
     },
   });
@@ -43,23 +43,23 @@ async function fetchMe() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [auth, setAuth] = useState<AuthState>({ status: "loading" });
+  const [auth, setAuth] = useState<AuthState>({ status: 'loading' });
 
   const refreshAuth = async () => {
-    setAuth({ status: "loading" });
+    setAuth({ status: 'loading' });
     const user = await fetchMe();
     if (user) {
-      setAuth({ status: "authed", user });
+      setAuth({ status: 'authed', user });
       return;
     }
 
-    localStorage.removeItem("auth_token");
-    setAuth({ status: "unauthed" });
+    localStorage.removeItem('token');
+    setAuth({ status: 'unauthed' });
   };
 
   const logout = () => {
-    localStorage.removeItem("auth_token");
-    setAuth({ status: "unauthed" });
+    localStorage.removeItem('token');
+    setAuth({ status: 'unauthed' });
   };
 
   useEffect(() => {
@@ -75,6 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }

@@ -1,8 +1,8 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Link, useNavigate } from 'react-router-dom';
+import { useState, type ChangeEvent, type FormEvent } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Card,
   CardContent,
@@ -10,9 +10,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 
 type RegisterState = {
   firstName: string;
@@ -24,10 +24,10 @@ type RegisterState = {
 export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState<RegisterState>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -40,20 +40,21 @@ export default function Register() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.firstName || !form.lastName || !form.email || !form.password) {
-      toast.error("Vul alle velden in");
+      toast.error('Vul alle velden in');
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           first_name: form.firstName,
           last_name: form.lastName,
           email: form.email,
           password: form.password,
+          role: 'patient',
         }),
       });
 
@@ -61,12 +62,12 @@ export default function Register() {
         const data = (await res.json().catch(() => null)) as {
           error?: string;
         } | null;
-        toast(data?.error ?? "Registratie mislukt");
+        toast(data?.error ?? 'Registratie mislukt');
         return;
       }
 
-      toast.success("Registratie gelukt, log nu in");
-      navigate("/login");
+      toast.success('Registratie gelukt, log nu in');
+      navigate('/login');
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export default function Register() {
                     <Input
                       className="auth-input"
                       value={form.firstName}
-                      onChange={handleChange("firstName")}
+                      onChange={handleChange('firstName')}
                       placeholder="Voornaam"
                       autoComplete="given-name"
                     />
@@ -117,7 +118,7 @@ export default function Register() {
                     <Input
                       className="auth-input"
                       value={form.lastName}
-                      onChange={handleChange("lastName")}
+                      onChange={handleChange('lastName')}
                       placeholder="Achternaam"
                       autoComplete="family-name"
                     />
@@ -129,7 +130,7 @@ export default function Register() {
                       className="auth-input"
                       type="email"
                       value={form.email}
-                      onChange={handleChange("email")}
+                      onChange={handleChange('email')}
                       placeholder="jij@turfje.nl"
                       autoComplete="email"
                     />
@@ -141,7 +142,7 @@ export default function Register() {
                       className="auth-input"
                       type="password"
                       value={form.password}
-                      onChange={handleChange("password")}
+                      onChange={handleChange('password')}
                       placeholder="••••••••"
                       autoComplete="new-password"
                     />
@@ -152,19 +153,19 @@ export default function Register() {
                     type="submit"
                     disabled={loading}
                   >
-                    {loading ? "Bezig..." : "Registreren"}
+                    {loading ? 'Bezig...' : 'Registreren'}
                   </Button>
                 </form>
               </CardContent>
               <CardFooter className="auth-footer">
                 <Separator className="auth-seperator" />
                 <Link className="auth-link" to="/login">
-                  Heb je al een account?{" "}
+                  Heb je al een account?{' '}
                   <span className="auth-inlin-link">Inloggen</span>
                 </Link>
                 <p>
-                  Door een account te maken ga je akkoord met onze{" "}
-                  <span className="auth-inline-link">voorwaarden</span> en{" "}
+                  Door een account te maken ga je akkoord met onze{' '}
+                  <span className="auth-inline-link">voorwaarden</span> en{' '}
                   <span className="auth-inline-link">privacy policy</span>.
                 </p>
               </CardFooter>

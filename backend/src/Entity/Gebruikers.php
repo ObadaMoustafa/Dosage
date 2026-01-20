@@ -17,6 +17,12 @@ class Gebruikers
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?Uuid $id = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $voornaam = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $achternaam = null;
+
     // patient, behandelaar, admin
     #[ORM\Column(length: 20)]
     private ?string $rol = null;
@@ -42,6 +48,30 @@ class Gebruikers
     public function getId(): ?Uuid
     {
         return $this->id;
+    }
+
+    public function getVoornaam(): ?string
+    {
+        return $this->voornaam;
+    }
+
+    public function setVoornaam(string $voornaam): static
+    {
+        $this->voornaam = $voornaam;
+
+        return $this;
+    }
+
+    public function getAchternaam(): ?string
+    {
+        return $this->achternaam;
+    }
+
+    public function setAchternaam(string $achternaam): static
+    {
+        $this->achternaam = $achternaam;
+
+        return $this;
     }
 
     public function getRol(): ?string
@@ -91,6 +121,10 @@ class Gebruikers
         return $this;
     }
 
+    public function getAangemaaktOp(): ?\DateTimeInterface
+    {
+        return $this->aangemaakt_op;
+    }
 
     
 }
