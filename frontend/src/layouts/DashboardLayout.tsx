@@ -30,14 +30,22 @@ import {
 import { useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
 
-//^ Add here any new panels to be shown in the sidebar
-const paths = [
+//^ 1. Sidebar Navigation Configuration
+const sidebarPaths = [
   {
     text: 'Overzicht',
     path: '/dashboard',
   },
   {
     text: 'Instellingen',
+    path: '/dashboard/settings',
+  },
+];
+
+//^ 2. User Dropdown Menu Configuration (Add your profile links here)
+const userMenuPaths = [
+  {
+    text: 'Profiel',
     path: '/dashboard/settings',
   },
 ];
@@ -87,10 +95,14 @@ export default function DashboardLayout() {
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {paths.map((e, i) => (
-                  <SidebarMenuItem key={i}>
-                    <MobileAwareNavLink to={e.path} isActive={path === e.path}>
-                      {e.text}
+                {/* Rendering Sidebar Items Automatically */}
+                {sidebarPaths.map((item, index) => (
+                  <SidebarMenuItem key={index}>
+                    <MobileAwareNavLink
+                      to={item.path}
+                      isActive={path === item.path}
+                    >
+                      {item.text}
                     </MobileAwareNavLink>
                   </SidebarMenuItem>
                 ))}
@@ -148,11 +160,24 @@ export default function DashboardLayout() {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuLabel>Gebruikersaccount</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
-                Profiel
-              </DropdownMenuItem>
+
+              {/* Rendering User Menu Items Automatically */}
+              {userMenuPaths.map((item, index) => (
+                <DropdownMenuItem
+                  key={index}
+                  className="cursor-pointer"
+                  onClick={() => navigate(item.path)}
+                >
+                  {item.text}
+                </DropdownMenuItem>
+              ))}
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>
+              {/* Logout remains separate as it's a function, not a path */}
+              <DropdownMenuItem
+                className="cursor-pointer text-red-500 focus:text-red-500"
+                onClick={handleLogout}
+              >
                 Uitloggen
               </DropdownMenuItem>
             </DropdownMenuContent>
