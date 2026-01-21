@@ -33,11 +33,11 @@ import { Separator } from '@/components/ui/separator';
 //^ Add here any new panels to be shown in the sidebar
 const paths = [
   {
-    text: 'Overview',
+    text: 'Overzicht',
     path: '/dashboard',
   },
   {
-    text: 'Settings',
+    text: 'Instellingen',
     path: '/dashboard/settings',
   },
 ];
@@ -103,7 +103,7 @@ export default function DashboardLayout() {
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <button type="button" onClick={handleLogout}>
-                  Logout
+                  Uitloggen
                 </button>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -126,7 +126,7 @@ export default function DashboardLayout() {
                 className="flex items-center gap-2 px-2 hover:bg-accent/50"
               >
                 <span className="hidden md:inline-block text-sm font-medium">
-                  Welcome, {user.first_name}
+                  Welkom, {user.first_name}
                 </span>
 
                 <Avatar className="h-8 w-8">
@@ -147,12 +147,14 @@ export default function DashboardLayout() {
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
+              <DropdownMenuLabel>Gebruikersaccount</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
-                Settings
+                Profiel
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                Uitloggen
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
