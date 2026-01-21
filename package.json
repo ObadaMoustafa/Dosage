@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "setup": "npm install && cd backend && composer install && cd ../frontend && npm install",
+    "setup": "npm install && cd backend && composer install && cd ../frontend && npm install && cd ..",
     "dev": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev\"",
     "init-db": "cd backend && composer migrate && composer get-meds",
-    "clear-cache": "cd backend && php bin/console cache:clear"
+    "clear-cache": "cd backend && php bin/console cache:clear",
+    "reset-db": "cd backend && rm -fr migrations/* && rm var/turfje.db && npm run init-db"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
