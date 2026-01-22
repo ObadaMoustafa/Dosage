@@ -86,7 +86,8 @@ export default function Register() {
               />
             </div>
             <div className="auth-quote">
-              <p className="auth-quote-author">Turfje 2026</p>
+              <p className="auth-quote-version">v0.1</p>
+              <p className="auth-quote-text">Welkom bij Turfje</p>
             </div>
           </div>
         </aside>
