@@ -23,8 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'; // <-- Import Alert Dialog
-
+} from '@/components/ui/alert-dialog';
 type ProfileForm = {
   firstName: string;
   lastName: string;
@@ -202,22 +201,22 @@ export default function DashboardSettings() {
   };
 
   return (
-    <div className="space-y-6 p-6 pb-16">
-      <div className="space-y-0.5">
-        <h1 className="text-2xl font-bold tracking-tight">Instellingen</h1>
-        <p className="text-muted-foreground">
-          Beheer je profielinstellingen en wachtwoord.
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Instellingen</h1>
+        <p className="text-sm text-muted-foreground">
+          Hier kun je je accountinstellingen beheren.
         </p>
       </div>
       <Separator className="my-6" />
 
       <div className="flex flex-col gap-8">
         {/* Profile Card */}
-        <Card>
+        <Card className="bg-[#1b2441] border-border/60">
           <CardHeader>
             <CardTitle>Profiel</CardTitle>
             <CardDescription>
-              Dit is hoe anderen je zien op de site.
+              Dit is jou profiel. Hier beheer je de gegevens van je account.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -250,6 +249,7 @@ export default function DashboardSettings() {
                     }))
                   }
                   placeholder="Voornaam"
+                  className="bg-white/5 border-white/15"
                 />
               </div>
               <div className="grid gap-2">
@@ -263,6 +263,7 @@ export default function DashboardSettings() {
                     }))
                   }
                   placeholder="Achternaam"
+                  className="bg-white/5 border-white/15"
                 />
               </div>
               <div className="grid gap-2">
@@ -273,6 +274,7 @@ export default function DashboardSettings() {
                     setProfile((prev) => ({ ...prev, email: e.target.value }))
                   }
                   placeholder="Email"
+                  className="bg-white/5 border-white/15"
                 />
               </div>
               <div className="pt-2">
@@ -287,11 +289,11 @@ export default function DashboardSettings() {
         </Card>
 
         {/* Password Card */}
-        <Card>
+        <Card className="bg-[#1b2441] border-border/60">
           <CardHeader>
             <CardTitle>Wachtwoord</CardTitle>
             <CardDescription>
-              Wijzig je wachtwoord om je account veilig te houden.
+              Hier kun je je wachtwoord wijzigen.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -307,6 +309,7 @@ export default function DashboardSettings() {
                       currentPassword: e.target.value,
                     }))
                   }
+                  className="bg-white/5 border-white/15"
                 />
               </div>
               <div className="grid gap-2">
@@ -320,6 +323,7 @@ export default function DashboardSettings() {
                       newPassword: e.target.value,
                     }))
                   }
+                  className="bg-white/5 border-white/15"
                 />
               </div>
               <div className="grid gap-2">
@@ -333,6 +337,7 @@ export default function DashboardSettings() {
                       confirmPassword: e.target.value,
                     }))
                   }
+                  className="bg-white/5 border-white/15"
                 />
               </div>
               <div className="pt-2">
@@ -345,9 +350,9 @@ export default function DashboardSettings() {
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-red-200 dark:border-red-900">
+        <Card className="bg-[#1b2441] border-red-900/60">
           <CardHeader>
-            <CardTitle className="text-red-600 dark:text-red-400">
+            <CardTitle className="text-red-600">
               Gevarenzone
             </CardTitle>
             <CardDescription>
@@ -365,13 +370,13 @@ export default function DashboardSettings() {
 
               {/* New Alert Dialog Implementation */}
               <AlertDialog
-                open={isDeleteDialogOpen}
-                onOpenChange={setIsDeleteDialogOpen}
+                  open={isDeleteDialogOpen}
+                  onOpenChange={setIsDeleteDialogOpen}
               >
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive">Account verwijderen</Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="bg-[#1b2441] border-border/60">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -381,7 +386,9 @@ export default function DashboardSettings() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel disabled={deletingAccount}>
+                    <AlertDialogCancel
+                      disabled={deletingAccount}
+                    >
                       Annuleren
                     </AlertDialogCancel>
                     <AlertDialogAction
