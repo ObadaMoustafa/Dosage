@@ -180,15 +180,12 @@ export default function DashboardSettings() {
     setDeletingAccount(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/delete-account`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       if (!res.ok) {
         toast.error('Fout bij verwijderen account.');

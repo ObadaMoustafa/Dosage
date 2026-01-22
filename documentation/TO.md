@@ -201,16 +201,15 @@ Alle endpoints geven JSON terug. Authenticatie vereist, tenzij anders aangegeven
 | `/api/auth/register`        | POST    | Iedereen        | Nieuwe gebruiker registreren (e-mail, wachtwoord, rol) |
 | `/api/auth/login`           | POST    | Iedereen        | Inloggen en JWT ontvangen                              |
 | `/api/auth/forgot-password` | POST    | Iedereen        | E-mail voor wachtwoordherstel aanvragen                |
-| `/api/auth/change-password` | POST    | Geauthenticeerd | Wachtwoord resetten met token                          |
+| `/api/auth/reset-password`  | POST    | Iedereen        | Wachtwoord resetten met token                          |
+| `/api/auth/change-password` | POST    | Geauthenticeerd | Wachtwoord wijzigen                                    |
 | `/api/auth/me`              | GET     | Geauthenticeerd | Huidig gebruikersprofiel ophalen                       |
-| `/api/auth/delete-account`  | DELETE  | Geauthenticeerd | Account verwijderen                                    |
+| `/api/auth/me`              | DELETE  | Geauthenticeerd | Account verwijderen                                    |
 
 ## 👥 Gebruikersbeheer & Koppeling
 
 | Endpoint                           | Methode | Rol                 | Beschrijving                    |
 | ---------------------------------- | ------- | ------------------- | ------------------------------- |
-| `/api/users/profile`               | PUT     | Geauthenticeerd     | Profiel bijwerken               |
-| `/api/users/delete-request`        | POST    | Geauthenticeerd     | Accountverwijdering aanvragen   |
 | `/api/pairing/generate-code`       | POST    | Patiënt             | Unieke koppelcode genereren     |
 | `/api/pairing/link`                | POST    | Behandelaar/Patiënt | Koppelen met patiënt via code   |
 | `/api/pairing/unlink/{patient_id}` | DELETE  | Behandelaar/Patiënt | Koppeling met patiënt verbreken |
