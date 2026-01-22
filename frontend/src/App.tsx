@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import DashboardHome from "./pages/dashboard/Index";
 import DashboardMedicines from "./pages/dashboard/Medicines";
+import DashboardSchedules from "./pages/dashboard/Schedules";
 import DashboardSettings from "./pages/dashboard/Settings";
 
 import "./App.css";
@@ -30,6 +31,9 @@ export default function App() {
           </Route>
           <Route path="/medicines" element={<DashboardLayout />}>
             <Route index element={<DashboardMedicines />} />
+          </Route>
+          <Route path="/schedules" element={<DashboardLayout />}>
+            <Route index element={<DashboardSchedules />} />
           </Route>
         </Route>
 

@@ -1,110 +1,126 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LucidePillBottle , LucideTablets, LucideClock, ArrowDownRight } from "lucide-react";
-import {Button} from "@/components/ui/button.tsx";
-import {Separator} from "@/components/ui/separator.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import UpcomingDoseCard from "@/components/dashboard/UpcomingDoseCard";
+import RemainingMedsCard from "@/components/dashboard/RemainingMedsCard";
+import HistoryCard from "@/components/dashboard/HistoryCard";
+import HistoryLineChart from "@/components/dashboard/HistoryLineChart";
+import { useAuth } from "@/auth/AuthProvider";
 
 export default function DashboardHome() {
+    const { auth } = useAuth();
+    const firstName = auth.status === 'authed' ? auth.user.first_name : 'User';
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
         <p className="text-sm text-muted-foreground">
-          Welkom terug. Hier is je dashboard.
+          Welkom terug {firstName}. Hier is je dashboard
         </p>
       </div>
       <Separator className="my-6" />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="bg-[#1b2441] border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium">Aankomende Inname</CardTitle>
-            <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-              <LucideClock className="h-3 w-3"/>
-              Over 2 uur
-            </span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold mb-1">14:00 uur</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1 py-0.5 text-xs font-semibold text-muted-foreground">
-                <LucidePillBottle className="h-4 w-4 mr-0.5"/>
-                Paracetamol 500/50mg
-              </span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1 py-0.5 mt-1 text-xs font-semibold text-muted-foreground">
-                <LucideTablets className="h-4 w-4 mr-0.5"/>
-                2 stuks
-              </span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[#1b2441] border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium">Medicijnen over</CardTitle>
-            <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-              <ArrowDownRight className="h-3 w-3"/>
-              -2 stuks
-            </span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold mb-1">28 Paracetamol</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1 py-0.5 text-xs font-semibold text-muted-foreground">
-                <LucidePillBottle className="h-4 w-4 mr-0.5"/>
-                3 Strips (10 p/strip)
-              </span>
-            </p>
-            <p className="text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1 py-0.5 mt-1 text-xs font-semibold text-muted-foreground">
-                <LucideTablets className="h-4 w-4 mr-0.5"/>
-                -2 om 14:00 uur
-              </span>
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[#1b2441] border-border/60">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium">Historie</CardTitle>
-            <Button className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground">
-              Open Historie
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <LucidePillBottle className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm font-medium">Paracetamol 500/50mg</div>
-                    <div className="text-xs text-muted-foreground">3 Strips (10 p/strip) · 2 stuks</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold">24-01-2026 · 14:00</div>
-                  <div className="text-xs text-green-400">Op tijd</div>
-                </div>
-              </li>
-
-              <li className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <LucidePillBottle className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm font-medium">Paracetamol 500/50mg</div>
-                    <div className="text-xs text-muted-foreground">1 Strip · 2 stuks</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold">23-01-2026 · 20:00</div>
-                  <div className="text-xs text-red-400">Gemist</div>
-                </div>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+        <UpcomingDoseCard
+          timeLabel="14:00 uur"
+          medicineLabel="Paracetamol 500/50mg"
+          quantityLabel="2 stuks"
+          etaLabel="Over 2 uur"
+        />
+        <RemainingMedsCard
+          title="Medicijnen over"
+          deltaLabel="-2 stuks"
+          totalLabel="28 Paracetamol"
+          packLabel="3 Strips (10 p/strip)"
+          nextDoseLabel="-2 om 14:00 uur"
+        />
+        <HistoryCard
+          items={[
+            {
+              id: "history-1",
+              title: "Paracetamol 500/50mg",
+              detail: "3 Strips (10 p/strip) · 2 stuks",
+              timestamp: "24-01-2026 · 14:00",
+              status: "Op tijd",
+              statusClassName: "text-xs text-green-400",
+            },
+            {
+              id: "history-2",
+              title: "Paracetamol 500/50mg",
+              detail: "1 Strip · 2 stuks",
+              timestamp: "23-01-2026 · 20:00",
+              status: "Gemist",
+              statusClassName: "text-xs text-red-400",
+            },
+          ]}
+        />
       </div>
+
+      <HistoryLineChart
+        title="Inname Historie"
+        description="Laatste 7 dagen"
+        trendLabel="1x minder vergeten dan vorige week! Goed bezig!"
+        footerLabel="Aantal innames per dag (laatste 7 dagen)"
+        data={[
+          {
+            label: "Ma",
+            value: 3,
+            details: [
+              { time: "08:00", status: "Op tijd", medicine: "Paracetamol" },
+              { time: "12:00", status: "Op tijd", medicine: "Omeprazol" },
+              { time: "20:00", status: "Gemist", medicine: "Paracetamol" },
+            ],
+          },
+          {
+            label: "Di",
+            value: 3,
+            details: [
+              { time: "09:00", status: "Op tijd", medicine: "Omeprazol" },
+              { time: "14:00", status: "Op tijd", medicine: "Paracetamol" },
+              { time: "20:00", status: "Gemist", medicine: "Paracetamol" },
+            ],
+          },
+          {
+            label: "Wo",
+            value: 2,
+            details: [
+              { time: "08:00", status: "Op tijd", medicine: "Omeprazol" },
+              { time: "18:00", status: "Op tijd", medicine: "Paracetamol" },
+            ],
+          },
+          {
+            label: "Do",
+            value: 3,
+            details: [
+              { time: "09:00", status: "Op tijd", medicine: "Omeprazol" },
+              { time: "14:00", status: "Gemist", medicine: "Paracetamol" },
+              { time: "20:00", status: "Op tijd", medicine: "Paracetamol" },
+            ],
+          },
+          {
+            label: "Vr",
+            value: 2,
+            details: [
+              { time: "12:00", status: "Op tijd", medicine: "Omeprazol" },
+              { time: "19:00", status: "Gemist", medicine: "Paracetamol" },
+            ],
+          },
+          {
+            label: "Za",
+            value: 1,
+            details: [{ time: "09:00", status: "Op tijd", medicine: "Omeprazol" }],
+          },
+          {
+            label: "Zo",
+            value: 2,
+            details: [
+              { time: "14:00", status: "Op tijd", medicine: "Paracetamol" },
+              { time: "20:00", status: "Op tijd", medicine: "Omeprazol" },
+            ],
+          },
+        ]}
+        seriesLabel="Innames"
+        seriesColor="#4963b3"
+      />
     </div>
   );
 }

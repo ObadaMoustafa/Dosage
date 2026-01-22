@@ -1,57 +1,35 @@
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/auth/AuthProvider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import QuickMedicineUse from "@/components/QuickMedicineUse";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
-} from '@/components/ui/sidebar';
-import { useEffect, useState } from 'react';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { Fragment, useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 //^ 1. Sidebar Navigation Configuration
 const sidebarPaths = [
   {
     text: 'Overzicht',
     icon: 'fas fa-home',
-    path: '/dashboard',
+    path: '/dashboard'
   },
   {
     text: 'Medicijnen',
     icon: 'fas fa-pills',
-    path: '/medicines',
+    path: '/medicines'
   },
   {
     text: 'Schema\'s',
     icon: 'fas fa-calendar-check',
-    path: '/schedules',
+    path: '/schedules'
   },
   {
     text: 'Historie',
     icon: 'fas fa-history',
-    path: '/history',
+    path: '/history'
   }
 ];
 
@@ -59,7 +37,8 @@ const sidebarPaths = [
 const userMenuPaths = [
   {
     text: 'Profiel',
-    path: '/dashboard/settings',
+    icon: 'fas fa-user',
+    path: '/dashboard/settings'
   },
 ];
 
@@ -87,15 +66,36 @@ export default function DashboardLayout() {
     navigate('/login');
   };
 
-  const headerTitle = (() => {
-    if (location.pathname === '/dashboard') return 'Dashboard';
-    if (location.pathname.startsWith('/medicines')) return 'Medicijnen';
-    if (location.pathname.startsWith('/schedules')) return "Schema's";
-    if (location.pathname.startsWith('/history')) return 'Historie';
-    if (location.pathname.startsWith('/dashboard/settings')) {
-      return 'Instellingen';
+  const breadcrumbItems = (() => {
+    const base = { label: "Dashboard", href: "/dashboard" };
+    if (location.pathname === "/dashboard") {
+      return [{ ...base, current: true }];
     }
-    return 'Dashboard';
+    if (location.pathname.startsWith("/medicines")) {
+      return [
+        { ...base },
+        { label: "Medicijnen", href: "/medicines", current: true },
+      ];
+    }
+    if (location.pathname.startsWith("/schedules")) {
+      return [
+        { ...base },
+        { label: "Schema's", href: "/schedules", current: true },
+      ];
+    }
+    if (location.pathname.startsWith("/history")) {
+      return [
+        { ...base },
+        { label: "Historie", href: "/history", current: true },
+      ];
+    }
+    if (location.pathname.startsWith("/dashboard/settings")) {
+      return [
+        { ...base },
+        { label: "Instellingen", href: "/dashboard/settings", current: true },
+      ];
+    }
+    return [{ ...base, current: true }];
   })();
 
   return (
@@ -103,7 +103,7 @@ export default function DashboardLayout() {
       <Sidebar
         collapsible={isMobile ? 'offcanvas' : 'none'}
         variant="sidebar"
-        className="sticky top-0 h-svh border-r bg-background"
+        className="sticky top-0 h-svh border-r bg-[#1b2441] text-sidebar-foreground"
       >
         <SidebarHeader>
           <div className="flex items-center gap-2 px-2 mt-4">
@@ -170,20 +170,16 @@ export default function DashboardLayout() {
                   align="end"
                   side="right"
                   sideOffset={12}
-                  className="w-60 rounded-xl border border-border bg-popover/95 p-1 shadow-lg backdrop-blur"
+                  className="sidebar-dropdown w-48"
                 >
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">
-                        {`${user.first_name} ${user.last_name}`.trim()}
-                      </p>
-                      <p className="w-[200px] truncate text-xs text-muted-foreground">
-                        {user.email}
+                        Gebruikersmenu
                       </p>
                     </div>
                   </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Gebruikersaccount</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-white/20" />
 
                   {userMenuPaths.map((item, index) => (
                     <DropdownMenuItem
@@ -191,15 +187,12 @@ export default function DashboardLayout() {
                       className="cursor-pointer"
                       onClick={() => navigate(item.path)}
                     >
+                      <span className={item.icon} aria-hidden="true" />
                       {item.text}
                     </DropdownMenuItem>
                   ))}
-
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="cursor-pointer text-red-500 focus:text-red-500"
-                    onClick={handleLogout}
-                  >
+                  <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500" onClick={handleLogout} >
+                    <span className='fas fa-person-running' aria-hidden="true" />
                     Uitloggen
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -210,11 +203,30 @@ export default function DashboardLayout() {
       </Sidebar>
 
       <SidebarInset className="dashboard-inset min-h-svh flex flex-col bg-background">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-6">
+        <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between border-b bg-background/95 px-6 backdrop-blur shadow-sm">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1 md:hidden" />
             <Separator orientation="vertical" className="mr-2 h-4 md:hidden" />
-            <span className="text-sm font-medium">{headerTitle}</span>
+            <Breadcrumb>
+              <BreadcrumbList>
+                {breadcrumbItems.map((item, index) => (
+                  <Fragment key={item.href}>
+                    <BreadcrumbItem>
+                      {item.current ? (
+                        <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                      ) : (
+                        <BreadcrumbLink asChild>
+                          <NavLink to={item.href}>{item.label}</NavLink>
+                        </BreadcrumbLink>
+                      )}
+                    </BreadcrumbItem>
+                    {index < breadcrumbItems.length - 1 && (
+                      <BreadcrumbSeparator />
+                    )}
+                  </Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
 
           <QuickMedicineUse />

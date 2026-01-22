@@ -17,6 +17,12 @@ button {
   box-shadow: none;
 }
 
+.sidebar-dropdown {
+    background-color: #0d1225;
+    border: 1px solid #212c50;
+    color: #f4f4f5;
+}
+
 .hover:bg-none {
   background: none;
 }

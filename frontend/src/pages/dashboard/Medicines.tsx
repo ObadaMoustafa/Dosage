@@ -1,14 +1,7 @@
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
 import {Separator} from "@/components/ui/separator.tsx";
 import DrawerMedicineEdit from "@/components/DrawerMedicineEdit";
@@ -16,20 +9,9 @@ import DrawerMedicineDelete from "@/components/DrawerMedicineDelete";
 import DrawerMedicineCreate from "@/components/DrawerMedicineCreate";
 
 const medicines = [
-  {
-    name: "Omeprazol",
-    route: "Oraal",
-    strength: "20mg",
-    description: "Tegen maagzuur",
-    leaflet: "Klik voor bijsluiter",
-  },
-  {
-    name: "Paracetamol",
-    route: "Oraal",
-    strength: "500/50mg",
-    description: "Generiek gebruik",
-    leaflet: "Klik voor bijsluiter",
-  },
+  { name: "Omeprazol", route: "Oraal", strength: "20mg", description: "Tegen maagzuur", leaflet: "Klik voor bijsluiter" },
+  { name: "Paracetamol", route: "Oraal", strength: "500/50mg", description: "Generiek gebruik", leaflet: "Klik voor bijsluiter" },
+  { name: "Ibuprofen", route: "Oraal", strength: "250mg", description: "Generiek gebruik", leaflet: "Klik voor bijsluiter" },
 ];
 
 export default function DashboardMedicines() {
