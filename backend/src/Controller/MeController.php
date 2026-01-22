@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\GebruikerAuth;
+use App\Entity\Gebruikers;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,31 +16,29 @@ class MeController extends AbstractController
     #[Route('/api/auth/me', name: 'api_me', methods: ['GET'])]
     public function me(): JsonResponse
     {
-        /** @var GebruikerAuth|null $user */
+        /** @var Gebruikers|null $user */
         $user = $this->getUser();
 
         if (!$user) {
             return $this->json(['message' => 'User not found or not logged in'], 401);
         }
 
-        $profile = $user->getGebruiker();
-
+        // $user is now the profile itself, no need for getGebruiker()
         return $this->json([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'first_name' => $profile?->getVoornaam(),
-            'last_name' => $profile?->getAchternaam(),
-            'role' => $profile?->getRol(),
-            'avatar_url' => $profile?->getAvatarUrl(),
-            'profile_id' => $profile?->getId(),
-            'created_at' => $profile?->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'first_name' => $user->getVoornaam(),
+            'last_name' => $user->getAchternaam(),
+            'role' => $user->getRol(),
+            'avatar_url' => $user->getAvatarUrl(),
+            'created_at' => $user->getAangemaaktOp()->format('Y-m-d H:i:s'),
         ]);
     }
 
     #[Route('/api/auth/me', name: 'api_me_update', methods: ['PUT'])]
     public function updateProfile(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        /** @var GebruikerAuth|null $user */
+        /** @var Gebruikers|null $user */
         $user = $this->getUser();
 
         if (!$user) {
@@ -48,25 +46,20 @@ class MeController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        $profile = $user->getGebruiker();
-
-        if (!$profile) {
-            return $this->json(['message' => 'Profile not found'], 404);
-        }
 
         // 1. Update Names
         if (isset($data['first_name'])) {
-            $profile->setVoornaam($data['first_name']);
+            $user->setVoornaam($data['first_name']);
         }
         if (isset($data['last_name'])) {
-            $profile->setAchternaam($data['last_name']);
+            $user->setAchternaam($data['last_name']);
         }
 
         // 2. Regenerate Avatar if names changed
         if (isset($data['first_name']) || isset($data['last_name'])) {
-            $fullName = "{$profile->getVoornaam()}+{$profile->getAchternaam()}";
-            $avatarUrl = "https://ui-avatars.com/api/?name={$fullName}&background=random&color=fff&size=128";
-            $profile->setAvatarUrl($avatarUrl);
+            $fullName = "{$user->getVoornaam()}+{$user->getAchternaam()}";
+            $avatarUrl = "https://ui-avatars.com/api/?name={$fullName}&background=random&color=fff&size=128&bold=true&rounded=true&format=png";
+            $user->setAvatarUrl($avatarUrl);
         }
 
         // 3. Update Email (handle uniqueness)
@@ -75,7 +68,6 @@ class MeController extends AbstractController
         }
 
         try {
-            $entityManager->persist($profile);
             $entityManager->persist($user);
             $entityManager->flush();
         } catch (UniqueConstraintViolationException $e) {
@@ -90,7 +82,7 @@ class MeController extends AbstractController
     #[Route('/api/auth/change-password', name: 'api_change_password', methods: ['PUT'])]
     public function changePassword(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager): JsonResponse
     {
-        /** @var GebruikerAuth|null $user */
+        /** @var Gebruikers|null $user */
         $user = $this->getUser();
 
         if (!$user) {
@@ -118,26 +110,20 @@ class MeController extends AbstractController
         return $this->json(['message' => 'Password changed successfully']);
     }
 
-    #[Route('/api/auth/delete-account', name: 'api_me_delete', methods: ['DELETE'])]
+    #[Route('/api/auth/me', name: 'api_me_delete', methods: ['DELETE'])]
     public function deleteAccount(EntityManagerInterface $entityManager): JsonResponse
     {
-        /** @var GebruikerAuth|null $user */
+        /** @var Gebruikers|null $user */
         $user = $this->getUser();
 
         if (!$user) {
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        // Optional: Remove the associated profile explicitly if cascade isn't configured
-        $profile = $user->getGebruiker();
-        if ($profile) {
-            $entityManager->remove($profile);
-        }
-
+        // Just remove the user (Profile and Auth are now one)
         $entityManager->remove($user);
         $entityManager->flush();
 
         return $this->json(['message' => 'Account deleted successfully']);
     }
-
 }

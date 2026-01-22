@@ -6,16 +6,24 @@ use App\Repository\GebruikersRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Types\UuidType;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: GebruikersRepository::class)]
-class Gebruikers
+class Gebruikers implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?Uuid $id = null;
+
+    #[ORM\Column(length: 180, unique: true)]
+    private ?string $email = null;
+
+    #[ORM\Column]
+    private ?string $password = null;
 
     #[ORM\Column(length: 255)]
     private ?string $voornaam = null;
@@ -40,17 +48,79 @@ class Gebruikers
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $aangemaakt_op = null;
 
-    #[ORM\OneToOne(mappedBy: 'gebruiker', cascade: ['persist', 'remove'])]
-    private ?GebruikerAuth $gebruikerAuth = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $laatste_login = null;
 
     public function __construct()
     {
-       $this->aangemaakt_op = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
+        $this->aangemaakt_op = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
     }
 
     public function getId(): ?Uuid
     {
         return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
+    {
+        // Default role
+        $roles = ['ROLE_USER'];
+
+        // Map your string role to Symfony Role
+        if ($this->rol === 'admin') {
+            $roles[] = 'ROLE_ADMIN';
+        } elseif ($this->rol === 'behandelaar') {
+            $roles[] = 'ROLE_BEHANDELAAR';
+        } elseif ($this->rol === 'patient') {
+            $roles[] = 'ROLE_PATIENT';
+        }
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials(): void
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
     }
 
     public function getVoornaam(): ?string
@@ -61,7 +131,6 @@ class Gebruikers
     public function setVoornaam(string $voornaam): static
     {
         $this->voornaam = $voornaam;
-
         return $this;
     }
 
@@ -73,7 +142,6 @@ class Gebruikers
     public function setAchternaam(string $achternaam): static
     {
         $this->achternaam = $achternaam;
-
         return $this;
     }
 
@@ -84,6 +152,12 @@ class Gebruikers
 
     public function setRol(string $rol): static
     {
+        $allowedRoles = ['patient', 'behandelaar', 'admin'];
+
+        if (!\in_array($rol, $allowedRoles)) {
+            throw new \InvalidArgumentException("Invalid role. Allowed: " . implode(', ', $allowedRoles));
+        }
+
         $this->rol = $rol;
         return $this;
     }
@@ -96,7 +170,6 @@ class Gebruikers
     public function setAvatarUrl(?string $avatar_url): static
     {
         $this->avatar_url = $avatar_url;
-
         return $this;
     }
 
@@ -122,24 +195,19 @@ class Gebruikers
         return $this;
     }
 
-    public function getGebruikerAuth(): ?GebruikerAuth
-    {
-        return $this->gebruikerAuth;
-    }
-
-    public function setGebruikerAuth(GebruikerAuth $gebruikerAuth): static
-    {
-        if ($gebruikerAuth->getGebruiker() !== $this) {
-            $gebruikerAuth->setGebruiker($this);
-        }
-        $this->gebruikerAuth = $gebruikerAuth;
-        return $this;
-    }
-
     public function getAangemaaktOp(): ?\DateTimeInterface
     {
         return $this->aangemaakt_op;
     }
 
-    
+    public function getLaatsteLogin(): ?\DateTimeInterface
+    {
+        return $this->laatste_login;
+    }
+
+    public function setLaatsteLogin(?\DateTimeInterface $laatste_login): static
+    {
+        $this->laatste_login = $laatste_login;
+        return $this;
+    }
 }

@@ -1,12 +1,12 @@
 security:
     password_hashers:
-        App\Entity\GebruikerAuth:
+        App\Entity\Gebruikers:
             algorithm: auto
 
     providers:
         app_user_provider:
             entity:
-                class: App\Entity\GebruikerAuth
+                class: App\Entity\Gebruikers
                 property: email
 
     firewalls:
@@ -39,7 +39,7 @@ security:
 when@test:
     security:
         password_hashers:
-            App\Entity\GebruikerAuth:
+            App\Entity\Gebruikers:
                 algorithm: auto
                 cost: 4
                 time_cost: 3

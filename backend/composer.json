@@ -74,7 +74,12 @@
             "@make-mig",
             "@do-mig"
         ],
-        "get-meds": "php bin/console app:import-medicines"
+        "get-meds": "php bin/console app:import-medicines",
+        "g-users": "php bin/console app:create-users",
+        "clean-db": [
+            "php bin/console doctrine:schema:drop --force",
+            "php bin/console doctrine:schema:update --force"
+        ]
     },
     "conflict": {
         "symfony/symfony": "*"

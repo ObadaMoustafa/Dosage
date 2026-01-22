@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\GebruikerAuth;
 use App\Entity\Gebruikers;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,38 +18,33 @@ class RegistrationController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        // 1. Validate input (Updated)
-        if (!isset($data['email']) || !isset($data['password']) || !isset($data['role']) || !isset($data['first_name']) || !isset($data['last_name'])) {
+        // 1. Validate input
+        if (!isset($data['email']) || !isset($data['password']) || !isset($data['first_name']) || !isset($data['last_name'])) {
             return $this->json(['message' => 'Missing required fields'], 400);
         }
 
-        // 2. Create Profile (Gebruikers) first
-        $profile = new Gebruikers();
-        // save names
-        $profile->setVoornaam($data['first_name']);
-        $profile->setAchternaam($data['last_name']);
-        // Generate Random Avatar based on name
+        $user = new Gebruikers();
+
+        // 2. Basic Info
+        $user->setVoornaam($data['first_name']);
+        $user->setAchternaam($data['last_name']);
+
+        // 3. Avatar Generation
         $fullName = "{$data['first_name']}+{$data['last_name']}";
         $avatarUrl = "https://ui-avatars.com/api/?name={$fullName}&background=random&color=fff&size=128&bold=true&rounded=true&format=png";
-        
-        $profile->setAvatarUrl($avatarUrl);
+        $user->setAvatarUrl($avatarUrl);
 
-        // Role should be: patient, behandelaar, or admin
-        $profile->setRol($data['role']); 
-        // Set created_at time to Europe/Amsterdam
-        
-        // 3. Create Auth User (GebruikerAuth)
-        $user = new GebruikerAuth();
+        // 4. Force Role to PATIENT or registration.
+        $user->setRol('patient');
+
+        // 5. Auth Info
         $user->setEmail($data['email']);
-        $user->setGebruiker($profile); // Link the profile to the auth user
 
-        // 4. Hash the password
         $hashedPassword = $passwordHasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
 
-        // 5. Save to Database
+        // 6. Save to Database
         try {
-            $entityManager->persist($profile);
             $entityManager->persist($user);
             $entityManager->flush();
         } catch (UniqueConstraintViolationException $e) {

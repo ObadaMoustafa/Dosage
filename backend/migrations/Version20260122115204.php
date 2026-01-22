@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20260121171445 extends AbstractMigration
+final class Version20260122115204 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,10 +20,7 @@ final class Version20260121171445 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE gebruiker_auth (id BLOB NOT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, aangemaakt_op DATETIME NOT NULL, laatste_login DATETIME DEFAULT NULL, gebruiker_id BLOB NOT NULL, PRIMARY KEY (id), CONSTRAINT FK_D8CC11DF9C92A3DF FOREIGN KEY (gebruiker_id) REFERENCES gebruikers (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
-        $this->addSql('CREATE UNIQUE INDEX UNIQ_D8CC11DFE7927C74 ON gebruiker_auth (email)');
-        $this->addSql('CREATE UNIQUE INDEX UNIQ_D8CC11DF9C92A3DF ON gebruiker_auth (gebruiker_id)');
-        $this->addSql('CREATE TABLE gebruiker_koppelingen (id BLOB NOT NULL, rechten CLOB DEFAULT NULL, status VARCHAR(20) NOT NULL, aangemaakt_op DATETIME NOT NULL, gebruiker_id BLOB NOT NULL, gekoppelde_gebruiker_id BLOB NOT NULL, PRIMARY KEY (id), CONSTRAINT FK_F182EC009C92A3DF FOREIGN KEY (gebruiker_id) REFERENCES gebruikers (id) NOT DEFERRABLE INITIALLY IMMEDIATE, CONSTRAINT FK_F182EC00C53F1A85 FOREIGN KEY (gekoppelde_gebruiker_id) REFERENCES gebruikers (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
+        $this->addSql('CREATE TABLE gebruiker_koppelingen (id BLOB NOT NULL, toegangsniveau VARCHAR(20) NOT NULL, type_verbinding VARCHAR(20) NOT NULL, status VARCHAR(20) NOT NULL, aangemaakt_op DATETIME NOT NULL, gebruiker_id BLOB NOT NULL, gekoppelde_gebruiker_id BLOB NOT NULL, PRIMARY KEY (id), CONSTRAINT FK_F182EC009C92A3DF FOREIGN KEY (gebruiker_id) REFERENCES gebruikers (id) NOT DEFERRABLE INITIALLY IMMEDIATE, CONSTRAINT FK_F182EC00C53F1A85 FOREIGN KEY (gekoppelde_gebruiker_id) REFERENCES gebruikers (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE INDEX IDX_F182EC009C92A3DF ON gebruiker_koppelingen (gebruiker_id)');
         $this->addSql('CREATE INDEX IDX_F182EC00C53F1A85 ON gebruiker_koppelingen (gekoppelde_gebruiker_id)');
         $this->addSql('CREATE TABLE gebruiker_medicijn (id BLOB NOT NULL, medicijn_versleuteld CLOB NOT NULL, aangemaakt_op DATETIME NOT NULL, gebruiker_id BLOB NOT NULL, medicijn_ref_id BLOB DEFAULT NULL, PRIMARY KEY (id), CONSTRAINT FK_F89AB8AA9C92A3DF FOREIGN KEY (gebruiker_id) REFERENCES gebruikers (id) NOT DEFERRABLE INITIALLY IMMEDIATE, CONSTRAINT FK_F89AB8AAB72C2C79 FOREIGN KEY (medicijn_ref_id) REFERENCES medicijnen (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
@@ -34,15 +31,18 @@ final class Version20260121171445 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_D0388043906A32 ON gebruiker_medicijn_gebruik (gebruiker_medicijn_schema_id)');
         $this->addSql('CREATE TABLE gebruiker_medicijn_schema (id BLOB NOT NULL, medicijn_schema CLOB NOT NULL, aangemaakt_op DATETIME NOT NULL, gebruiker_medicijn_id BLOB NOT NULL, PRIMARY KEY (id), CONSTRAINT FK_8C9BBA108E684394 FOREIGN KEY (gebruiker_medicijn_id) REFERENCES gebruiker_medicijn (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
         $this->addSql('CREATE INDEX IDX_8C9BBA108E684394 ON gebruiker_medicijn_schema (gebruiker_medicijn_id)');
-        $this->addSql('CREATE TABLE gebruikers (id BLOB NOT NULL, voornaam VARCHAR(255) NOT NULL, achternaam VARCHAR(255) NOT NULL, rol VARCHAR(20) NOT NULL, avatar_url VARCHAR(255) DEFAULT NULL, publieke_sleutel CLOB DEFAULT NULL, profielgegevens CLOB DEFAULT NULL, aangemaakt_op DATETIME NOT NULL, PRIMARY KEY (id))');
+        $this->addSql('CREATE TABLE gebruikers (id BLOB NOT NULL, email VARCHAR(180) NOT NULL, password VARCHAR(255) NOT NULL, voornaam VARCHAR(255) NOT NULL, achternaam VARCHAR(255) NOT NULL, rol VARCHAR(20) NOT NULL, avatar_url VARCHAR(255) DEFAULT NULL, publieke_sleutel CLOB DEFAULT NULL, profielgegevens CLOB DEFAULT NULL, aangemaakt_op DATETIME NOT NULL, laatste_login DATETIME DEFAULT NULL, PRIMARY KEY (id))');
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_968F1E25E7927C74 ON gebruikers (email)');
         $this->addSql('CREATE TABLE log_meldingen (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, tijdstip DATETIME NOT NULL, onderdeel VARCHAR(200) NOT NULL, melding VARCHAR(2000) NOT NULL)');
         $this->addSql('CREATE TABLE medicijnen (id BLOB NOT NULL, naam VARCHAR(100) NOT NULL, toedieningsvorm VARCHAR(50) DEFAULT NULL, sterkte VARCHAR(50) DEFAULT NULL, beschrijving CLOB DEFAULT NULL, bijsluiter CLOB DEFAULT NULL, aangemaakt_op DATETIME NOT NULL, PRIMARY KEY (id))');
+        $this->addSql('CREATE TABLE pairing_code (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, code VARCHAR(10) NOT NULL, type_verbinding VARCHAR(20) NOT NULL, verloopt_op DATETIME NOT NULL, gebruiker_id BLOB NOT NULL, CONSTRAINT FK_D0ACCEDE9C92A3DF FOREIGN KEY (gebruiker_id) REFERENCES gebruikers (id) NOT DEFERRABLE INITIALLY IMMEDIATE)');
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_D0ACCEDE77153098 ON pairing_code (code)');
+        $this->addSql('CREATE INDEX IDX_D0ACCEDE9C92A3DF ON pairing_code (gebruiker_id)');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('DROP TABLE gebruiker_auth');
         $this->addSql('DROP TABLE gebruiker_koppelingen');
         $this->addSql('DROP TABLE gebruiker_medicijn');
         $this->addSql('DROP TABLE gebruiker_medicijn_gebruik');
@@ -50,5 +50,6 @@ final class Version20260121171445 extends AbstractMigration
         $this->addSql('DROP TABLE gebruikers');
         $this->addSql('DROP TABLE log_meldingen');
         $this->addSql('DROP TABLE medicijnen');
+        $this->addSql('DROP TABLE pairing_code');
     }
 }
