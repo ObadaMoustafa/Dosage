@@ -31,6 +31,20 @@ class MedicijnenRepository extends ServiceEntityRepository
     //        ;
     //    }
 
+    /**
+     * @return Medicijnen[] Returns an array of Medicijnen objects
+     */
+    public function findByNamePart(string $query): array
+    {
+        return $this->createQueryBuilder('m')
+            ->andWhere('m.naam LIKE :query')
+            ->setParameter('query', '%' . $query . '%')
+            ->orderBy('m.naam', 'ASC')
+            ->setMaxResults(20)
+            ->getQuery()
+            ->getResult();
+    }
+
     //    public function findOneBySomeField($value): ?Medicijnen
     //    {
     //        return $this->createQueryBuilder('m')

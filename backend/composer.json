@@ -21,8 +21,10 @@
     },
     "require-dev": {
         "doctrine/doctrine-bundle": "^3.2.2",
+        "doctrine/doctrine-fixtures-bundle": "^4.3",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6.1",
+        "fakerphp/faker": "^1.24",
         "symfony/maker-bundle": ">=1.65.1",
         "symfony/uid": "8.0.*"
     },
@@ -74,8 +76,8 @@
             "@make-mig",
             "@do-mig"
         ],
-        "get-meds": "php bin/console app:import-medicines",
-        "g-users": "php bin/console app:create-users",
+        "get-meds": "php bin/console doctrine:fixtures:load --no-interaction",
+        "g-users": "bash src/Command/create-users.sh",
         "clean-db": [
             "php bin/console doctrine:schema:drop --force",
             "php bin/console doctrine:schema:update --force"
