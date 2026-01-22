@@ -203,7 +203,7 @@ const Sidebar = React.forwardRef<
             data-sidebar="sidebar"
             data-mobile="true"
             // التعديل هنا: زودنا bg-sidebar و text-sidebar-foreground عشان يغطي على الـ default white
-            className="w-[--sidebar-width] bg-sidebar text-sidebar-foreground p-0 [&>button]:hidden"
+            className="dashboard-layout w-[--sidebar-width] bg-sidebar text-sidebar-foreground p-0 [&>button]:hidden"
             style={
               {
                 '--sidebar-width': SIDEBAR_WIDTH_MOBILE,

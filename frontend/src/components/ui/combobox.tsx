@@ -64,7 +64,6 @@ function ComboboxInput({
                     <InputGroupButton
                         size="icon-xs"
                         variant="ghost"
-                        render={<ComboboxTrigger />}
                         data-slot="input-group-button"
                         className="group-has-data-[slot=combobox-clear]/input-group:hidden data-pressed:bg-transparent"
                         disabled={disabled}
@@ -229,7 +228,7 @@ function ComboboxChip({
         >
             {children}
             {showRemove && (
-                <ComboboxPrimitive.ChipRemove className="-ml-1 opacity-50 hover:opacity-100" data-slot="combobox-chip-remove" render={<Button variant="ghost" size="icon-xs"><XIcon className="pointer-events-none" /></Button>} />
+                <ComboboxPrimitive.ChipRemove className="-ml-1 opacity-50 hover:opacity-100" data-slot="combobox-chip-remove" render={<Button variant="ghost"><XIcon className="pointer-events-none" /></Button>} />
             )}
         </ComboboxPrimitive.Chip>
     )
@@ -251,9 +250,9 @@ function ComboboxChipsInput({
     )
 }
 
-function useComboboxAnchor() {
-    return React.useRef<HTMLDivElement | null>(null)
-}
+// function useComboboxAnchor() {
+//     return React.useRef<HTMLDivElement | null>(null)
+// }
 
 export {
     Combobox,
@@ -270,6 +269,5 @@ export {
     ComboboxChip,
     ComboboxChipsInput,
     ComboboxTrigger,
-    ComboboxValue,
-    useComboboxAnchor,
+    ComboboxValue
 }
