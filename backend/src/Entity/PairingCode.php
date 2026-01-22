@@ -74,6 +74,10 @@ class PairingCode
 
     public function isValid(): bool
     {
-        return $this->expiresAt > new \DateTime();
+        // 1. Get Current Time in Amsterdam
+        $now = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
+
+        // 2. Compare
+        return $this->expiresAt > $now;
     }
 }

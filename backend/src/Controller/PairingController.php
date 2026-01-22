@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
 
 #[Route('/api/pairing')]
 class PairingController extends AbstractController
@@ -29,21 +30,7 @@ class PairingController extends AbstractController
             return $this->json(['error' => 'Ongeldig type verbinding.'], 400);
         }
 
-        // Rule 1: Therapist Singleton Check
-        if ($type === GebruikerKoppelingen::TYPE_THERAPIST) {
-            $existingTherapist = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
-                'gebruiker' => $user,
-                'connectionType' => GebruikerKoppelingen::TYPE_THERAPIST
-            ]);
-
-            if ($existingTherapist) {
-                return $this->json(['error' => 'U heeft al een hoofdbehandelaar. Ontkoppel deze eerst.'], 403);
-            }
-        }
-
-        // Rule 2: Cleanup Old Codes (Expired OR Active) for this specific type
-        // If the user requests a new code, we assume they lost the old one or it expired.
-        // We delete ANY previous code for this user & type to avoid duplicates.
+        // Rule 1: Cleanup Old Codes (Expired OR Active) for this specific type
         $oldCode = $em->getRepository(PairingCode::class)->findOneBy([
             'gebruiker' => $user,
             'connectionType' => $type
@@ -51,7 +38,6 @@ class PairingController extends AbstractController
 
         if ($oldCode) {
             $em->remove($oldCode);
-            // We flush later
         }
 
         // Generate New Code
@@ -61,7 +47,8 @@ class PairingController extends AbstractController
         $pairingCode->setCode($codeString);
         $pairingCode->setGebruiker($user);
         $pairingCode->setConnectionType($type);
-        $pairingCode->setExpiresAt(new \DateTime('+15 minutes'));
+        $expiryTime = new \DateTime('+15 minutes', new \DateTimeZone('Europe/Amsterdam'));
+        $pairingCode->setExpiresAt($expiryTime);
 
         $em->persist($pairingCode);
         $em->flush();
@@ -87,9 +74,8 @@ class PairingController extends AbstractController
             return $this->json(['error' => 'Ongeldige code.'], 404);
         }
 
-        // 2. Lazy Cleanup: Check Expiry
+        // 2. Validate Expiry
         if (!$pairingCode->isValid()) {
-            // Code exists but expired -> DELETE IT immediately
             $em->remove($pairingCode);
             $em->flush();
             return $this->json(['error' => 'Code is verlopen.'], 400);
@@ -105,7 +91,13 @@ class PairingController extends AbstractController
             return $this->json(['error' => 'U kunt uzelf niet koppelen.'], 400);
         }
 
-        // 4. Check if already linked (Duplicate Check)
+        // 4. SECURITY FIX: Validate Role based on Connection Type
+        // If the code is for a Therapist, the user scanning it MUST be a Therapist
+        if ($type === GebruikerKoppelingen::TYPE_THERAPIST && $currentUser->getRol() !== 'behandelaar') {
+            return $this->json(['error' => 'Alleen een behandelaar kan deze code gebruiken.'], 403);
+        }
+
+        // 5. Duplicate Check
         $existingLink = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
             'gebruiker' => $patient,
             'gekoppelde_gebruiker' => $currentUser
@@ -115,12 +107,11 @@ class PairingController extends AbstractController
             return $this->json(['error' => 'U bent al gekoppeld aan deze gebruiker.'], 409);
         }
 
-        // 5. Create Connection
+        // 6. Create Connection
         $connection = new GebruikerKoppelingen();
         $connection->setGebruiker($patient);
         $connection->setGekoppeldeGebruiker($currentUser);
         $connection->setConnectionType($type);
-        // Set Status Active immediately as implied by code usage
         $connection->setStatus(GebruikerKoppelingen::STATUS_ACTIVE);
 
         // Auto-assign permissions
@@ -130,7 +121,7 @@ class PairingController extends AbstractController
             $connection->setAccessLevel(GebruikerKoppelingen::ACCESS_READ);
         }
 
-        // 6. Burn the used code
+        // 7. Burn Code
         $em->remove($pairingCode);
 
         $em->persist($connection);
@@ -149,25 +140,46 @@ class PairingController extends AbstractController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function unlink(string $id, EntityManagerInterface $em): JsonResponse
     {
-        // Finds the connection by ID
-        $connection = $em->getRepository(GebruikerKoppelingen::class)->find($id);
-
-        if (!$connection) {
-            return $this->json(['error' => 'Koppeling niet gevonden.'], 404);
-        }
-
         /** @var Gebruikers $currentUser */
         $currentUser = $this->getUser();
 
-        // Authorization Rule:
-        // You can delete if you are the PATIENT (owner) OR the LINKED USER (leaving)
-        if ($connection->getGebruiker() !== $currentUser && $connection->getGekoppeldeGebruiker() !== $currentUser) {
-            return $this->json(['error' => 'Niet toegestaan.'], 403);
+        // 1. Fix UUID format if it is missing hyphens (32 chars)
+        if (preg_match('/^[a-f\d]{32}$/i', $id)) {
+            $id = sprintf('%s-%s-%s-%s-%s', substr($id, 0, 8), substr($id, 8, 4), substr($id, 12, 4), substr($id, 16, 4), substr($id, 20));
         }
 
+        // 2. Find the other user (Target)
+        $otherUser = $em->getRepository(Gebruikers::class)->find($id);
+        if (!$otherUser) {
+            return $this->json(['error' => 'User not found.'], 404);
+        }
+
+        $repo = $em->getRepository(GebruikerKoppelingen::class);
+
+        // 3. Search for the connection (Check both directions)
+
+        // Direction A: I am the Patient, removing the Therapist/Family
+        $connection = $repo->findOneBy([
+            'gebruiker' => $currentUser,
+            'gekoppelde_gebruiker' => $otherUser
+        ]);
+
+        // Direction B: I am the Therapist/Family, removing the Patient
+        if (!$connection) {
+            $connection = $repo->findOneBy([
+                'gebruiker' => $otherUser, // They are the patient
+                'gekoppelde_gebruiker' => $currentUser // I am the linked user
+            ]);
+        }
+
+        if (!$connection) {
+            return $this->json(['error' => 'No connection found with this user.'], 404);
+        }
+
+        // 4. Remove
         $em->remove($connection);
         $em->flush();
 
-        return $this->json(['message' => 'Koppeling verbroken.']);
+        return $this->json(['message' => 'Connection removed successfully.']);
     }
 }
