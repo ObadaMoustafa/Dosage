@@ -67,7 +67,7 @@ export default function DrawerMedicineEdit({
           <div className="relative">
             <DrawerHeader className="dialog-text-color">
               <DrawerTitle className="text-white/90">
-                Medicijn bewerken
+                Medicijn: {medicine.name}
               </DrawerTitle>
               <DrawerDescription className="text-white/50">
                 Pas de gegevens van dit medicijn aan

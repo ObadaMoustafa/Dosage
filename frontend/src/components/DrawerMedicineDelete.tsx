@@ -38,7 +38,7 @@ export default function DrawerMedicineDelete({
       </AlertDialogTrigger>
       <AlertDialogContent className="dialog-main">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-white/80">Medicijn verwijderen?</AlertDialogTitle>
+          <AlertDialogTitle className="text-white/80">{medicineName} verwijderen?</AlertDialogTitle>
           <AlertDialogDescription className="text-white/50">
             Hiermee verwijder je <strong>{medicineName}</strong> permanent uit je
             lijst. Deze actie kan niet ongedaan worden gemaakt.
