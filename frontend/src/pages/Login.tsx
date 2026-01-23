@@ -72,8 +72,8 @@ export default function Login() {
               />
             </div>
             <div className="auth-quote">
-              <p className="auth-quote-text">“Waar ben ik mee bezig?”</p>
-              <p className="auth-quote-author">- Josh 2026</p>
+              <p className="auth-quote-version">v0.1</p>
+              <p className="auth-quote-text">Welkom bij Turfje</p>
             </div>
           </div>
         </aside>
