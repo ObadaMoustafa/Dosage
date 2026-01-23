@@ -2,8 +2,29 @@
   min-height: 100%;
 }
 
+body {
+  font-family: 'Google Sans', sans-serif;
+}
+
 button {
   cursor: pointer;
+}
+
+.nobg {
+  background: none;
+  border: none;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.sidebar-dropdown {
+    background-color: #0d1225;
+    border: 1px solid #212c50;
+    color: #f4f4f5;
+}
+
+.hover:bg-none {
+  background: none;
 }
 
 .auth-card {
@@ -71,10 +92,10 @@ button {
   font-size: 1.5rem;
   font-weight: 600;
   color: #f4f4f5;
-  margin: 0 0 0.75rem;
+  margin: 0 0 0;
 }
 
-.auth-quote-author {
+.auth-quote-version {
   font-size: 0.875rem;
   color: #a1a1aa;
   margin: 0;
@@ -176,10 +197,9 @@ button {
 .dashboard-layout {
   min-height: 100vh;
   width: 100%;
-  color: var(--foreground);
   display: flex;
   align-items: stretch;
-  --background: oklch(0.13 0.028 261.692);
+  --background: #1b2441;
   --foreground: oklch(0.985 0.002 247.839);
   --card: oklch(0.21 0.034 264.665);
   --card-foreground: oklch(0.985 0.002 247.839);
@@ -193,6 +213,8 @@ button {
   --sidebar-accent-foreground: oklch(0.985 0.002 247.839);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 .logo {
@@ -204,112 +226,75 @@ button {
   margin: 0 auto;
 }
 
-.dashboard-brand {
-  text-transform: uppercase;
-  letter-spacing: 0.3em;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #d4d4d8;
-}
-
 .dashboard-inset {
-  background: linear-gradient(135deg, #09090b 0%, #18181b 50%, #09090b 100%);
-  color: #f4f4f5;
+  background: var(--background);
+  color: var(--foreground);
   flex: 1;
   min-width: 0;
 }
 
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #27272a;
-  background: rgba(9, 9, 11, 0.7);
-  backdrop-filter: blur(12px);
+.dashboard-main {
+  background: #2a3967;
+  border-top: 1px solid color-mix(in oklch, var(--border) 70%, white 30%);
 }
 
-.dashboard-header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.875rem;
-  color: #a1a1aa;
+.dialog-main {
+    background: #1b2441;
+    color: #f4f4f5;
+    border: #212c50 1px solid;
 }
 
-.dashboard-trigger {
-  color: #a1a1aa;
+.dialog-main-select {
+    background: #0d1225;
+    border: none;
+    color: #f4f4f5;
 }
 
-.dashboard-user-trigger {
-  display: inline-flex;
-  gap: 0.75rem;
-  align-items: center;
+.dialog-main-select-content {
+    background: #0d1225;
+    border: #212c50 1px solid;
+    color: #f4f4f5;
+}
+
+.dialog-main-button {
+  background: #0d1225;
+  border: #212c50 1px solid;
   color: #f4f4f5;
 }
 
-.dashboard-avatar {
-  height: 2.5rem;
-  width: 2.5rem;
-}
-
-.dashboard-user-text {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  font-size: 0.75rem;
-  color: #a1a1aa;
-}
-
-.dashboard-user-text span:first-child {
-  color: #f4f4f5;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.dashboard-menu {
-  background: #0f0f12;
-  border: 1px solid #27272a;
+.main-button {
+  background: #0d1225;
   color: #f4f4f5;
 }
 
-.dashboard-content {
-  padding: 2rem;
-}
-
-.dashboard-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.dashboard-heading h1 {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 600;
-}
-
-.dashboard-heading p {
-  margin: 0.25rem 0 0;
-  color: #a1a1aa;
-}
-
-.dashboard-stats {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.dashboard-stat-value {
-  display: block;
-  font-size: 2rem;
-  font-weight: 600;
+.main-button:hover {
+  background: #0d1225;
   color: #f4f4f5;
 }
 
-@media (min-width: 768px) {
-  .dashboard-stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+.main-button-nb {
+  background: #121933;
+  color: #f4f4f5;
+  border: none;
+}
+
+.main-button-nb:hover {
+  background: #151E3CFF;
+  color: #f4f4f5;
+}
+
+.dialog-text-color {
+    color: #f4f4f5;
+}
+
+.settings-card {
+  background-color: #1b2441;
+}
+
+.alert-dialog {
+  background-color: #1b2441;
+  color: #f4f4f5;
+  border: 1px solid #212c50;
 }
 
 .settings-grid {
