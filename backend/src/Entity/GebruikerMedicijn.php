@@ -21,9 +21,20 @@ class GebruikerMedicijn
     #[ORM\JoinColumn(nullable: false)]
     private ?Gebruikers $gebruiker = null;
 
-    // Just the name of the medicine (Plain Text)
     #[ORM\Column(length: 255)]
-    private ?string $medicijn = null;
+    private ?string $medicijn_naam = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $toedieningsvorm = null; // e.g. Pill, Syrup
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $sterkte = null; // e.g. 500mg
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $beschrijving = null; // Usage instructions
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $bijsluiter = null; // Leaflet info or notes
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $aangemaakt_op = null;
@@ -48,13 +59,53 @@ class GebruikerMedicijn
         return $this;
     }
 
-    public function getMedicijn(): ?string
+    public function getMedicijnNaam(): ?string
     {
-        return $this->medicijn;
+        return $this->medicijn_naam;
     }
-    public function setMedicijn(string $medicijn): static
+    public function setMedicijnNaam(string $medicijn_naam): static
     {
-        $this->medicijn = $medicijn;
+        $this->medicijn_naam = $medicijn_naam;
+        return $this;
+    }
+
+    public function getToedieningsvorm(): ?string
+    {
+        return $this->toedieningsvorm;
+    }
+    public function setToedieningsvorm(?string $toedieningsvorm): static
+    {
+        $this->toedieningsvorm = $toedieningsvorm;
+        return $this;
+    }
+
+    public function getSterkte(): ?string
+    {
+        return $this->sterkte;
+    }
+    public function setSterkte(?string $sterkte): static
+    {
+        $this->sterkte = $sterkte;
+        return $this;
+    }
+
+    public function getBeschrijving(): ?string
+    {
+        return $this->beschrijving;
+    }
+    public function setBeschrijving(?string $beschrijving): static
+    {
+        $this->beschrijving = $beschrijving;
+        return $this;
+    }
+
+    public function getBijsluiter(): ?string
+    {
+        return $this->bijsluiter;
+    }
+    public function setBijsluiter(?string $bijsluiter): static
+    {
+        $this->bijsluiter = $bijsluiter;
         return $this;
     }
 
