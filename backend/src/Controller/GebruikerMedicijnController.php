@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\Gebruikers;
 use App\Entity\GebruikerMedicijn;
-use App\Entity\GebruikerKoppelingen;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,40 +16,14 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class GebruikerMedicijnController extends AbstractController
 {
     #[Route('', methods: ['GET'])]
-    public function index(Request $request, EntityManagerInterface $em): JsonResponse
+    public function index(EntityManagerInterface $em): JsonResponse
     {
-        /** @var Gebruikers $currentUser */
-        $currentUser = $this->getUser();
+        /** @var Gebruikers $user */
+        $user = $this->getUser();
 
-        // Check if the requester wants to see another user's medicines (e.g. Therapist viewing Patient)
-        $targetUserId = $request->query->get('user_id');
-
-        if ($targetUserId) {
-            $targetUser = $em->getRepository(Gebruikers::class)->find($targetUserId);
-
-            if (!$targetUser) {
-                return $this->json(['error' => 'User not found.'], 404);
-            }
-
-            // SECURITY CHECK: Verify connection exists
-            // "Is there a link where Target is the Patient AND CurrentUser is the Connected User?"
-            $isLinked = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
-                'gebruiker' => $targetUser,          // Patient
-                'gekoppelde_gebruiker' => $currentUser // Therapist/Family
-            ]);
-
-            if (!$isLinked) {
-                return $this->json(['error' => 'Access denied. You are not connected to this user.'], 403);
-            }
-
-            $userToFetch = $targetUser;
-        } else {
-            // Default: User viewing their own medicines
-            $userToFetch = $currentUser;
-        }
-
+        // Fetch ONLY current user's medicines
         $medicines = $em->getRepository(GebruikerMedicijn::class)->findBy(
-            ['gebruiker' => $userToFetch],
+            ['gebruiker' => $user],
             ['aangemaakt_op' => 'DESC']
         );
 
@@ -61,14 +34,14 @@ class GebruikerMedicijnController extends AbstractController
             'sterkte' => $m->getSterkte(),
             'beschrijving' => $m->getBeschrijving(),
             'bijsluiter' => $m->getBijsluiter(),
-            'aangemaakt_op' => $m->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'added_at' => $m->getAangemaaktOp()->format('Y-m-d H:i:s'),
         ], $medicines);
 
         return $this->json($data);
     }
 
     #[Route('', methods: ['POST'])]
-    #[IsGranted('ROLE_PATIENT')] // Only patients can ADD medicines (for now)
+    #[IsGranted('ROLE_PATIENT')]
     public function add(Request $request, EntityManagerInterface $em): JsonResponse
     {
         /** @var Gebruikers $user */
@@ -98,52 +71,19 @@ class GebruikerMedicijnController extends AbstractController
         ]);
     }
 
-    // id => the row id.
-    #[Route('/{id}', methods: ['DELETE'])]
-    #[IsGranted('ROLE_PATIENT')] // Only patients can DELETE medicines
-    public function delete(string $id, EntityManagerInterface $em): JsonResponse
+    #[Route('/{id}', methods: ['GET'])]
+    public function show(string $id, EntityManagerInterface $em): JsonResponse
     {
-        /** @var Gebruikers $user */
-        $user = $this->getUser();
+        /** @var Gebruikers $currentUser */
+        $currentUser = $this->getUser();
 
         $med = $em->getRepository(GebruikerMedicijn::class)->findOneBy([
             'id' => $id,
-            'gebruiker' => $user
+            'gebruiker' => $currentUser // Force ownership check
         ]);
 
         if (!$med) {
             return $this->json(['error' => 'Medicijn niet gevonden.'], 404);
-        }
-
-        $em->remove($med);
-        $em->flush();
-
-        return $this->json(['message' => 'Medicijn verwijderd.']);
-    }
-
-    #[Route('/{id}', methods: ['GET'])]
-    public function show(string $id, EntityManagerInterface $em): JsonResponse
-    {
-        $med = $em->getRepository(GebruikerMedicijn::class)->find($id);
-
-        if (!$med) {
-            return $this->json(['error' => 'Medicijn niet gevonden.'], 404);
-        }
-
-        /** @var Gebruikers $currentUser */
-        $currentUser = $this->getUser();
-        $owner = $med->getGebruiker();
-
-        // Authorization: Allow if Owner OR Connected Therapist/Family
-        if ($owner !== $currentUser) {
-            $isLinked = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
-                'gebruiker' => $owner,
-                'gekoppelde_gebruiker' => $currentUser
-            ]);
-
-            if (!$isLinked) {
-                return $this->json(['error' => 'Geen toegang.'], 403);
-            }
         }
 
         return $this->json([
@@ -153,7 +93,7 @@ class GebruikerMedicijnController extends AbstractController
             'sterkte' => $med->getSterkte(),
             'beschrijving' => $med->getBeschrijving(),
             'bijsluiter' => $med->getBijsluiter(),
-            'aangemaaket_op' => $med->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'added_at' => $med->getAangemaaktOp()->format('Y-m-d H:i:s'),
         ]);
     }
 
@@ -173,12 +113,9 @@ class GebruikerMedicijnController extends AbstractController
         }
 
         // Case B: Medicine exists, but belongs to someone else
-        // We compare the User Object or User ID
         if ($med->getGebruiker() !== $currentUser) {
             return $this->json(['error' => 'Geen rechten om dit medicijn te bewerken.'], 403);
         }
-
-        // --- At this point, everything is valid ---
 
         // Update fields if present
         if (isset($data['medicijn_naam'])) {
@@ -203,5 +140,27 @@ class GebruikerMedicijnController extends AbstractController
             'message' => 'Medicijn succesvol bijgewerkt.',
             'id' => $med->getId()
         ]);
+    }
+
+    #[Route('/{id}', methods: ['DELETE'])]
+    #[IsGranted('ROLE_PATIENT')]
+    public function delete(string $id, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Gebruikers $user */
+        $user = $this->getUser();
+
+        $med = $em->getRepository(GebruikerMedicijn::class)->findOneBy([
+            'id' => $id,
+            'gebruiker' => $user
+        ]);
+
+        if (!$med) {
+            return $this->json(['error' => 'Medicijn niet gevonden.'], 404);
+        }
+
+        $em->remove($med);
+        $em->flush();
+
+        return $this->json(['message' => 'Medicijn verwijderd.']);
     }
 }

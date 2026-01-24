@@ -206,24 +206,25 @@ Alle endpoints geven JSON terug. Authenticatie vereist, tenzij anders aangegeven
 | ✅     | `/api/auth/me`              | GET     | Geauthenticeerd | Huidig gebruikersprofiel ophalen                       |
 | ✅     | `/api/auth/me`              | DELETE  | Geauthenticeerd | Account verwijderen                                    |
 
-## 👥 Gebruikersbeheer & Koppeling
+## 🔗 Gebruikers Koppelingen
 
-| Status | Endpoint                           | Methode | Rol                 | Beschrijving                    |
-| :----- | :--------------------------------- | :------ | :------------------ | :------------------------------ |
-| ✅     | `/api/pairing/code`                | POST    | Patiënt             | Unieke koppelcode genereren     |
-| ✅     | `/api/pairing/link`                | POST    | Behandelaar/Patiënt | Koppelen met patiënt via code   |
-| ✅     | `/api/pairing/unlink/{patient_id}` | DELETE  | Behandelaar/Patiënt | Koppeling met patiënt verbreken |
-| ✅     | `/api/pairing/patients`            | GET     | Behandelaar         | Lijst van gekoppelde patiënten  |
+| Status | Endpoint                   | Methode | Rol             | Beschrijving                                                   |
+| :----- | :------------------------- | :------ | :-------------- | :------------------------------------------------------------- |
+| ✅     | `/api/pairing/invite`      | POST    | ROLE_PATIENT    | Genereer koppelcode (15 min). Body: `{ "type": "THERAPIST" }`  |
+| ✅     | `/api/pairing/link`        | POST    | Geauthenticeerd | Account koppelen met code. Body: `{ "code": "12345" }`         |
+| ✅     | `/api/pairing/viewers`     | GET     | Geauthenticeerd | (Patiënt) Lijst van mensen die toegang hebben tot jouw dossier |
+| ✅     | `/api/pairing/subjects`    | GET     | Geauthenticeerd | (Behandelaar) Lijst van mensen die jij behandelt of volgt      |
+| ✅     | `/api/pairing/unlink/{id}` | DELETE  | Geauthenticeerd | Verbinding verbreken met een specifieke gebruiker              |
 
 ## 💊 Medicijnen
 
-| Status | Endpoint                  | Methode | Rol                  | Beschrijving                           |
-| :----- | :------------------------ | :------ | :------------------- | :------------------------------------- |
-| ❌     | `/api/medications/search` | GET     | Geauthenticeerd      | Zoeken in openbare medicijnen-database |
-| ❌     | `/api/medications/save`   | POST    | Patiënt/Behandelaar  | Medicijn opslaan in “Mijn Medicijnen”  |
-| ❌     | `/api/medications/mine`   | GET     | Patiënt/Behandelaar  | Opgeslagen medicijnen tonen            |
-| ❌     | `/api/medications/{id}`   | GET     | Geauthenticeerd      | Details van medicijn ophalen           |
-| ❌     | `/api/medications/{id}`   | DELETE  | Eigenaar/Behandelaar | Medicijn uit lijst verwijderen         |
+| Status | Endpoint                             | Methode | Rol             | Beschrijving                           |
+| :----- | :----------------------------------- | :------ | :-------------- | :------------------------------------- |
+| ✅     | `/api/medicines/search?q=<medicine>` | GET     | Geauthenticeerd | Zoeken in openbare medicijnen-database |
+| ✅     | `/api/my-medicines`                  | POST    | Patiënt         | Medicijn opslaan in “Mijn Medicijnen”  |
+| ✅     | `/api/my-medicines`                  | GET     | Patiënt         | Opgeslagen medicijnen tonen            |
+| ✅     | `/api/my-medicines/{id}`             | GET     | Patient         | Details van medicijn ophalen           |
+| ✅     | `/api/medications/{id}`              | DELETE  | Geauthenticeerd | Medicijn uit lijst verwijderen         |
 
 ## 🗓️ Schema’s & Turven
 

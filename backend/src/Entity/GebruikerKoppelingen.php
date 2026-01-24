@@ -13,7 +13,7 @@ class GebruikerKoppelingen
     public const ACCESS_READ = 'READ_ONLY';
     public const ACCESS_WRITE = 'FULL_ACCESS';
 
-    public const TYPE_FAMILY = 'FAMILY';
+    public const TYPE_TRUSTED = 'TRUSTED';
     public const TYPE_THERAPIST = 'THERAPIST';
 
     public const STATUS_ACTIVE = 'active';
