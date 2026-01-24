@@ -2,7 +2,10 @@
 curl -X POST http://127.0.0.1:8000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user1@test.com", "password":";lkj;lkj"}'
-
+# todo: GET my THERAPIST connections.
+# todo: GET my FAMILY connections.
+# todo: GET my patients. // {read_only, full_access}
+# todo: GET my people I care of. // {read_only}
 # generate a code for a doctor
 curl -X POST http://127.0.0.1:8000/api/pairing/code \
   -H "Authorization: Bearer YOUR_PATIENT_TOKEN" \
