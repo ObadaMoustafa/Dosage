@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownRight, LucidePillBottle, LucideTablets } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
+import {Separator} from "@/components/ui/separator.tsx";
 
 type RemainingMedsCardProps = {
   title: string;
@@ -41,8 +42,9 @@ export default function RemainingMedsCard({
             {nextDoseLabel}
           </span>
         </p>
+        <Separator className="mt-4 mb-0 pb-0" />
       </CardContent>
-      <CardFooter className="pt-3 flex justify-end">
+      <CardFooter className="my-0">
         <Button
           asChild
           className="inline-flex h-10 w-full items-center justify-center gap-1 rounded-half bg-[#141c33] text-xs text-muted-foreground hover:bg-[#1b2441]"

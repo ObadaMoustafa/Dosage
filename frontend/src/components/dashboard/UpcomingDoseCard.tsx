@@ -2,6 +2,7 @@ import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components
 import { LucideClock, LucidePillBottle, LucideTablets } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {Link} from "react-router-dom";
+import {Separator} from "@/components/ui/separator.tsx";
 
 type UpcomingDoseCardProps = {
   timeLabel: string;
@@ -39,8 +40,9 @@ export default function UpcomingDoseCard({
             {quantityLabel}
           </span>
         </p>
+        <Separator className="mt-4 mb-0 pb-0" />
       </CardContent>
-      <CardFooter className="pt-3">
+      <CardFooter className="my-0">
         <div className="grid w-full grid-cols-1 items-stretch gap-2 sm:grid-cols-3">
           <Button
             size="sm"
