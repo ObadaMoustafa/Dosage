@@ -1,13 +1,13 @@
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
 import {Separator} from "@/components/ui/separator.tsx";
-import DrawerMedicineEdit, { type MedicineRow } from "@/components/DrawerMedicineEdit";
-import DrawerMedicineDelete from "@/components/DrawerMedicineDelete";
+import { type MedicineRow } from "@/components/DrawerMedicineEdit";
 import DrawerMedicineCreate from "@/components/DrawerMedicineCreate";
-import { formatStockLabel, stockItems } from "@/data/stock";
+import MedicineTableRow from "@/components/MedicineTableRow";
+import { stockItems } from "@/data/stock";
 
 const medicines: MedicineRow[] = [
   {
@@ -99,38 +99,11 @@ export default function DashboardMedicines() {
             </TableHeader>
             <TableBody>
               {filteredMedicines.map((medicine) => (
-                <TableRow key={medicine.name}>
-                  <TableCell className="font-medium">
-                    {medicine.name}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {medicine.brand}
-                  </TableCell>
-                  <TableCell>{medicine.route}</TableCell>
-                  <TableCell>{medicine.strength}</TableCell>
-                  <TableCell>{medicine.description}</TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {medicine.stockId
-                      ? stockById.get(medicine.stockId)
-                        ? formatStockLabel(stockById.get(medicine.stockId)!)
-                        : "Onbekend"
-                      : "Niet gekoppeld"}
-                  </TableCell>
-                  <TableCell>
-                    <button
-                      type="button"
-                      className="text-xs text-white/80 underline-offset-4 hover:underline"
-                    >
-                      {medicine.leaflet}
-                    </button>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <DrawerMedicineEdit medicine={medicine} />
-                      <DrawerMedicineDelete medicineName={medicine.name} />
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <MedicineTableRow
+                  key={medicine.name}
+                  medicine={medicine}
+                  stockById={stockById}
+                />
               ))}
             </TableBody>
           </Table>

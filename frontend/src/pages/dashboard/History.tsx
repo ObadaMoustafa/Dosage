@@ -6,7 +6,6 @@ import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -18,15 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import HistoryTableRow, { type HistoryEntry } from '@/components/HistoryTableRow';
 import HistoryLineChart from '@/components/dashboard/HistoryLineChart';
-
-type HistoryEntry = {
-  id: string;
-  medicine: string;
-  details: string;
-  scheduledAt: string;
-  status: 'Op tijd' | 'Gemist';
-};
 
 const historyEntries: HistoryEntry[] = [
   {
@@ -198,24 +190,7 @@ export default function DashboardHistory() {
               </TableHeader>
               <TableBody>
                 {filteredEntries.map((entry) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-medium">{entry.medicine}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {entry.details}
-                    </TableCell>
-                    <TableCell>{entry.scheduledAt}</TableCell>
-                    <TableCell className="text-right">
-                      <span
-                        className={
-                          entry.status === 'Op tijd'
-                            ? 'text-green-400 text-xs font-semibold'
-                            : 'text-red-400 text-xs font-semibold'
-                        }
-                      >
-                        {entry.status}
-                      </span>
-                    </TableCell>
-                  </TableRow>
+                  <HistoryTableRow key={entry.id} entry={entry} />
                 ))}
               </TableBody>
             </Table>

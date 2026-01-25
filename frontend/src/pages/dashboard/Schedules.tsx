@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -12,10 +11,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Search } from "lucide-react";
 import DrawerScheduleCreate from "@/components/DrawerScheduleCreate";
-import DrawerScheduleDelete from "@/components/DrawerScheduleDelete";
-import DrawerScheduleEdit from "@/components/DrawerScheduleEdit";
+import ScheduleTableRow, { type ScheduleRow } from "@/components/ScheduleTableRow";
 
-const schedules = [
+const schedules: ScheduleRow[] = [
   {
     medicine: "Omeprazol 20mg",
     count: "1x",
@@ -108,21 +106,13 @@ export default function DashboardSchedules() {
                   schedule.times,
                 );
                 return (
-                <TableRow key={`${schedule.medicine}-${intervalLabel}`}>
-                  <TableCell className="font-medium">
-                    {schedule.medicine}
-                  </TableCell>
-                  <TableCell>{schedule.count}</TableCell>
-                  <TableCell>{schedule.description}</TableCell>
-                  <TableCell>{intervalLabel}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <DrawerScheduleEdit schedule={schedule} />
-                      <DrawerScheduleDelete scheduleLabel={schedule.medicine} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )})}
+                  <ScheduleTableRow
+                    key={`${schedule.medicine}-${intervalLabel}`}
+                    schedule={schedule}
+                    intervalLabel={intervalLabel}
+                  />
+                );
+              })}
             </TableBody>
           </Table>
 
