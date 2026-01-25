@@ -45,7 +45,7 @@ This document covers all implemented endpoints made till now.
 
 ## 💊 2. Medicines (Mijn Medicijnen)
 
-**Base URL:** `/api/medicines`
+**Base URL:** `/api/my-medicines`
 
 ### **2.1 Add Medicine**
 
@@ -67,7 +67,12 @@ This document covers all implemented endpoints made till now.
 - **Endpoint:** `GET /`
 - **Description:** Get a list of all medicines owned by the current user.
 
-### **2.3 Edit Medicine**
+### **2.3 Get a specific medicine**
+
+- **Endpoint:** `GET /{id}`
+- **Description:** Get a medicine by uuid.
+
+### **2.4 Edit Medicine**
 
 - **Endpoint:** `PUT /{id}`
 - **Body (JSON):**
@@ -82,9 +87,41 @@ This document covers all implemented endpoints made till now.
 }
 ```
 
-### **2.4 Delete Medicine**
+### **2.5 Delete Medicine**
 
 - **Endpoint:** `DELETE /{id}`
+
+---
+
+## ⚕️ 2.0.1 Medicines Storage (Medicijnen)
+
+**Base URL:** `/api/medicines`
+
+### **2.0.1.1 List All Medicines [ADMIN]**
+
+- **Endpoint:** `GET /`
+- **Description:** Get a list of all medicines in the Medicijnen.
+
+### **2.0.1.2 Add a medicine [ADMIN]**
+
+- **Endpoint:** `POST /add`
+- **Description:** Get a list of all medicines in the Medicijnen.
+- **Body (JSON - required):**
+
+```json
+{
+  "naam": "Paracetamol",
+  "toedieningsvorm": "drank",
+  "sterkte": "10 mg",
+  "beschrijving": "Pain reliever and fever reducer.",
+  "bijsluiter": "Take 1 tablet every 4-6 hours. Do not exceed 8 tablets in 24 hours."
+}
+```
+
+### **2.0.1.3 search a medicine [all_roles]**
+
+- **Endpoint:** `GET /search?q={med_name}`
+- **Description:** Get a list of all medicines in the Medicijnen.
 
 ---
 

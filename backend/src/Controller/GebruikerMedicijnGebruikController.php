@@ -93,7 +93,6 @@ class GebruikerMedicijnGebruikController extends AbstractController
     $targetPatientId = $request->query->get('patient_id');
     $targetUser = $currentUser;
 
-
     if ($targetPatientId && $targetPatientId !== $currentUser->getId()->toRfc4122()) {
       $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
         'gekoppelde_gebruiker' => $currentUser,
@@ -118,6 +117,7 @@ class GebruikerMedicijnGebruikController extends AbstractController
       ->orderBy('l.aangemaakt_op', 'DESC');
 
     // C. Filters
+    // by date
     if ($date = $request->query->get('date')) {
       $start = new \DateTime("{$date} 00:00:00");
       $end = new \DateTime("{$date} 23:59:59");
@@ -125,6 +125,7 @@ class GebruikerMedicijnGebruikController extends AbstractController
         ->setParameter('start', $start)
         ->setParameter('end', $end);
     }
+    // by date range
     if ($from = $request->query->get('from')) {
       $qb->andWhere('l.aangemaakt_op >= :from')
         ->setParameter('from', new \DateTime($from));
@@ -133,9 +134,11 @@ class GebruikerMedicijnGebruikController extends AbstractController
       $qb->andWhere('l.aangemaakt_op <= :to')
         ->setParameter('to', new \DateTime($to));
     }
+
+    // by gmn id.
     if ($gmnId = $request->query->get('gmn_id')) {
       $qb->andWhere('gm.id = :gmnId')
-        ->setParameter('gmnId', $gmnId);
+        ->setParameter('gmnId', $gmnId, 'uuid');
     }
 
     $logs = $qb->getQuery()->getResult();

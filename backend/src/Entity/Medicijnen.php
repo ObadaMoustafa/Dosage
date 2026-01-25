@@ -96,4 +96,14 @@ class Medicijnen
         $this->bijsluiter = $bijsluiter;
         return $this;
     }
+    public function getAangemaaktOp(): ?\DateTimeInterface
+    {
+        return $this->aangemaakt_op;
+    }
+
+    public function setAangemaaktOp(\DateTimeInterface $aangemaakt_op): static
+    {
+        $this->aangemaakt_op = $aangemaakt_op;
+        return $this;
+    }
 }
