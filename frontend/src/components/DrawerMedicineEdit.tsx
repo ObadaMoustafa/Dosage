@@ -21,13 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pencil, X } from "lucide-react";
+import { formatStockLabel, stockItems } from "@/data/stock";
 
 export type MedicineRow = {
   name: string;
+  brand: string;
   route: string;
   strength: string;
   description: string;
   leaflet: string;
+  stockId?: string;
 };
 
 type DrawerMedicineEditProps = {
@@ -36,6 +39,10 @@ type DrawerMedicineEditProps = {
 };
 
 const routeOptions = ["Oraal", "Anaal", "Spuit", "Anders"];
+const stockOptions = stockItems.map((item) => ({
+  id: item.id,
+  label: `${item.name} · ${formatStockLabel(item)}`,
+}));
 
 export default function DrawerMedicineEdit({
   medicine,
@@ -98,6 +105,17 @@ export default function DrawerMedicineEdit({
               </div>
 
               <div className="grid gap-2">
+                <Label className="text-white/80">Merk</Label>
+                <Input
+                  value={form.brand}
+                  onChange={(event) =>
+                    setForm((prev) => ({ ...prev, brand: event.target.value }))
+                  }
+                  className="bg-white/5 border-white/15 text-white/90"
+                />
+              </div>
+
+              <div className="grid gap-2">
                 <Label className="text-white/80">Toedieningsvorm</Label>
                 <Select
                   value={form.route}
@@ -116,6 +134,40 @@ export default function DrawerMedicineEdit({
                         className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
                       >
                         {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-white/80">Voorraad koppelen</Label>
+                <Select
+                  value={form.stockId ?? "none"}
+                  onValueChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      stockId: value === "none" ? undefined : value,
+                    }))
+                  }
+                >
+                  <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
+                    <SelectValue placeholder="Kies voorraad" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#141c33] text-foreground border-white/15">
+                    <SelectItem
+                      value="none"
+                      className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
+                    >
+                      Geen koppeling
+                    </SelectItem>
+                    {stockOptions.map((option) => (
+                      <SelectItem
+                        key={option.id}
+                        value={option.id}
+                        className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
+                      >
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
