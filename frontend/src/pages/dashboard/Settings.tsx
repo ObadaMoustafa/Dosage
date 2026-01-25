@@ -14,6 +14,18 @@ import { toast } from 'sonner';
 import { useAuth } from '@/auth/AuthProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -29,6 +41,13 @@ type ProfileForm = {
   lastName: string;
   email: string;
   avatarUrl?: string;
+};
+
+type ShareConnection = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 };
 
 export default function DashboardSettings() {
@@ -49,6 +68,25 @@ export default function DashboardSettings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false); // <-- Modal State
+  const [shareCode, setShareCode] = useState<string | null>(null);
+  const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [otpValue, setOtpValue] = useState('');
+  const [viewingUserId, setViewingUserId] = useState('self');
+  const [sharedWith, setSharedWith] = useState<ShareConnection[]>([
+    {
+      id: 'share-1',
+      name: 'Sanne de Vries',
+      email: 'sanne@voorbeeld.nl',
+      role: 'Zorgverlener',
+    },
+    {
+      id: 'share-2',
+      name: 'Mark Jansen',
+      email: 'mark@voorbeeld.nl',
+      role: 'Familie',
+    },
+  ]);
 
   useEffect(() => {
     if (auth.status !== 'authed') return;
@@ -200,6 +238,56 @@ export default function DashboardSettings() {
     }
   };
 
+  const handleGenerateShareCode = async () => {
+    setShareLoading(true);
+    try {
+      const code = `${Math.floor(100000 + Math.random() * 900000)}`;
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toLocaleTimeString(
+        'nl-NL',
+        {
+          hour: '2-digit',
+          minute: '2-digit',
+        },
+      );
+      setShareCode(code);
+      setShareExpiresAt(expiresAt);
+      toast.success('Deelcode gegenereerd');
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleConnectShare = async (event: FormEvent) => {
+    event.preventDefault();
+    if (otpValue.length !== 6) {
+      toast.error('Vul de 6-cijferige code in.');
+      return;
+    }
+    toast.success('Verbinding gemaakt (demo).');
+    setOtpValue('');
+  };
+
+  const handleRemoveShare = async (shareId: string) => {
+    setSharedWith((prev) => prev.filter((item) => item.id !== shareId));
+  };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('turfje:viewing-user');
+    if (stored) {
+      setViewingUserId(stored);
+    }
+  }, []);
+
+  const handleViewingUserChange = (nextValue: string) => {
+    setViewingUserId(nextValue);
+    localStorage.setItem('turfje:viewing-user', nextValue);
+  };
+
+  const viewingOptions = [
+    { id: 'self', label: 'Jij' },
+    ...sharedWith.map((share) => ({ id: share.id, label: share.name })),
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -346,6 +434,145 @@ export default function DashboardSettings() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Share Card */}
+        <Card className="bg-[#1b2441] border-border/60">
+          <CardHeader>
+            <CardTitle>Delen</CardTitle>
+            <CardDescription>
+              Geef iemand toegang tot jouw schema&apos;s en historie via een
+              tijdelijke code.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
+              <div>
+                <p className="text-sm font-medium">Bekijken</p>
+                <p className="text-xs text-muted-foreground">
+                  Kies wiens overzicht je wilt zien. Dit geldt voor je sessie.
+                </p>
+              </div>
+              <Select value={viewingUserId} onValueChange={handleViewingUserChange}>
+                <SelectTrigger className="bg-background/10 border-border/60 md:w-60">
+                  <SelectValue placeholder="Kies gebruiker" />
+                </SelectTrigger>
+                <SelectContent>
+                  {viewingOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-medium">Deelcode</p>
+                  <p className="text-xs text-muted-foreground">
+                    Code verloopt na 10 minuten.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleGenerateShareCode}
+                  disabled={shareLoading}
+                >
+                  {shareLoading ? 'Genereren...' : 'Genereer code'}
+                </Button>
+              </div>
+              {shareCode ? (
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div className="text-2xl font-semibold tracking-[0.3em]">
+                    {shareCode}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Geldig tot {shareExpiresAt}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Nog geen actieve code.
+                </div>
+              )}
+            </div>
+
+            <form
+              className="rounded-md border border-white/10 bg-white/5 p-4 space-y-3"
+              onSubmit={handleConnectShare}
+            >
+              <div>
+                <p className="text-sm font-medium">Koppel met code</p>
+                <p className="text-xs text-muted-foreground">
+                  Vul een 6-cijferige code in om te koppelen.
+                </p>
+              </div>
+              <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                <InputOTPGroup>
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <InputOTPSlot key={index} index={index} />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+              <div>
+                <Button type="submit" disabled={otpValue.length !== 6}>
+                  Verbinden
+                </Button>
+              </div>
+            </form>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Gedeeld met</p>
+                  <p className="text-xs text-muted-foreground">
+                    Beheer wie jouw data kan bekijken.
+                  </p>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {sharedWith.length} koppelingen
+                </span>
+              </div>
+              {sharedWith.length === 0 ? (
+                <div className="rounded-md border border-white/10 bg-white/5 p-4 text-sm text-muted-foreground">
+                  Nog geen koppelingen.
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {sharedWith.map((share) => (
+                    <div
+                      key={share.id}
+                      className="flex flex-col gap-3 rounded-md border border-white/10 bg-white/5 p-4 md:flex-row md:items-center md:justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage />
+                          <AvatarFallback>
+                            {`${share.name?.[0] ?? ''}${share.name?.split(' ')[1]?.[0] ?? ''}`.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium">{share.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {share.email} · {share.role}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="main-button-nb"
+                        onClick={() => handleRemoveShare(share.id)}
+                      >
+                        Verwijderen
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

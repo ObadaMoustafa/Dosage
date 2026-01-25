@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import QuickMedicineUse from '@/components/QuickMedicineUse';
@@ -18,6 +18,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import {
   Sidebar,
@@ -49,6 +56,7 @@ export default function DashboardLayout() {
   const location = useLocation();
   const isMobile = useIsMobile();
   const pathname = location.pathname;
+  const [viewingUserId, setViewingUserId] = useState('self');
 
   const user =
     auth.status === 'authed'
@@ -69,6 +77,26 @@ export default function DashboardLayout() {
     targetPath === '/dashboard'
       ? pathname === targetPath
       : pathname.startsWith(targetPath);
+  const viewingOptions = useMemo(
+    () => [
+      { id: 'self', label: 'Jij' },
+      { id: 'share-1', label: 'Sanne de Vries' },
+      { id: 'share-2', label: 'Mark Jansen' },
+    ],
+    [],
+  );
+  const storageKey = 'turfje:viewing-user';
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored && viewingOptions.some((option) => option.id === stored)) {
+      setViewingUserId(stored);
+    }
+  }, [viewingOptions]);
+  useEffect(() => {
+    localStorage.setItem(storageKey, viewingUserId);
+  }, [viewingUserId]);
+  const viewingLabel =
+    viewingOptions.find((option) => option.id === viewingUserId)?.label ?? 'Jij';
 
   return (
     <SidebarProvider className="dashboard-layout min-h-svh">
@@ -209,7 +237,29 @@ export default function DashboardLayout() {
             </Breadcrumb>
           </div>
 
-          <QuickMedicineUse />
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 md:flex">
+              <span className="text-xs text-muted-foreground">Profielen:</span>
+              <Select value={viewingUserId} onValueChange={setViewingUserId}>
+                <SelectTrigger className="h-9 w-44 bg-background/10 border-border/60">
+                  <SelectValue placeholder="Kies gebruiker" />
+                </SelectTrigger>
+                <SelectContent>
+                  {viewingOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {viewingUserId !== 'self' && (
+              <span className="hidden rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-muted-foreground md:inline-flex">
+                Alleen lezen: {viewingLabel}
+              </span>
+            )}
+            <QuickMedicineUse />
+          </div>
         </header>
 
         <main className="dashboard-main flex flex-1 flex-col gap-6 p-6">
