@@ -45,7 +45,7 @@ export default function RemainingMedsCard({
       <CardFooter className="pt-3 flex justify-end">
         <Button
           asChild
-          className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground"
+          className="inline-flex h-10 w-full items-center justify-center gap-1 rounded-half bg-[#141c33] text-xs text-muted-foreground hover:bg-[#1b2441]"
         >
           <Link to="/dashboard/inventory">Ga naar voorraad</Link>
         </Button>
