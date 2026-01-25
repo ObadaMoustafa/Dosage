@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LucidePillBottle } from "lucide-react";
@@ -41,8 +42,11 @@ export default function HistoryCard({ items }: HistoryCardProps) {
         </ul>
       </CardContent>
       <CardFooter className="pt-3 flex justify-end">
-        <Button className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground">
-          Ga naar Historie
+        <Button
+          asChild
+          className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground"
+        >
+          <Link to="/history">Ga naar Historie</Link>
         </Button>
       </CardFooter>
     </Card>

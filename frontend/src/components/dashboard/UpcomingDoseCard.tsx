@@ -1,6 +1,7 @@
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import { LucideClock, LucidePillBottle, LucideTablets } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
+import {Link} from "react-router-dom";
 
 type UpcomingDoseCardProps = {
   timeLabel: string;
@@ -40,8 +41,11 @@ export default function UpcomingDoseCard({
         </p>
       </CardContent>
       <CardFooter className="pt-3 flex justify-end">
-        <Button className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground">
-          Ga naar Schema's
+        <Button
+            asChild
+            className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground"
+        >
+          <Link to="/schedules">Ga naar Schema's</Link>
         </Button>
       </CardFooter>
     </Card>

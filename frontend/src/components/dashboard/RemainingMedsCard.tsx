@@ -1,6 +1,7 @@
-import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownRight, LucidePillBottle, LucideTablets } from "lucide-react";
-import {Button} from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 type RemainingMedsCardProps = {
   title: string;
@@ -42,8 +43,11 @@ export default function RemainingMedsCard({
         </p>
       </CardContent>
       <CardFooter className="pt-3 flex justify-end">
-        <Button className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground">
-          Ga naar voorraad
+        <Button
+          asChild
+          className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground"
+        >
+          <Link to="/dashboard/inventory">Ga naar voorraad</Link>
         </Button>
       </CardFooter>
     </Card>

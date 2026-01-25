@@ -20,8 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
+import { formatStockLabel, stockItems } from "@/data/stock";
 
 const routeOptions = ["Oraal", "Anaal", "Spuit", "Anders"];
+const stockOptions = stockItems.map((item) => ({
+  id: item.id,
+  label: `${item.name} · ${formatStockLabel(item)}`,
+}));
 
 export default function DrawerMedicineCreate() {
   return (
@@ -55,6 +60,14 @@ export default function DrawerMedicineCreate() {
           <div className="space-y-6 px-4 pb-4">
             <div className="space-y-4">
               <div className="grid gap-2">
+                <Label className="text-white/80">Merk</Label>
+                <Input
+                  placeholder="Bijv. Kruidvat of apotheek"
+                  className="bg-white/5 border-white/15 text-white/90"
+                />
+              </div>
+
+              <div className="grid gap-2">
                 <Label className="text-white/80">Toedieningsvorm</Label>
                 <Select>
                   <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
@@ -68,6 +81,32 @@ export default function DrawerMedicineCreate() {
                         className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
                       >
                         {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-white/80">Voorraad koppelen</Label>
+                <Select>
+                  <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
+                    <SelectValue placeholder="Kies voorraad" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#141c33] text-foreground border-white/15">
+                    <SelectItem
+                      value="none"
+                      className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
+                    >
+                      Geen koppeling
+                    </SelectItem>
+                    {stockOptions.map((option) => (
+                      <SelectItem
+                        key={option.id}
+                        value={option.id}
+                        className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
+                      >
+                        {option.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

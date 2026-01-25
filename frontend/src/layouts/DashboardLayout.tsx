@@ -1,56 +1,54 @@
+import { Fragment } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
-import { useIsMobile } from '@/hooks/use-mobile';
-import QuickMedicineUse from "@/components/QuickMedicineUse";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import QuickMedicineUse from '@/components/QuickMedicineUse';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
-import { Fragment, useEffect, useState } from 'react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-
-//^ 1. Sidebar Navigation Configuration
-const sidebarPaths = [
-  {
-    text: 'Overzicht',
-    icon: 'fas fa-home',
-    path: '/dashboard'
-  },
-  {
-    text: 'Medicijnen',
-    icon: 'fas fa-pills',
-    path: '/medicines'
-  },
-  {
-    text: 'Schema\'s',
-    icon: 'fas fa-calendar-check',
-    path: '/schedules'
-  },
-  {
-    text: 'Historie',
-    icon: 'fas fa-history',
-    path: '/history'
-  }
-];
-
-//^ 2. User Dropdown Menu Configuration (Add your profile links here)
-const userMenuPaths = [
-  {
-    text: 'Profiel',
-    icon: 'fas fa-user',
-    path: '/dashboard/settings'
-  },
-];
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  getBreadcrumbItems,
+  settingsPaths,
+  sidebarPaths,
+  userMenuPaths,
+} from '@/layouts/dashboardConfig';
 
 export default function DashboardLayout() {
   const { auth, logout } = useAuth();
   const navigate = useNavigate();
-  const [path, setPath] = useState<string>('');
   const location = useLocation();
   const isMobile = useIsMobile();
-  useEffect(() => {
-    setPath(location.pathname);
-  }, [location]);
+  const pathname = location.pathname;
 
   const user =
     auth.status === 'authed'
@@ -66,37 +64,11 @@ export default function DashboardLayout() {
     navigate('/login');
   };
 
-  const breadcrumbItems = (() => {
-    const base = { label: "Dashboard", href: "/dashboard" };
-    if (location.pathname === "/dashboard") {
-      return [{ ...base, current: true }];
-    }
-    if (location.pathname.startsWith("/medicines")) {
-      return [
-        { ...base },
-        { label: "Medicijnen", href: "/medicines", current: true },
-      ];
-    }
-    if (location.pathname.startsWith("/schedules")) {
-      return [
-        { ...base },
-        { label: "Schema's", href: "/schedules", current: true },
-      ];
-    }
-    if (location.pathname.startsWith("/history")) {
-      return [
-        { ...base },
-        { label: "Historie", href: "/history", current: true },
-      ];
-    }
-    if (location.pathname.startsWith("/dashboard/settings")) {
-      return [
-        { ...base },
-        { label: "Instellingen", href: "/dashboard/settings", current: true },
-      ];
-    }
-    return [{ ...base, current: true }];
-  })();
+  const breadcrumbItems = getBreadcrumbItems(pathname);
+  const isActivePath = (targetPath: string) =>
+    targetPath === '/dashboard'
+      ? pathname === targetPath
+      : pathname.startsWith(targetPath);
 
   return (
     <SidebarProvider className="dashboard-layout min-h-svh">
@@ -121,9 +93,12 @@ export default function DashboardLayout() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {/* Rendering Sidebar Items Automatically */}
-                {sidebarPaths.map((item, index) => (
-                  <SidebarMenuItem key={index}>
-                    <MobileAwareNavLink to={item.path} isActive={path === item.path}>
+                {sidebarPaths.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <MobileAwareNavLink
+                      to={item.path}
+                      isActive={isActivePath(item.path)}
+                    >
                       <span className={item.icon} aria-hidden="true" />
                       {item.text}
                     </MobileAwareNavLink>
@@ -136,12 +111,17 @@ export default function DashboardLayout() {
             <SidebarGroupLabel>Instellingen</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                    <SidebarMenuItem>
-                      <MobileAwareNavLink to='/dashboard/settings' isActive={path === '/dashboard/settings'}>
-                        <span className='fas fa-cog' aria-hidden="true" />
-                        Instellingen
-                      </MobileAwareNavLink>
-                    </SidebarMenuItem>
+                {settingsPaths.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <MobileAwareNavLink
+                      to={item.path}
+                      isActive={isActivePath(item.path)}
+                    >
+                      <span className={item.icon} aria-hidden="true" />
+                      {item.text}
+                    </MobileAwareNavLink>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -181,9 +161,9 @@ export default function DashboardLayout() {
                   </div>
                   <DropdownMenuSeparator className="bg-white/20" />
 
-                  {userMenuPaths.map((item, index) => (
+                  {userMenuPaths.map((item) => (
                     <DropdownMenuItem
-                      key={index}
+                      key={item.path}
                       className="cursor-pointer"
                       onClick={() => navigate(item.path)}
                     >
