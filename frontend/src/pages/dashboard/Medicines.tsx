@@ -4,23 +4,53 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search } from "lucide-react";
 import {Separator} from "@/components/ui/separator.tsx";
-import DrawerMedicineEdit from "@/components/DrawerMedicineEdit";
+import DrawerMedicineEdit, { type MedicineRow } from "@/components/DrawerMedicineEdit";
 import DrawerMedicineDelete from "@/components/DrawerMedicineDelete";
 import DrawerMedicineCreate from "@/components/DrawerMedicineCreate";
+import { formatStockLabel, stockItems } from "@/data/stock";
 
-const medicines = [
-  { name: "Omeprazol", route: "Oraal", strength: "20mg", description: "Tegen maagzuur", leaflet: "Klik voor bijsluiter" },
-  { name: "Paracetamol", route: "Oraal", strength: "500/50mg", description: "Generiek gebruik", leaflet: "Klik voor bijsluiter" },
-  { name: "Ibuprofen", route: "Oraal", strength: "250mg", description: "Generiek gebruik", leaflet: "Klik voor bijsluiter" },
+const medicines: MedicineRow[] = [
+  {
+    name: "Omeprazol",
+    brand: "Apotheek",
+    route: "Oraal",
+    strength: "20mg",
+    description: "Tegen maagzuur",
+    leaflet: "Klik voor bijsluiter",
+    stockId: "stock-2",
+  },
+  {
+    name: "Paracetamol",
+    brand: "Kruidvat",
+    route: "Oraal",
+    strength: "500/50mg",
+    description: "Generiek gebruik",
+    leaflet: "Klik voor bijsluiter",
+    stockId: "stock-1",
+  },
+  {
+    name: "Ibuprofen",
+    brand: "Apotheek",
+    route: "Oraal",
+    strength: "250mg",
+    description: "Generiek gebruik",
+    leaflet: "Klik voor bijsluiter",
+    stockId: "stock-3",
+  },
 ];
 
 export default function DashboardMedicines() {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const stockById = React.useMemo(
+    () => new Map(stockItems.map((item) => [item.id, item])),
+    [],
+  );
   const filteredMedicines = medicines.filter((medicine) => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
     return (
       medicine.name.toLowerCase().includes(query) ||
+      medicine.brand.toLowerCase().includes(query) ||
       medicine.route.toLowerCase().includes(query) ||
       medicine.strength.toLowerCase().includes(query) ||
       medicine.description.toLowerCase().includes(query)
@@ -58,9 +88,11 @@ export default function DashboardMedicines() {
             <TableHeader>
               <TableRow>
                 <TableHead>Medicijn</TableHead>
+                <TableHead>Merk</TableHead>
                 <TableHead>Toedieningsvorm</TableHead>
                 <TableHead>Sterkte</TableHead>
                 <TableHead>Beschrijving</TableHead>
+                <TableHead>Voorraad</TableHead>
                 <TableHead>Bijsluiter</TableHead>
                 <TableHead className="text-right">Acties</TableHead>
               </TableRow>
@@ -71,9 +103,19 @@ export default function DashboardMedicines() {
                   <TableCell className="font-medium">
                     {medicine.name}
                   </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {medicine.brand}
+                  </TableCell>
                   <TableCell>{medicine.route}</TableCell>
                   <TableCell>{medicine.strength}</TableCell>
                   <TableCell>{medicine.description}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {medicine.stockId
+                      ? stockById.get(medicine.stockId)
+                        ? formatStockLabel(stockById.get(medicine.stockId)!)
+                        : "Onbekend"
+                      : "Niet gekoppeld"}
+                  </TableCell>
                   <TableCell>
                     <button
                       type="button"

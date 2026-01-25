@@ -1,6 +1,8 @@
 import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card";
 import { LucideClock, LucidePillBottle, LucideTablets } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
+import {Link} from "react-router-dom";
+import {Separator} from "@/components/ui/separator.tsx";
 
 type UpcomingDoseCardProps = {
   timeLabel: string;
@@ -38,11 +40,29 @@ export default function UpcomingDoseCard({
             {quantityLabel}
           </span>
         </p>
+        <Separator className="mt-4 mb-0 pb-0" />
       </CardContent>
-      <CardFooter className="pt-3 flex justify-end">
-        <Button className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground">
-          Ga naar Schema's
-        </Button>
+      <CardFooter className="my-0">
+        <div className="grid w-full grid-cols-1 items-stretch gap-2 sm:grid-cols-3">
+          <Button
+            size="sm"
+            className="h-10 w-full bg-green-500/15 text-green-200 hover:bg-green-500/25"
+          >
+            Ingenomen
+          </Button>
+          <Button
+            size="sm"
+            className="h-10 w-full bg-red-500/15 text-red-200 hover:bg-red-500/25"
+          >
+            Gemist
+          </Button>
+          <Button
+            asChild
+            className="inline-flex h-10 w-full items-center justify-center gap-1 rounded-half bg-[#141c33] text-xs text-muted-foreground hover:bg-[#1b2441]"
+          >
+            <Link to="/schedules">Ga naar Schema's</Link>
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

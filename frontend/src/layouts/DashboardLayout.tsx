@@ -1,56 +1,62 @@
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
-import { useIsMobile } from '@/hooks/use-mobile';
-import QuickMedicineUse from "@/components/QuickMedicineUse";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import QuickMedicineUse from '@/components/QuickMedicineUse';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
-import { Fragment, useEffect, useState } from 'react';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-
-//^ 1. Sidebar Navigation Configuration
-const sidebarPaths = [
-  {
-    text: 'Overzicht',
-    icon: 'fas fa-home',
-    path: '/dashboard'
-  },
-  {
-    text: 'Medicijnen',
-    icon: 'fas fa-pills',
-    path: '/medicines'
-  },
-  {
-    text: 'Schema\'s',
-    icon: 'fas fa-calendar-check',
-    path: '/schedules'
-  },
-  {
-    text: 'Historie',
-    icon: 'fas fa-history',
-    path: '/history'
-  }
-];
-
-//^ 2. User Dropdown Menu Configuration (Add your profile links here)
-const userMenuPaths = [
-  {
-    text: 'Profiel',
-    icon: 'fas fa-user',
-    path: '/dashboard/settings'
-  },
-];
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  getBreadcrumbItems,
+  settingsPaths,
+  sidebarPaths,
+  userMenuPaths,
+} from '@/layouts/dashboardConfig';
 
 export default function DashboardLayout() {
   const { auth, logout } = useAuth();
   const navigate = useNavigate();
-  const [path, setPath] = useState<string>('');
   const location = useLocation();
   const isMobile = useIsMobile();
-  useEffect(() => {
-    setPath(location.pathname);
-  }, [location]);
+  const pathname = location.pathname;
+  const [viewingUserId, setViewingUserId] = useState('self');
 
   const user =
     auth.status === 'authed'
@@ -66,37 +72,31 @@ export default function DashboardLayout() {
     navigate('/login');
   };
 
-  const breadcrumbItems = (() => {
-    const base = { label: "Dashboard", href: "/dashboard" };
-    if (location.pathname === "/dashboard") {
-      return [{ ...base, current: true }];
+  const breadcrumbItems = getBreadcrumbItems(pathname);
+  const isActivePath = (targetPath: string) =>
+    targetPath === '/dashboard'
+      ? pathname === targetPath
+      : pathname.startsWith(targetPath);
+  const viewingOptions = useMemo(
+    () => [
+      { id: 'self', label: 'Jij' },
+      { id: 'share-1', label: 'Sanne de Vries' },
+      { id: 'share-2', label: 'Mark Jansen' },
+    ],
+    [],
+  );
+  const storageKey = 'turfje:viewing-user';
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey);
+    if (stored && viewingOptions.some((option) => option.id === stored)) {
+      setViewingUserId(stored);
     }
-    if (location.pathname.startsWith("/medicines")) {
-      return [
-        { ...base },
-        { label: "Medicijnen", href: "/medicines", current: true },
-      ];
-    }
-    if (location.pathname.startsWith("/schedules")) {
-      return [
-        { ...base },
-        { label: "Schema's", href: "/schedules", current: true },
-      ];
-    }
-    if (location.pathname.startsWith("/history")) {
-      return [
-        { ...base },
-        { label: "Historie", href: "/history", current: true },
-      ];
-    }
-    if (location.pathname.startsWith("/dashboard/settings")) {
-      return [
-        { ...base },
-        { label: "Instellingen", href: "/dashboard/settings", current: true },
-      ];
-    }
-    return [{ ...base, current: true }];
-  })();
+  }, [viewingOptions]);
+  useEffect(() => {
+    localStorage.setItem(storageKey, viewingUserId);
+  }, [viewingUserId]);
+  const viewingLabel =
+    viewingOptions.find((option) => option.id === viewingUserId)?.label ?? 'Jij';
 
   return (
     <SidebarProvider className="dashboard-layout min-h-svh">
@@ -121,9 +121,12 @@ export default function DashboardLayout() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {/* Rendering Sidebar Items Automatically */}
-                {sidebarPaths.map((item, index) => (
-                  <SidebarMenuItem key={index}>
-                    <MobileAwareNavLink to={item.path} isActive={path === item.path}>
+                {sidebarPaths.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <MobileAwareNavLink
+                      to={item.path}
+                      isActive={isActivePath(item.path)}
+                    >
                       <span className={item.icon} aria-hidden="true" />
                       {item.text}
                     </MobileAwareNavLink>
@@ -136,12 +139,17 @@ export default function DashboardLayout() {
             <SidebarGroupLabel>Instellingen</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                    <SidebarMenuItem>
-                      <MobileAwareNavLink to='/dashboard/settings' isActive={path === '/dashboard/settings'}>
-                        <span className='fas fa-cog' aria-hidden="true" />
-                        Instellingen
-                      </MobileAwareNavLink>
-                    </SidebarMenuItem>
+                {settingsPaths.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <MobileAwareNavLink
+                      to={item.path}
+                      isActive={isActivePath(item.path)}
+                    >
+                      <span className={item.icon} aria-hidden="true" />
+                      {item.text}
+                    </MobileAwareNavLink>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -181,9 +189,9 @@ export default function DashboardLayout() {
                   </div>
                   <DropdownMenuSeparator className="bg-white/20" />
 
-                  {userMenuPaths.map((item, index) => (
+                  {userMenuPaths.map((item) => (
                     <DropdownMenuItem
-                      key={index}
+                      key={item.path}
                       className="cursor-pointer"
                       onClick={() => navigate(item.path)}
                     >
@@ -229,7 +237,29 @@ export default function DashboardLayout() {
             </Breadcrumb>
           </div>
 
-          <QuickMedicineUse />
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 md:flex">
+              <span className="text-xs text-muted-foreground">Profielen:</span>
+              <Select value={viewingUserId} onValueChange={setViewingUserId}>
+                <SelectTrigger className="h-9 w-44 bg-background/10 border-border/60">
+                  <SelectValue placeholder="Kies gebruiker" />
+                </SelectTrigger>
+                <SelectContent>
+                  {viewingOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {viewingUserId !== 'self' && (
+              <span className="hidden rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-muted-foreground md:inline-flex">
+                Alleen lezen: {viewingLabel}
+              </span>
+            )}
+            <QuickMedicineUse />
+          </div>
         </header>
 
         <main className="dashboard-main flex flex-1 flex-col gap-6 p-6">

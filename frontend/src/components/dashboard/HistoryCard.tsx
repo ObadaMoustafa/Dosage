@@ -1,6 +1,8 @@
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LucidePillBottle } from "lucide-react";
+import {Separator} from "@/components/ui/separator.tsx";
 
 type HistoryItem = {
   id: string;
@@ -39,10 +41,14 @@ export default function HistoryCard({ items }: HistoryCardProps) {
             </li>
           ))}
         </ul>
+          <Separator className="mt-4 mb-0 pb-0" />
       </CardContent>
-      <CardFooter className="pt-3 flex justify-end">
-        <Button className="inline-flex items-center gap-1 rounded-half border px-2 py-0 text-xs font-semibold text-muted-foreground">
-          Ga naar Historie
+        <CardFooter className="my-0">
+        <Button
+          asChild
+          className="inline-flex h-10 w-full items-center justify-center gap-1 rounded-half bg-[#141c33] text-xs text-muted-foreground hover:bg-[#1b2441]"
+        >
+          <Link to="/history">Ga naar Historie</Link>
         </Button>
       </CardFooter>
     </Card>
