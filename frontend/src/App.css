@@ -231,6 +231,14 @@ button {
   color: var(--foreground);
 }
 
+.dashboard-layout [data-sidebar="menu-button"][data-active="true"] {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.dashboard-layout [data-sidebar="menu-button"]:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .logo {
   width: 100%;
   max-width: 96px;

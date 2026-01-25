@@ -36,6 +36,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 type ProfileForm = {
   firstName: string;
   lastName: string;
@@ -71,6 +80,10 @@ export default function DashboardSettings() {
   const [shareCode, setShareCode] = useState<string | null>(null);
   const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
+  const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
+  const [shareRole, setShareRole] = useState<'Zorgverlener' | 'Vertrouweling' | null>(
+    null,
+  );
   const [otpValue, setOtpValue] = useState('');
   const [viewingUserId, setViewingUserId] = useState('self');
   const [sharedWith, setSharedWith] = useState<ShareConnection[]>([
@@ -238,7 +251,9 @@ export default function DashboardSettings() {
     }
   };
 
-  const handleGenerateShareCode = async () => {
+  const handleGenerateShareCode = async (
+    role: 'Zorgverlener' | 'Vertrouweling',
+  ) => {
     setShareLoading(true);
     try {
       const code = `${Math.floor(100000 + Math.random() * 900000)}`;
@@ -249,12 +264,20 @@ export default function DashboardSettings() {
           minute: '2-digit',
         },
       );
+      setShareRole(role);
       setShareCode(code);
       setShareExpiresAt(expiresAt);
       toast.success('Deelcode gegenereerd');
     } finally {
       setShareLoading(false);
     }
+  };
+
+  const handleShareRoleSelect = async (
+    role: 'Zorgverlener' | 'Vertrouweling',
+  ) => {
+    await handleGenerateShareCode(role);
+    setShareDrawerOpen(false);
   };
 
   const handleConnectShare = async (event: FormEvent) => {
@@ -477,7 +500,7 @@ export default function DashboardSettings() {
                 </div>
                 <Button
                   type="button"
-                  onClick={handleGenerateShareCode}
+                  onClick={() => setShareDrawerOpen(true)}
                   disabled={shareLoading}
                 >
                   {shareLoading ? 'Genereren...' : 'Genereer code'}
@@ -489,6 +512,7 @@ export default function DashboardSettings() {
                     {shareCode}
                   </div>
                   <div className="text-xs text-muted-foreground">
+                    {shareRole ? `Voor: ${shareRole} · ` : ''}
                     Geldig tot {shareExpiresAt}
                   </div>
                 </div>
@@ -498,6 +522,47 @@ export default function DashboardSettings() {
                 </div>
               )}
             </div>
+            <Drawer open={shareDrawerOpen} onOpenChange={setShareDrawerOpen}>
+              <DrawerContent className="dialog-main sm:left-1/2 sm:right-auto sm:w-lg sm:-translate-x-1/2">
+                <div className="mx-auto w-full max-w-xl pb-2">
+                  <DrawerHeader className="dialog-text-color">
+                    <DrawerTitle className="text-white/90">
+                      Voor wie wil je een code genereren?
+                    </DrawerTitle>
+                    <DrawerDescription className="text-white/50">
+                      Kies de rol om een tijdelijke deelcode aan te maken.
+                    </DrawerDescription>
+                  </DrawerHeader>
+                  <div className="px-4 pb-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Button
+                        type="button"
+                        className="bg-white/10 text-white/90 hover:bg-white/20"
+                        disabled={shareLoading}
+                        onClick={() => handleShareRoleSelect('Zorgverlener')}
+                      >
+                        Zorgverlener
+                      </Button>
+                      <Button
+                        type="button"
+                        className="bg-white/10 text-white/90 hover:bg-white/20"
+                        disabled={shareLoading}
+                        onClick={() => handleShareRoleSelect('Vertrouweling')}
+                      >
+                        Vertrouweling
+                      </Button>
+                    </div>
+                  </div>
+                  <DrawerFooter>
+                    <DrawerClose asChild>
+                      <Button variant="outline" className="main-button-nb">
+                        Annuleren
+                      </Button>
+                    </DrawerClose>
+                  </DrawerFooter>
+                </div>
+              </DrawerContent>
+            </Drawer>
 
             <form
               className="rounded-md border border-white/10 bg-white/5 p-4 space-y-3"

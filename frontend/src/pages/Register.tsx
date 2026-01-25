@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import TextReveal from '@/components/TextReveal';
 
 type RegisterState = {
   firstName: string;
@@ -87,7 +88,10 @@ export default function Register() {
             </div>
             <div className="auth-quote">
               <p className="auth-quote-version">v0.1</p>
-              <p className="auth-quote-text">Welkom bij Turfje</p>
+              <TextReveal
+                text="Welkom bij Turfje"
+                className="auth-quote-text"
+              />
             </div>
           </div>
         </aside>
