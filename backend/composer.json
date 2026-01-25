@@ -21,8 +21,10 @@
     },
     "require-dev": {
         "doctrine/doctrine-bundle": "^3.2.2",
+        "doctrine/doctrine-fixtures-bundle": "^4.3",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6.1",
+        "fakerphp/faker": "^1.24",
         "symfony/maker-bundle": ">=1.65.1",
         "symfony/uid": "8.0.*"
     },
@@ -68,17 +70,24 @@
         "post-update-cmd": [
             "@auto-scripts"
         ],
+        "clean-db": "rm -fr migrations/* && rm var/turfje.db",
         "make-mig": "php bin/console make:migration",
         "do-mig": "php bin/console doctrine:migrations:migrate --no-interaction",
         "migrate": [
             "@make-mig",
             "@do-mig"
         ],
-        "get-meds": "php bin/console app:import-medicines",
-        "g-users": "php bin/console app:create-users",
-        "clean-db": [
-            "php bin/console doctrine:schema:drop --force",
-            "php bin/console doctrine:schema:update --force"
+        "get-meds": "php bin/console doctrine:fixtures:load --no-interaction",
+        "g-users": "php bin/console app:seed-users",
+        "conn-users": "php bin/console app:seed-connections",
+        "set-users-meds": "php bin/console app:seed-patient-medicines",
+        "fresh-db": [
+            "@clean-db",
+            "@migrate",
+            "@g-users",
+            "@get-meds",
+            "@conn-users",
+            "@set-users-meds"
         ]
     },
     "conflict": {

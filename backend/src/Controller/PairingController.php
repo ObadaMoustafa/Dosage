@@ -11,12 +11,11 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Uid\Uuid;
 
 #[Route('/api/pairing')]
 class PairingController extends AbstractController
 {
-    #[Route('/code', methods: ['POST'])]
+    #[Route('/invite', methods: ['POST'])]
     #[IsGranted('ROLE_PATIENT')]
     public function generateCode(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -24,13 +23,15 @@ class PairingController extends AbstractController
         $user = $this->getUser();
         $data = json_decode($request->getContent(), true);
 
-        // Default to FAMILY if not provided, strictly check allowed types
-        $type = strtoupper($data['type'] ?? GebruikerKoppelingen::TYPE_FAMILY);
-        if (!in_array($type, [GebruikerKoppelingen::TYPE_FAMILY, GebruikerKoppelingen::TYPE_THERAPIST])) {
-            return $this->json(['error' => 'Ongeldig type verbinding.'], 400);
+        // Default to TRUSTED if not provided
+        $type = strtoupper($data['type'] ?? GebruikerKoppelingen::TYPE_TRUSTED);
+
+        // Validation: Only allow supported types
+        if (!in_array($type, [GebruikerKoppelingen::TYPE_TRUSTED, GebruikerKoppelingen::TYPE_THERAPIST])) {
+            return $this->json(['error' => 'Invalid connection type.'], 400);
         }
 
-        // Rule 1: Cleanup Old Codes (Expired OR Active) for this specific type
+        // Rule: Cleanup Old Codes (Expired OR Active) for this specific type to avoid duplicates
         $oldCode = $em->getRepository(PairingCode::class)->findOneBy([
             'gebruiker' => $user,
             'connectionType' => $type
@@ -40,13 +41,15 @@ class PairingController extends AbstractController
             $em->remove($oldCode);
         }
 
-        // Generate New Code
+        // Generate New 5-digit Code
         $codeString = (string) random_int(10000, 99999);
 
         $pairingCode = new PairingCode();
         $pairingCode->setCode($codeString);
         $pairingCode->setGebruiker($user);
         $pairingCode->setConnectionType($type);
+
+        // Set expiry (15 minutes from now)
         $expiryTime = new \DateTime('+15 minutes', new \DateTimeZone('Europe/Amsterdam'));
         $pairingCode->setExpiresAt($expiryTime);
 
@@ -71,14 +74,14 @@ class PairingController extends AbstractController
         $pairingCode = $em->getRepository(PairingCode::class)->findOneBy(['code' => $codeString]);
 
         if (!$pairingCode) {
-            return $this->json(['error' => 'Ongeldige code.'], 404);
+            return $this->json(['error' => 'Invalid code.'], 404);
         }
 
         // 2. Validate Expiry
         if (!$pairingCode->isValid()) {
             $em->remove($pairingCode);
             $em->flush();
-            return $this->json(['error' => 'Code is verlopen.'], 400);
+            return $this->json(['error' => 'Code has expired.'], 400);
         }
 
         $patient = $pairingCode->getGebruiker();
@@ -88,13 +91,12 @@ class PairingController extends AbstractController
 
         // 3. Prevent Self-Linking
         if ($patient === $currentUser) {
-            return $this->json(['error' => 'U kunt uzelf niet koppelen.'], 400);
+            return $this->json(['error' => 'You cannot link to yourself.'], 400);
         }
 
-        // 4. SECURITY FIX: Validate Role based on Connection Type
-        // If the code is for a Therapist, the user scanning it MUST be a Therapist
+        // 4. Role Validation: If code is for THERAPIST, scanner must be a 'behandelaar'
         if ($type === GebruikerKoppelingen::TYPE_THERAPIST && $currentUser->getRol() !== 'behandelaar') {
-            return $this->json(['error' => 'Alleen een behandelaar kan deze code gebruiken.'], 403);
+            return $this->json(['error' => 'Only a therapist can scan this code.'], 403);
         }
 
         // 5. Duplicate Check
@@ -104,7 +106,7 @@ class PairingController extends AbstractController
         ]);
 
         if ($existingLink) {
-            return $this->json(['error' => 'U bent al gekoppeld aan deze gebruiker.'], 409);
+            return $this->json(['error' => 'You are already linked to this user.'], 409);
         }
 
         // 6. Create Connection
@@ -114,26 +116,109 @@ class PairingController extends AbstractController
         $connection->setConnectionType($type);
         $connection->setStatus(GebruikerKoppelingen::STATUS_ACTIVE);
 
-        // Auto-assign permissions
+        // Note: 'aangemaakt_op' is set automatically in the Entity constructor
+
+        // Auto-assign permissions based on type
         if ($type === GebruikerKoppelingen::TYPE_THERAPIST) {
             $connection->setAccessLevel(GebruikerKoppelingen::ACCESS_WRITE);
         } else {
             $connection->setAccessLevel(GebruikerKoppelingen::ACCESS_READ);
         }
 
-        // 7. Burn Code
+        // 7. Burn Code (One-time use)
         $em->remove($pairingCode);
 
         $em->persist($connection);
         $em->flush();
 
         return $this->json([
-            'message' => 'Succesvol gekoppeld!',
+            'message' => 'Successfully linked!',
             'patient' => [
                 'name' => $patient->getVoornaam() . ' ' . $patient->getAchternaam(),
                 'type' => $type
             ]
         ]);
+    }
+
+    #[Route('/viewers', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function getMyViewers(EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Gebruikers $currentUser */
+        $currentUser = $this->getUser();
+
+        // Query: Who is watching ME? (I am the 'gebruiker')
+        $connections = $em->getRepository(GebruikerKoppelingen::class)->findBy([
+            'gebruiker' => $currentUser,
+            'status' => GebruikerKoppelingen::STATUS_ACTIVE
+        ]);
+
+        $response = [
+            'therapists' => [], // Doctors
+            'trusted' => []     // Family/Friends
+        ];
+
+        foreach ($connections as $conn) {
+            $viewer = $conn->getGekoppeldeGebruiker();
+
+            $item = [
+                'connection_id' => $conn->getId(), // Needed for Unlink action
+                'user_id' => $viewer->getId(),
+                'name' => $viewer->getVoornaam() . ' ' . $viewer->getAchternaam(),
+                'avatar' => $viewer->getAvatarUrl(),
+                'role' => $viewer->getRol(),
+                'since' => $conn->getCreatedAt()->format('Y-m-d')
+            ];
+
+            if ($conn->getConnectionType() === GebruikerKoppelingen::TYPE_THERAPIST) {
+                $response['therapists'][] = $item;
+            } else {
+                $response['trusted'][] = $item;
+            }
+        }
+
+        return $this->json($response);
+    }
+
+    // For the user to get the people who he can see {full_access & read_only}
+    #[Route('/subjects', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function getMySubjects(EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Gebruikers $currentUser */
+        $currentUser = $this->getUser();
+
+        // Query: Who am I watching? (I am the 'gekoppelde_gebruiker')
+        $connections = $em->getRepository(GebruikerKoppelingen::class)->findBy([
+            'gekoppelde_gebruiker' => $currentUser,
+            'status' => GebruikerKoppelingen::STATUS_ACTIVE
+        ]);
+
+        $response = [
+            'full_access' => [], // For patients I treat as a Doctor
+            'read_only' => []    // For family members/friends I care for
+        ];
+
+        foreach ($connections as $conn) {
+            $subject = $conn->getGebruiker();
+
+            $item = [
+                'connection_id' => $conn->getId(), // Needed for Unlink action
+                'user_id' => $subject->getId(),
+                'name' => $subject->getVoornaam() . ' ' . $subject->getAchternaam(),
+                'avatar' => $subject->getAvatarUrl(),
+                'email' => $subject->getEmail(), // Maybe useful for doctors
+                'since' => $conn->getCreatedAt()->format('Y-m-d')
+            ];
+
+            if ($conn->getAccessLevel() === GebruikerKoppelingen::ACCESS_WRITE) {
+                $response['full_access'][] = $item;
+            } else {
+                $response['read_only'][] = $item;
+            }
+        }
+
+        return $this->json($response);
     }
 
     #[Route('/unlink/{id}', methods: ['DELETE'])]
@@ -143,12 +228,7 @@ class PairingController extends AbstractController
         /** @var Gebruikers $currentUser */
         $currentUser = $this->getUser();
 
-        // 1. Fix UUID format if it is missing hyphens (32 chars)
-        if (preg_match('/^[a-f\d]{32}$/i', $id)) {
-            $id = sprintf('%s-%s-%s-%s-%s', substr($id, 0, 8), substr($id, 8, 4), substr($id, 12, 4), substr($id, 16, 4), substr($id, 20));
-        }
-
-        // 2. Find the other user (Target)
+        // Find the other user (Target)
         $otherUser = $em->getRepository(Gebruikers::class)->find($id);
         if (!$otherUser) {
             return $this->json(['error' => 'User not found.'], 404);
@@ -156,19 +236,18 @@ class PairingController extends AbstractController
 
         $repo = $em->getRepository(GebruikerKoppelingen::class);
 
-        // 3. Search for the connection (Check both directions)
-
-        // Direction A: I am the Patient, removing the Therapist/Family
+        // Check for connection in both directions
+        // Direction A: Current User is the Patient
         $connection = $repo->findOneBy([
             'gebruiker' => $currentUser,
             'gekoppelde_gebruiker' => $otherUser
         ]);
 
-        // Direction B: I am the Therapist/Family, removing the Patient
+        // Direction B: Current User is the Linked User (Therapist/Family)
         if (!$connection) {
             $connection = $repo->findOneBy([
-                'gebruiker' => $otherUser, // They are the patient
-                'gekoppelde_gebruiker' => $currentUser // I am the linked user
+                'gebruiker' => $otherUser,
+                'gekoppelde_gebruiker' => $currentUser
             ]);
         }
 
@@ -176,7 +255,6 @@ class PairingController extends AbstractController
             return $this->json(['error' => 'No connection found with this user.'], 404);
         }
 
-        // 4. Remove
         $em->remove($connection);
         $em->flush();
 

@@ -52,7 +52,7 @@
 
 - Zoek openbare medicijneninfo op naam/merk: naam, dosering, werkzame stoffen, bijwerkingen, bijsluiter.
 - Medicijnen opslaan in “Mijn Medicijnen”.
-- **Apotheekzoeker** (optioneel): alleen indien er een **gratis, openbare Nederlandse apotheek-API** bestaat. Zo niet, dan wordt dit weggelaten (FO T15 = “nice to have”).
+- **Apotheekzoeker** (optioneel): alleen indien er een **gratis, openbare Nederlandse apotheek-API** bestaat. Zo niet, dan wordt dit weggelaten.
 
 ## 2.6 Feedbacksysteem
 
@@ -76,7 +76,7 @@
 
 # 3. Beveiliging & Privacy
 
-- **Geen delen van patiëntgegevens met derden**, behalve met de gekoppelde behandelaar (FO: "Geen delen met derden behalve behandelaar").
+- **Geen delen van patiëntgegevens met derden**, behalve met de gekoppelde behandelaar.
 - Gevoelige schrijfacties (turven, feedback) worden **digitaal ondertekend** (Laravel `openssl_sign`).
 - JWT’s veilig opgeslagen:
   - Android: Versleutelde SharedPreferences + Android Keystore
@@ -196,62 +196,63 @@ Alle endpoints geven JSON terug. Authenticatie vereist, tenzij anders aangegeven
 
 ## 🔐 Authenticatie
 
-| Endpoint                    | Methode | Rol             | Beschrijving                                           |
-| --------------------------- | ------- | --------------- | ------------------------------------------------------ |
-| `/api/auth/register`        | POST    | Iedereen        | Nieuwe gebruiker registreren (e-mail, wachtwoord, rol) |
-| `/api/auth/login`           | POST    | Iedereen        | Inloggen en JWT ontvangen                              |
-| `/api/auth/forgot-password` | POST    | Iedereen        | E-mail voor wachtwoordherstel aanvragen                |
-| `/api/auth/reset-password`  | POST    | Iedereen        | Wachtwoord resetten met token                          |
-| `/api/auth/change-password` | POST    | Geauthenticeerd | Wachtwoord wijzigen                                    |
-| `/api/auth/me`              | GET     | Geauthenticeerd | Huidig gebruikersprofiel ophalen                       |
-| `/api/auth/me`              | DELETE  | Geauthenticeerd | Account verwijderen                                    |
+| Status | Endpoint                    | Methode | Rol             | Beschrijving                                           |
+| :----- | :-------------------------- | :------ | :-------------- | :----------------------------------------------------- |
+| ✅     | `/api/auth/register`        | POST    | Iedereen        | Nieuwe gebruiker registreren (e-mail, wachtwoord, rol) |
+| ✅     | `/api/auth/login`           | POST    | Iedereen        | Inloggen en JWT ontvangen                              |
+| ❌     | `/api/auth/forgot-password` | POST    | Iedereen        | E-mail voor wachtwoordherstel aanvragen                |
+| ❌     | `/api/auth/reset-password`  | POST    | Iedereen        | Wachtwoord resetten met token                          |
+| ✅     | `/api/auth/change-password` | POST    | Geauthenticeerd | Wachtwoord wijzigen                                    |
+| ✅     | `/api/auth/me`              | GET     | Geauthenticeerd | Huidig gebruikersprofiel ophalen                       |
+| ✅     | `/api/auth/me`              | DELETE  | Geauthenticeerd | Account verwijderen                                    |
 
-## 👥 Gebruikersbeheer & Koppeling
+## 🔗 Gebruikers Koppelingen
 
-| Endpoint                           | Methode | Rol                 | Beschrijving                    |
-| ---------------------------------- | ------- | ------------------- | ------------------------------- |
-| `/api/pairing/generate-code`       | POST    | Patiënt             | Unieke koppelcode genereren     |
-| `/api/pairing/link`                | POST    | Behandelaar/Patiënt | Koppelen met patiënt via code   |
-| `/api/pairing/unlink/{patient_id}` | DELETE  | Behandelaar/Patiënt | Koppeling met patiënt verbreken |
-| `/api/pairing/patients`            | GET     | Behandelaar         | Lijst van gekoppelde patiënten  |
+| Status | Endpoint                   | Methode | Rol             | Beschrijving                                                   |
+| :----- | :------------------------- | :------ | :-------------- | :------------------------------------------------------------- |
+| ✅     | `/api/pairing/invite`      | POST    | ROLE_PATIENT    | Genereer koppelcode (15 min). Body: `{ "type": "THERAPIST" }`  |
+| ✅     | `/api/pairing/link`        | POST    | Geauthenticeerd | Account koppelen met code. Body: `{ "code": "12345" }`         |
+| ✅     | `/api/pairing/viewers`     | GET     | Geauthenticeerd | (Patiënt) Lijst van mensen die toegang hebben tot jouw dossier |
+| ✅     | `/api/pairing/subjects`    | GET     | Geauthenticeerd | (Behandelaar) Lijst van mensen die jij behandelt of volgt      |
+| ✅     | `/api/pairing/unlink/{id}` | DELETE  | Geauthenticeerd | Verbinding verbreken met een specifieke gebruiker              |
 
 ## 💊 Medicijnen
 
-| Endpoint                  | Methode | Rol                  | Beschrijving                           |
-| ------------------------- | ------- | -------------------- | -------------------------------------- |
-| `/api/medications/search` | GET     | Geauthenticeerd      | Zoeken in openbare medicijnen-database |
-| `/api/medications/save`   | POST    | Patiënt/Behandelaar  | Medicijn opslaan in “Mijn Medicijnen”  |
-| `/api/medications/mine`   | GET     | Patiënt/Behandelaar  | Opgeslagen medicijnen tonen            |
-| `/api/medications/{id}`   | GET     | Geauthenticeerd      | Details van medicijn ophalen           |
-| `/api/medications/{id}`   | DELETE  | Eigenaar/Behandelaar | Medicijn uit lijst verwijderen         |
+| Status | Endpoint                             | Methode | Rol             | Beschrijving                           |
+| :----- | :----------------------------------- | :------ | :-------------- | :------------------------------------- |
+| ✅     | `/api/medicines/search?q=<medicine>` | GET     | Geauthenticeerd | Zoeken in openbare medicijnen-database |
+| ✅     | `/api/my-medicines`                  | POST    | Patiënt         | Medicijn opslaan in “Mijn Medicijnen”  |
+| ✅     | `/api/my-medicines`                  | GET     | Patiënt         | Opgeslagen medicijnen tonen            |
+| ✅     | `/api/my-medicines/{id}`             | GET     | Patient         | Details van medicijn ophalen           |
+| ✅     | `/api/medications/{id}`              | DELETE  | Geauthenticeerd | Medicijn uit lijst verwijderen         |
 
 ## 🗓️ Schema’s & Turven
 
-| Endpoint              | Methode    | Rol                             | Beschrijving                        |
-| --------------------- | ---------- | ------------------------------- | ----------------------------------- |
-| `/api/schedules`      | POST       | Patiënt/Behandelaar             | Nieuw medicatieschema aanmaken      |
-| `/api/schedules`      | GET        | Patiënt/Behandelaar             | Alle schema’s tonen                 |
-| `/api/schedules/{id}` | PUT/DELETE | Eigenaar/Behandelaar            | Schema bewerken of verwijderen      |
-| `/api/logs`           | POST       | Patiënt                         | Medicijninname registreren ("Turf") |
-| `/api/logs`           | GET        | Patiënt/Behandelaar (gekoppeld) | Turfgeschiedenis inzien             |
-| `/api/logs/stats`     | GET        | Patiënt/Behandelaar             | Statistieken (dagelijks/wekelijks)  |
+| Status | Endpoint              | Methode    | Rol                             | Beschrijving                        |
+| :----- | :-------------------- | :--------- | :------------------------------ | :---------------------------------- |
+| ❌     | `/api/schedules`      | POST       | Patiënt/Behandelaar             | Nieuw medicatieschema aanmaken      |
+| ❌     | `/api/schedules`      | GET        | Patiënt/Behandelaar             | Alle schema’s tonen                 |
+| ❌     | `/api/schedules/{id}` | PUT/DELETE | Eigenaar/Behandelaar            | Schema bewerken of verwijderen      |
+| ❌     | `/api/logs`           | POST       | Patiënt                         | Medicijninname registreren ("Turf") |
+| ❌     | `/api/logs`           | GET        | Patiënt/Behandelaar (gekoppeld) | Turfgeschiedenis inzien             |
+| ❌     | `/api/logs/stats`     | GET        | Patiënt/Behandelaar             | Statistieken (dagelijks/wekelijks)  |
 
 ## 💬 Feedback
 
-| Endpoint                   | Methode | Rol                             | Beschrijving                 |
-| -------------------------- | ------- | ------------------------------- | ---------------------------- |
-| `/api/feedback`            | POST    | Patiënt                         | Feedback geven over medicijn |
-| `/api/feedback`            | GET     | Patiënt/Behandelaar (gekoppeld) | Feedbackgeschiedenis tonen   |
-| `/api/feedback/{id}/reply` | POST    | Behandelaar                     | Reageren op patiëntfeedback  |
+| Status | Endpoint                   | Methode | Rol                             | Beschrijving                 |
+| :----- | :------------------------- | :------ | :------------------------------ | :--------------------------- |
+| ❌     | `/api/feedback`            | POST    | Patiënt                         | Feedback geven over medicijn |
+| ❌     | `/api/feedback`            | GET     | Patiënt/Behandelaar (gekoppeld) | Feedbackgeschiedenis tonen   |
+| ❌     | `/api/feedback/{id}/reply` | POST    | Behandelaar                     | Reageren op patiëntfeedback  |
 
 ## 👨‍💼 Beheeromgeving (Web-routes)
 
-| Endpoint                           | Methode | Rol   | Beschrijving                           |
-| ---------------------------------- | ------- | ----- | -------------------------------------- |
-| `/admin/users`                     | GET     | Admin | Alle gebruikers tonen                  |
-| `/admin/users/{id}/role`           | PUT     | Admin | Gebruikersrol wijzigen                 |
-| `/admin/users/{id}/reset-password` | POST    | Admin | Wachtwoord resetten                    |
-| `/admin/users/{id}/toggle-status`  | POST    | Admin | Account in-/uitschakelen               |
-| `/admin/pair`                      | POST    | Admin | Handmatig patiënt-behandelaar koppelen |
+| Status | Endpoint                           | Methode | Rol   | Beschrijving                           |
+| :----- | :--------------------------------- | :------ | :---- | :------------------------------------- |
+| ❌     | `/admin/users`                     | GET     | Admin | Alle gebruikers tonen                  |
+| ❌     | `/admin/users/{id}/role`           | PUT     | Admin | Gebruikersrol wijzigen                 |
+| ❌     | `/admin/users/{id}/reset-password` | POST    | Admin | Wachtwoord resetten                    |
+| ❌     | `/admin/users/{id}/toggle-status`  | POST    | Admin | Account in-/uitschakelen               |
+| ❌     | `/admin/pair`                      | POST    | Admin | Handmatig patiënt-behandelaar koppelen |
 
 > **Opmerking**: Notificaties zijn **lokaal** en worden beheerd door React Native (bijv. via `@notifee/react-native`). Er worden **geen server-pushed meldingen** gebruikt.
