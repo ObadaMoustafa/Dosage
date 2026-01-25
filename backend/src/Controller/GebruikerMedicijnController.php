@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class GebruikerMedicijnController extends AbstractController
 {
     #[Route('', methods: ['GET'])]
-    public function index(EntityManagerInterface $em): JsonResponse
+    public function getAll(EntityManagerInterface $em): JsonResponse
     {
         /** @var Gebruikers $user */
         $user = $this->getUser();
@@ -40,39 +40,8 @@ class GebruikerMedicijnController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('', methods: ['POST'])]
-    #[IsGranted('ROLE_PATIENT')]
-    public function add(Request $request, EntityManagerInterface $em): JsonResponse
-    {
-        /** @var Gebruikers $user */
-        $user = $this->getUser();
-        $payload = json_decode($request->getContent(), true);
-
-        $medicijnNaam = $payload['medicijn_naam'] ?? null;
-
-        if (!$medicijnNaam) {
-            return $this->json(['error' => 'Medicijn naam is verplicht.'], 400);
-        }
-
-        $med = new GebruikerMedicijn();
-        $med->setGebruiker($user);
-        $med->setMedicijnNaam($medicijnNaam);
-        $med->setToedieningsvorm($payload['toedieningsvorm'] ?? null);
-        $med->setSterkte($payload['sterkte'] ?? null);
-        $med->setBeschrijving($payload['beschrijving'] ?? null);
-        $med->setBijsluiter($payload['bijsluiter'] ?? null);
-
-        $em->persist($med);
-        $em->flush();
-
-        return $this->json([
-            'message' => 'Medicijn succesvol toegevoegd.',
-            'id' => $med->getId()
-        ]);
-    }
-
     #[Route('/{id}', methods: ['GET'])]
-    public function show(string $id, EntityManagerInterface $em): JsonResponse
+    public function getOne(string $id, EntityManagerInterface $em): JsonResponse
     {
         /** @var Gebruikers $currentUser */
         $currentUser = $this->getUser();
@@ -96,6 +65,64 @@ class GebruikerMedicijnController extends AbstractController
             'added_at' => $med->getAangemaaktOp()->format('Y-m-d H:i:s'),
         ]);
     }
+
+    #[Route('/add', methods: ['POST'])]
+    #[IsGranted('ROLE_PATIENT')]
+    public function add(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var Gebruikers $user */
+        $user = $this->getUser();
+        $payload = json_decode($request->getContent(), true);
+
+        // 1. تنظيف المدخلات (Trim)
+        $inputName = trim($payload['medicijn_naam'] ?? '');
+        $inputStrength = trim($payload['sterkte'] ?? '');
+
+        // 2. التحقق إن الحقول مش فاضية
+        if ($inputName === '' || $inputStrength === '') {
+            return $this->json([
+                'error' => 'Medicijn naam en sterkte zijn verplicht.'
+            ], 400);
+        }
+
+        // 3. الحل الجذري: نجيب أدوية اليوزر ونقارن بـ PHP
+        // ده بيحل مشاكل الـ Database Collation و SQLite
+        $existingMedicines = $em->getRepository(GebruikerMedicijn::class)->findBy([
+            'gebruiker' => $user
+        ]);
+
+        foreach ($existingMedicines as $med) {
+            // بنقارن الاسم والقوة بعد توحيد حالة الأحرف (Lower Case)
+            $dbName = strtolower(trim($med->getMedicijnNaam()));
+            $dbStrength = strtolower(trim($med->getSterkte() ?? '')); // الـ ?? '' عشان لو القيمة NULL
+
+            if ($dbName === strtolower($inputName) && $dbStrength === strtolower($inputStrength)) {
+                return $this->json([
+                    'error' => 'Je hebt dit medicijn met deze sterkte al toegevoegd.'
+                ], 409);
+            }
+        }
+
+        // 4. لو مفيش تطابق، كمل حفظ
+        $med = new GebruikerMedicijn();
+        $med->setGebruiker($user);
+        $med->setMedicijnNaam($inputName); // بنحفظ الاسم زي ما اليوزر كتبه (Case Sensitive for display)
+        $med->setSterkte($inputStrength);
+
+        $med->setToedieningsvorm($payload['toedieningsvorm'] ?? null);
+        $med->setBeschrijving($payload['beschrijving'] ?? null);
+        $med->setBijsluiter($payload['bijsluiter'] ?? null);
+
+        $em->persist($med);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Medicijn succesvol toegevoegd.',
+            'id' => $med->getId()
+        ]);
+    }
+
+
 
     #[Route('/{id}', methods: ['PUT'])]
     public function update(string $id, Request $request, EntityManagerInterface $em): JsonResponse

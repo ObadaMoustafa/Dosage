@@ -10,14 +10,14 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: GebruikerKoppelingenRepository::class)]
 class GebruikerKoppelingen
 {
-    public const ACCESS_READ = 'READ_ONLY';
-    public const ACCESS_WRITE = 'FULL_ACCESS';
+    public const string ACCESS_READ = 'READ_ONLY';
+    public const string ACCESS_WRITE = 'FULL_ACCESS';
 
-    public const TYPE_TRUSTED = 'TRUSTED';
-    public const TYPE_THERAPIST = 'THERAPIST';
+    public const string TYPE_TRUSTED = 'TRUSTED';
+    public const string TYPE_THERAPIST = 'THERAPIST';
 
-    public const STATUS_ACTIVE = 'active';
-    public const STATUS_PENDING = 'pending';
+    public const string STATUS_ACTIVE = 'active';
+    public const string STATUS_PENDING = 'pending';
 
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
