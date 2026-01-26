@@ -77,15 +77,15 @@
             "@make-mig",
             "@do-mig"
         ],
-        "get-meds": "php bin/console doctrine:fixtures:load --no-interaction",
+        "get-meds": "php bin/console app:seed-medicines",
         "g-users": "php bin/console app:seed-users",
         "conn-users": "php bin/console app:seed-connections",
         "set-users-meds": "php bin/console app:seed-patient-medicines",
         "fresh-db": [
             "@clean-db",
             "@migrate",
-            "@g-users",
             "@get-meds",
+            "@g-users",
             "@conn-users",
             "@set-users-meds"
         ]
