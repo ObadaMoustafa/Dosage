@@ -30,6 +30,9 @@ class GebruikerMedicijnGebruik
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $medicijn_turven = null;
 
+    #[ORM\Column(length: 20)]
+    private ?string $status = null; // 'optijd' or 'gemist'
+
     // Last time taken or updated
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $aangemaakt_op = null;
@@ -72,6 +75,22 @@ class GebruikerMedicijnGebruik
     public function setMedicijnTurven(int $medicijn_turven): static
     {
         $this->medicijn_turven = $medicijn_turven;
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): static
+    {
+        $allowedStatus = ["optijd", "gemist"];
+        if (!\in_array($status, $allowedStatus)) {
+            throw new \InvalidArgumentException("Invalid status. Allowed: " . implode(', ', $allowedStatus));
+        }
+
+        $this->status = $status;
         return $this;
     }
 

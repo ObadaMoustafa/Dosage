@@ -16,9 +16,6 @@ class GebruikerKoppelingen
     public const string TYPE_TRUSTED = 'TRUSTED';
     public const string TYPE_THERAPIST = 'THERAPIST';
 
-    public const string STATUS_ACTIVE = 'active';
-    public const string STATUS_PENDING = 'pending';
-
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
@@ -41,8 +38,6 @@ class GebruikerKoppelingen
     #[ORM\Column(length: 20, name: 'type_verbinding')]
     private ?string $connectionType = null;
 
-    #[ORM\Column(length: 20)]
-    private ?string $status = self::STATUS_ACTIVE;
 
     #[ORM\Column(type: 'datetime', name: 'aangemaakt_op')]
     private ?\DateTimeInterface $createdAt = null;
@@ -95,16 +90,6 @@ class GebruikerKoppelingen
     public function setConnectionType(string $connectionType): static
     {
         $this->connectionType = $connectionType;
-        return $this;
-    }
-
-    public function getStatus(): ?string
-    {
-        return $this->status;
-    }
-    public function setStatus(string $status): static
-    {
-        $this->status = $status;
         return $this;
     }
 

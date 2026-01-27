@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/pairing')]
-class PairingController extends AbstractController
+class GebruikerKoppelingenController extends AbstractController
 {
     #[Route('/invite', methods: ['POST'])]
     #[IsGranted('ROLE_PATIENT')]
@@ -114,7 +114,6 @@ class PairingController extends AbstractController
         $connection->setGebruiker($patient);
         $connection->setGekoppeldeGebruiker($currentUser);
         $connection->setConnectionType($type);
-        $connection->setStatus(GebruikerKoppelingen::STATUS_ACTIVE);
 
         // Note: 'aangemaakt_op' is set automatically in the Entity constructor
 
@@ -150,7 +149,6 @@ class PairingController extends AbstractController
         // Query: Who is watching ME? (I am the 'gebruiker')
         $connections = $em->getRepository(GebruikerKoppelingen::class)->findBy([
             'gebruiker' => $currentUser,
-            'status' => GebruikerKoppelingen::STATUS_ACTIVE
         ]);
 
         $response = [
@@ -188,10 +186,9 @@ class PairingController extends AbstractController
         /** @var Gebruikers $currentUser */
         $currentUser = $this->getUser();
 
-        // Query: Who am I watching? (I am the 'gekoppelde_gebruiker')
+        // Check connections
         $connections = $em->getRepository(GebruikerKoppelingen::class)->findBy([
             'gekoppelde_gebruiker' => $currentUser,
-            'status' => GebruikerKoppelingen::STATUS_ACTIVE
         ]);
 
         $response = [

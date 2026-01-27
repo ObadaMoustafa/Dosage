@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Gebruikers;
+use App\Entity\GebruikerKoppelingen; // Import added
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -14,24 +15,51 @@ use Symfony\Component\Routing\Attribute\Route;
 class MeController extends AbstractController
 {
     #[Route('/api/auth/me', name: 'api_me', methods: ['GET'])]
-    public function me(): JsonResponse
+    public function me(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        /** @var Gebruikers|null $user */
-        $user = $this->getUser();
+        /** @var Gebruikers|null $currentUser */
+        $currentUser = $this->getUser();
 
-        if (!$user) {
+        if (!$currentUser) {
             return $this->json(['message' => 'User not found or not logged in'], 401);
         }
 
-        // $user is now the profile itself, no need for getGebruiker()
+        // 1. Check for requested user_id
+        $targetId = $request->query->get('user_id');
+
+        // 2. If requesting ANOTHER user (Viewer Mode)
+        if ($targetId && $targetId !== $currentUser->getId()->toRfc4122()) {
+
+            // Security Check: Is there a connection?
+            $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+                'gekoppelde_gebruiker' => $currentUser, // The Viewer (Doctor/Caregiver)
+                'gebruiker' => $targetId               // The Target (Patient)
+            ]);
+
+            if (!$connection) {
+                return $this->json(['error' => 'U heeft geen toegang tot de gegevens van deze gebruiker.'], 403);
+            }
+
+            $targetUser = $connection->getGebruiker();
+
+            // Return LIMITED data as requested
+            return $this->json([
+                'id' => $targetUser->getId(),
+                'email' => $targetUser->getEmail(),
+                'first_name' => $targetUser->getVoornaam(),
+                'last_name' => $targetUser->getAchternaam(),
+            ]);
+        }
+
+        // 3. If requesting SELF (Full Profile)
         return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'first_name' => $user->getVoornaam(),
-            'last_name' => $user->getAchternaam(),
-            'role' => $user->getRol(),
-            'avatar_url' => $user->getAvatarUrl(),
-            'created_at' => $user->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'id' => $currentUser->getId(),
+            'email' => $currentUser->getEmail(),
+            'first_name' => $currentUser->getVoornaam(),
+            'last_name' => $currentUser->getAchternaam(),
+            'role' => $currentUser->getRol(),
+            'avatar_url' => $currentUser->getAvatarUrl(),
+            'created_at' => $currentUser->getAangemaaktOp()->format('Y-m-d H:i:s'),
         ]);
     }
 
@@ -97,7 +125,7 @@ class MeController extends AbstractController
 
         // 1. Verify Current Password
         if (!$passwordHasher->isPasswordValid($user, $data['current_password'])) {
-            return $this->json(['error' => 'Huidig wachtwoord is onjuist.'], 400); // Incorrect current password
+            return $this->json(['error' => 'Huidig wachtwoord is onjuist.'], 400);
         }
 
         // 2. Hash and Set New Password
@@ -120,7 +148,6 @@ class MeController extends AbstractController
             return $this->json(['message' => 'Unauthorized'], 401);
         }
 
-        // Just remove the user (Profile and Auth are now one)
         $entityManager->remove($user);
         $entityManager->flush();
 
