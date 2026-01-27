@@ -100,8 +100,6 @@ class SeedConnectionsCommand extends Command
       $connection->setGebruiker($patient);
       $connection->setGekoppeldeGebruiker($targetUser);
 
-      // Set Status
-      $connection->setStatus(GebruikerKoppelingen::STATUS_ACTIVE);
 
       // Set Type and Access Level based on the scenario key
       if ($typeKey === 'therapist') {

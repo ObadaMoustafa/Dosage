@@ -101,6 +101,23 @@ class Gebruikers implements UserInterface, PasswordAuthenticatedUserInterface
         return array_unique($roles);
     }
 
+    public function getRol(): ?string
+    {
+        return $this->rol;
+    }
+
+    public function setRol(string $rol): static
+    {
+        $allowedRoles = ['patient', 'behandelaar', 'admin'];
+
+        if (!\in_array($rol, $allowedRoles)) {
+            throw new \InvalidArgumentException("Invalid role. Allowed: " . implode(', ', $allowedRoles));
+        }
+
+        $this->rol = $rol;
+        return $this;
+    }
+
     /**
      * @see PasswordAuthenticatedUserInterface
      */
@@ -145,22 +162,7 @@ class Gebruikers implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getRol(): ?string
-    {
-        return $this->rol;
-    }
 
-    public function setRol(string $rol): static
-    {
-        $allowedRoles = ['patient', 'behandelaar', 'admin'];
-
-        if (!\in_array($rol, $allowedRoles)) {
-            throw new \InvalidArgumentException("Invalid role. Allowed: " . implode(', ', $allowedRoles));
-        }
-
-        $this->rol = $rol;
-        return $this;
-    }
 
     public function getAvatarUrl(): ?string
     {
