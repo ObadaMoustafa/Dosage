@@ -6,8 +6,7 @@
     "setup": "npm install && cd backend && composer install && cd ../frontend && npm install && cd ..",
     "dev": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev\"",
     "dev:host": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev -- --host\"",
-    "init-db": "cd backend && composer migrate && composer get-meds",
-    "clear-cache": "cd backend && php bin/console cache:clear"
+    "fresh-db": "cd backend && composer fresh-db"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
