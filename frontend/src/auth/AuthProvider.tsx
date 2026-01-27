@@ -1,15 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-type AuthUser = {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  role: string;
-  profile_id?: number | null;
-  avatar_url?: string | null;
-  created_at: string;
-};
+import { authApi, type AuthUser } from '@/lib/api';
 
 type AuthState =
   | { status: 'loading' }
@@ -24,31 +14,12 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function fetchMe() {
-  const token = localStorage.getItem('token');
-  if (!token) return null;
-
-  // Kies jouw Symfony endpoint:
-  // Vaak: GET /api/me of /api/user of /api/profile
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (res.status === 401 || res.status === 403) return null;
-  if (!res.ok) throw new Error(`Auth check failed: ${res.status}`);
-  return res.json();
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({ status: 'loading' });
 
   const refreshAuth = async () => {
     setAuth({ status: 'loading' });
-    const user = await fetchMe();
+    const user = await authApi.me();
     if (user) {
       setAuth({ status: 'authed', user });
       return;

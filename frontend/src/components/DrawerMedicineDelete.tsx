@@ -12,10 +12,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 type DrawerMedicineDeleteProps = {
   medicineName: string;
-  onConfirm?: () => void;
+  onConfirm?: () => Promise<boolean> | boolean | void;
 };
 
 export default function DrawerMedicineDelete({
@@ -23,10 +24,22 @@ export default function DrawerMedicineDelete({
   onConfirm,
 }: DrawerMedicineDeleteProps) {
   const [open, setOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(false);
 
-  const handleConfirm = () => {
-    onConfirm?.();
-    setOpen(false);
+  const handleConfirm = async () => {
+    if (!onConfirm) {
+      setOpen(false);
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await onConfirm();
+      if (result === false) return;
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,12 +58,15 @@ export default function DrawerMedicineDelete({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="main-button-nb">Annuleren</AlertDialogCancel>
+          <AlertDialogCancel className="main-button-nb" disabled={loading}>
+            Annuleren
+          </AlertDialogCancel>
           <AlertDialogAction
             className="bg-red-600 text-white hover:bg-red-700"
             onClick={handleConfirm}
+            disabled={loading}
           >
-            Verwijderen
+            {loading ? <Spinner className="h-4 w-4 text-white" /> : "Verwijderen"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

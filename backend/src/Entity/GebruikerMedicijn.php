@@ -39,6 +39,9 @@ class GebruikerMedicijn
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $aangemaakt_op = null;
 
+    #[ORM\ManyToOne]
+    private ?VoorraadItem $voorraadItem = null;
+
     public function __construct()
     {
         $this->aangemaakt_op = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
@@ -116,6 +119,17 @@ class GebruikerMedicijn
     public function setAangemaaktOp(\DateTimeInterface $aangemaakt_op): static
     {
         $this->aangemaakt_op = $aangemaakt_op;
+        return $this;
+    }
+
+    public function getVoorraadItem(): ?VoorraadItem
+    {
+        return $this->voorraadItem;
+    }
+
+    public function setVoorraadItem(?VoorraadItem $voorraadItem): static
+    {
+        $this->voorraadItem = $voorraadItem;
         return $this;
     }
 }

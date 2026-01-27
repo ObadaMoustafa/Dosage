@@ -21,9 +21,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Pencil, X } from "lucide-react";
-import { formatStockLabel, stockItems } from "@/data/stock";
 
 export type MedicineRow = {
+  id?: string;
   name: string;
   brand: string;
   route: string;
@@ -35,21 +35,20 @@ export type MedicineRow = {
 
 type DrawerMedicineEditProps = {
   medicine: MedicineRow;
-  onSave?: (next: MedicineRow) => void;
+  onSave?: (next: MedicineRow) => Promise<boolean> | boolean | void;
+  stockOptions?: { id: string; label: string }[];
 };
 
 const routeOptions = ["Oraal", "Anaal", "Spuit", "Anders"];
-const stockOptions = stockItems.map((item) => ({
-  id: item.id,
-  label: `${item.name} · ${formatStockLabel(item)}`,
-}));
 
 export default function DrawerMedicineEdit({
   medicine,
   onSave,
+  stockOptions = [],
 }: DrawerMedicineEditProps) {
   const [open, setOpen] = React.useState(false);
   const [form, setForm] = React.useState<MedicineRow>(medicine);
+  const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -57,9 +56,20 @@ export default function DrawerMedicineEdit({
     }
   }, [open, medicine]);
 
-  const handleSave = () => {
-    onSave?.(form);
-    setOpen(false);
+  const handleSave = async () => {
+    if (!onSave) {
+      setOpen(false);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await onSave(form);
+      if (result === false) return;
+      setOpen(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -223,8 +233,9 @@ export default function DrawerMedicineEdit({
               type="button"
               className="bg-white/10 text-white/90 hover:bg-white/20"
               onClick={handleSave}
+              disabled={saving}
             >
-              Opslaan
+              {saving ? "Opslaan..." : "Opslaan"}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" className="main-button-nb">

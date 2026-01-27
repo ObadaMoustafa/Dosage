@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,11 +18,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import InventoryTableRow from '@/components/InventoryTableRow';
-import {
-  formatStockLabel,
-  stockItems,
-  type StockStatus,
-} from '@/data/stock';
+import DrawerStockCreate from '@/components/DrawerStockCreate';
+import { formatStockLabel, type StockItem, type StockStatus } from '@/data/stock';
+import { stockApi } from '@/lib/api';
+import { toast } from 'sonner';
 
 const statusLabels: Record<'all' | StockStatus, string> = {
   all: 'Alle statussen',
@@ -34,6 +33,8 @@ const statusLabels: Record<'all' | StockStatus, string> = {
 export default function DashboardVoorraad() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | StockStatus>('all');
+  const [loading, setLoading] = useState(true);
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -45,7 +46,83 @@ export default function DashboardVoorraad() {
       const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, stockItems]);
+
+  const loadStock = async () => {
+    setLoading(true);
+    try {
+      const data = await stockApi.list();
+      const mapped = data.map((item) => ({
+        id: item.id,
+        name: item.name,
+        stripsCount: item.strips_count,
+        pillsPerStrip: item.pills_per_strip,
+        loosePills: item.loose_pills,
+        threshold: item.threshold,
+        lastUpdated: item.last_updated,
+        status: item.status,
+      }));
+      setStockItems(mapped);
+    } catch (error) {
+      toast.error((error as Error).message || 'Voorraad laden mislukt.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadStock();
+  }, []);
+
+  const handleUpdate = async (next: StockItem) => {
+    try {
+      await stockApi.update(next.id, {
+        name: next.name,
+        strips_count: next.stripsCount,
+        pills_per_strip: next.pillsPerStrip,
+        loose_pills: next.loosePills,
+        threshold: next.threshold,
+        status: next.status,
+      });
+      setStockItems((prev) => prev.map((item) => (item.id === next.id ? next : item)));
+      window.dispatchEvent(new CustomEvent('turfje:stock-updated'));
+      toast.success('Voorraad bijgewerkt.');
+      return true;
+    } catch (error) {
+      toast.error((error as Error).message || 'Voorraad bijwerken mislukt.');
+      return false;
+    }
+  };
+
+  const handleCreate = async (next: Omit<StockItem, 'id' | 'lastUpdated'>) => {
+    try {
+      const id = await stockApi.create({
+        name: next.name,
+        strips_count: next.stripsCount,
+        pills_per_strip: next.pillsPerStrip,
+        loose_pills: next.loosePills,
+        threshold: next.threshold,
+        status: next.status,
+      });
+      const created: StockItem = {
+        id: id ?? `temp-${Date.now()}`,
+        name: next.name,
+        stripsCount: next.stripsCount,
+        pillsPerStrip: next.pillsPerStrip,
+        loosePills: next.loosePills,
+        threshold: next.threshold,
+        status: next.status,
+        lastUpdated: new Date().toISOString(),
+      };
+      setStockItems((prev) => [created, ...prev]);
+      window.dispatchEvent(new CustomEvent('turfje:stock-updated'));
+      toast.success('Voorraad toegevoegd.');
+      return true;
+    } catch (error) {
+      toast.error((error as Error).message || 'Voorraad toevoegen mislukt.');
+      return false;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -62,7 +139,8 @@ export default function DashboardVoorraad() {
           <CardHeader className="space-y-3 pb-3">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <CardTitle className="text-base">Voorraad overzicht</CardTitle>
-              <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row">
+              <div className="flex w-full flex-col gap-2 md:w-auto md:flex-row md:items-center">
+                <DrawerStockCreate onSave={handleCreate} />
                 <div className="relative w-full md:w-64">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -106,12 +184,12 @@ export default function DashboardVoorraad() {
               </TableHeader>
               <TableBody>
                 {filteredItems.map((item) => (
-                  <InventoryTableRow key={item.id} item={item} />
+                  <InventoryTableRow key={item.id} item={item} onEdit={handleUpdate} />
                 ))}
               </TableBody>
             </Table>
             <div className="text-xs text-muted-foreground">
-              {filteredItems.length} items
+              {loading ? 'Voorraad laden...' : `${filteredItems.length} items`}
             </div>
           </CardContent>
         </Card>

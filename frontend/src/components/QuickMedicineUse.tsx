@@ -1,26 +1,103 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Combobox, ComboboxContent, ComboboxEmpty, ComboboxGroup, ComboboxInput, ComboboxItem, ComboboxList } from "@/components/ui/combobox";
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Plus, X } from "lucide-react";
+import { logsApi, medicinesApi } from "@/lib/api";
+import { toast } from "sonner";
 
-const medicineItems = [
-  { label: "Paracetamol 500/50mg", value: "paracetamol-500-50" },
-  { label: "Ibuprofen 250mg", value: "ibuprofen-250" },
-  { label: "Omeprazol 20mg", value: "omeprazol-20" },
-];
+type MedicineOption = {
+  id: string;
+  label: string;
+  value: string;
+};
 
 export default function QuickMedicineUse() {
   const [open, setOpen] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [loading, setLoading] = React.useState(true);
+  const [medicineItems, setMedicineItems] = React.useState<MedicineOption[]>([]);
   const [doseCount, setDoseCount] = React.useState(1);
-  const [selectedMedicine, setSelectedMedicine] = React.useState<
-    (typeof medicineItems)[number] | null
-  >(null);
+  const [selectedMedicine, setSelectedMedicine] = React.useState<MedicineOption | null>(
+    null,
+  );
   const [medicineQuery, setMedicineQuery] = React.useState("");
+
+  const loadMedicines = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await medicinesApi.listMy();
+      const options = data.map((item) => ({
+        id: item.id,
+        label: item.medicijn_naam,
+        value: item.id,
+      }));
+      setMedicineItems(options);
+    } catch (error) {
+      toast.error((error as Error).message || "Medicijnen laden mislukt.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void loadMedicines();
+    const handleMedicinesUpdate = () => {
+      void loadMedicines();
+    };
+    window.addEventListener("turfje:medicines-updated", handleMedicinesUpdate);
+    return () => {
+      window.removeEventListener("turfje:medicines-updated", handleMedicinesUpdate);
+    };
+  }, [loadMedicines]);
+
   const filteredMedicineItems = medicineItems.filter((item) =>
     item.label.toLowerCase().includes(medicineQuery.trim().toLowerCase()),
   );
+
+  const handleSubmit = async (status: "op_tijd" | "gemist") => {
+    if (!selectedMedicine) {
+      toast.error("Selecteer een medicijn.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      await logsApi.create({
+        gmn_id: selectedMedicine.id,
+        medicijn_turven: doseCount,
+        status,
+      });
+      toast.success(status === "gemist" ? "Gemiste inname opgeslagen." : "Inname opgeslagen.");
+      window.dispatchEvent(new CustomEvent("turfje:log-created"));
+      setOpen(false);
+      setDoseCount(1);
+      setSelectedMedicine(null);
+      setMedicineQuery("");
+    } catch (error) {
+      toast.error((error as Error).message || "Inname opslaan mislukt.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Drawer open={open} onOpenChange={setOpen}>
@@ -66,13 +143,21 @@ export default function QuickMedicineUse() {
               >
                 <ComboboxInput
                   className="bg-white/5 border-white/15 text-white/90"
-                  placeholder="Selecteer een medicijn"
+                  placeholder={loading ? "Medicijnen laden..." : "Selecteer een medicijn"}
+                  disabled={loading}
                 />
-                <ComboboxContent className="dialog-main-select-content">
+                <ComboboxContent className="dialog-main-select-content z-[60] pointer-events-auto">
                   <ComboboxList>
                     <ComboboxGroup>
                       {filteredMedicineItems.map((item) => (
-                        <ComboboxItem key={item.value} value={item}>
+                        <ComboboxItem
+                          key={item.value}
+                          value={item}
+                          onMouseDown={() => {
+                            setSelectedMedicine(item);
+                            setMedicineQuery(item.label);
+                          }}
+                        >
                           {item.label}
                         </ComboboxItem>
                       ))}
@@ -90,6 +175,7 @@ export default function QuickMedicineUse() {
                   type="button"
                   size="icon"
                   onClick={() => setDoseCount(Math.max(1, doseCount - 1))}
+                  disabled={submitting}
                 >
                   -
                 </Button>
@@ -101,6 +187,7 @@ export default function QuickMedicineUse() {
                   type="button"
                   size="icon"
                   onClick={() => setDoseCount(doseCount + 1)}
+                  disabled={submitting}
                 >
                   +
                 </Button>
@@ -108,11 +195,24 @@ export default function QuickMedicineUse() {
             </div>
           </div>
           <DrawerFooter className="pt-2 mt-2">
-            <DrawerClose asChild>
-              <Button type="button" className="main-button">
-                Invoegen
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
+              <Button
+                type="button"
+                className="h-10 w-full bg-green-500/15 text-green-200 hover:bg-green-500/25"
+                onClick={() => handleSubmit("op_tijd")}
+                disabled={submitting || loading}
+              >
+                {submitting ? "Bezig..." : "Ingenomen"}
               </Button>
-            </DrawerClose>
+              <Button
+                type="button"
+                className="h-10 w-full bg-red-500/15 text-red-200 hover:bg-red-500/25"
+                onClick={() => handleSubmit("gemist")}
+                disabled={submitting || loading}
+              >
+                {submitting ? "Bezig..." : "Gemist"}
+              </Button>
+            </div>
           </DrawerFooter>
         </div>
       </DrawerContent>

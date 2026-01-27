@@ -14,6 +14,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import TextReveal from '@/components/TextReveal';
+import { authApi } from '@/lib/api';
 
 type RegisterState = {
   firstName: string;
@@ -47,28 +48,17 @@ export default function Register() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: form.firstName,
-          last_name: form.lastName,
-          email: form.email,
-          password: form.password,
-          role: 'patient',
-        }),
+      await authApi.register({
+        first_name: form.firstName,
+        last_name: form.lastName,
+        email: form.email,
+        password: form.password,
+        role: 'patient',
       });
-
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        toast(data?.error ?? 'Registratie mislukt');
-        return;
-      }
-
       toast.success('Registratie gelukt, log nu in');
       navigate('/login');
+    } catch (error) {
+      toast((error as Error).message || 'Registratie mislukt');
     } finally {
       setLoading(false);
     }

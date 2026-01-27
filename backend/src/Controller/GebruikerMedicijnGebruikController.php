@@ -7,6 +7,7 @@ use App\Entity\GebruikerKoppelingen;
 use App\Entity\GebruikerMedicijn;
 use App\Entity\GebruikerMedicijnGebruik;
 use App\Entity\GebruikerMedicijnSchema;
+use App\Entity\VoorraadItem;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -47,6 +48,13 @@ class GebruikerMedicijnGebruikController extends AbstractController
     // 2. Set Amount
     $log->setMedicijnTurven((int) ($data['medicijn_turven'] ?? 1));
 
+    // 2b. Set Status (Optional)
+    $status = $data['status'] ?? GebruikerMedicijnGebruik::STATUS_OP_TIJD;
+    if (!in_array($status, [GebruikerMedicijnGebruik::STATUS_OP_TIJD, GebruikerMedicijnGebruik::STATUS_GEMIST], true)) {
+      return $this->json(['error' => 'Ongeldige status.'], 400);
+    }
+    $log->setStatus($status);
+
     // 3. Validate gms_id (Optional but STRICT if provided)
     if (!empty($data['gms_id'])) {
       $schema = $em->getRepository(GebruikerMedicijnSchema::class)->find($data['gms_id']);
@@ -75,6 +83,30 @@ class GebruikerMedicijnGebruikController extends AbstractController
 
     $em->persist($log);
     $em->flush();
+
+    // 5. Decrease stock when logged as taken
+    if ($log->getStatus() === GebruikerMedicijnGebruik::STATUS_OP_TIJD) {
+      $stockItem = $gebruikerMedicijn->getVoorraadItem();
+      if ($stockItem instanceof VoorraadItem) {
+        $pillsPerStrip = max(1, $stockItem->getPillsPerStrip());
+        $total = ($stockItem->getStripsCount() * $pillsPerStrip) + $stockItem->getLoosePills();
+        $newTotal = max(0, $total - $log->getMedicijnTurven());
+
+        $stockItem->setStripsCount((int) floor($newTotal / $pillsPerStrip));
+        $stockItem->setLoosePills((int) ($newTotal % $pillsPerStrip));
+
+        if ($newTotal <= (int) floor($stockItem->getThreshold() / 2)) {
+          $stockItem->setStatus(VoorraadItem::STATUS_BIJNA_LEEG);
+        } elseif ($newTotal <= $stockItem->getThreshold()) {
+          $stockItem->setStatus(VoorraadItem::STATUS_BIJNA_OP);
+        } else {
+          $stockItem->setStatus(VoorraadItem::STATUS_OP_PEIL);
+        }
+
+        $stockItem->setLastUpdated(new \DateTime('now', new \DateTimeZone('Europe/Amsterdam')));
+        $em->flush();
+      }
+    }
 
     return $this->json([
       'message' => 'Turf succesvol opgeslagen.',
@@ -149,6 +181,7 @@ class GebruikerMedicijnGebruikController extends AbstractController
       'medicijn_naam' => $log->getGebruikerMedicijn()->getMedicijnNaam(),
       'medicijn_turven' => $log->getMedicijnTurven(),
       'gms_id' => $log->getGebruikerMedicijnSchema()?->getId(),
+      'status' => $log->getStatus(),
       'aangemaakt_op' => $log->getAangemaaktOp()->format('c'),
     ], $logs);
 

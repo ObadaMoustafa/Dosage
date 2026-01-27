@@ -21,13 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
-import { formatStockLabel, stockItems } from "@/data/stock";
 
 const routeOptions = ["Oraal", "Anaal", "Spuit", "Anders"];
-const stockOptions = stockItems.map((item) => ({
-  id: item.id,
-  label: `${item.name} · ${formatStockLabel(item)}`,
-}));
 
 export type CreateMedicinePayload = {
   name: string;
@@ -42,10 +37,12 @@ export type CreateMedicinePayload = {
 
 type DrawerMedicineCreateProps = {
   onSubmit?: (payload: CreateMedicinePayload) => void;
+  stockOptions?: { id: string; label: string }[];
 };
 
 export default function DrawerMedicineCreate({
   onSubmit,
+  stockOptions = [],
 }: DrawerMedicineCreateProps) {
   const [open, setOpen] = React.useState(false);
   const initialForm = React.useMemo(

@@ -2,8 +2,20 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="dd08c50e-2710-4723-a52d-47f5fc233012" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/migrations/Version20260122171417.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/migrations/Version20260123122001.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/migrations/Version20260125143701.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/auth/AuthProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/auth/AuthProvider.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/DrawerMedicineDelete.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/DrawerMedicineDelete.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/DrawerMedicineEdit.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/DrawerMedicineEdit.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/HistoryTableRow.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/HistoryTableRow.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/MedicineTableRow.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/MedicineTableRow.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Login.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Login.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/Register.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/Register.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/dashboard/History.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/dashboard/Medicines.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/dashboard/Medicines.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/dashboard/Settings.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/dashboard/Settings.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +31,7 @@
   <component name="CopilotPersistence">
     <persistenceIdMap>
       <entry key="_/home/aethyal/Code/Turfje" value="36R1qNfiYtdFyjEtEA65h0ZGQ6A" />
+      <entry key="_C:/Users/aethyal/PhpstormProjects/turfje" value="38lBwe85S7YyuK23mqkmZqGBNKG" />
     </persistenceIdMap>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -31,7 +44,7 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP 8.3">
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="PHP">
     <include_path>
       <path value="$PROJECT_DIR$/vendor/composer" />
       <path value="$PROJECT_DIR$/vendor/symfony/flex" />
@@ -84,6 +97,28 @@
       <path value="$PROJECT_DIR$/backend/vendor/psr/clock" />
       <path value="$PROJECT_DIR$/backend/vendor/lexik/jwt-authentication-bundle" />
       <path value="$PROJECT_DIR$/backend/vendor/lcobucci/jwt" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/uid" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/doctrine-bridge" />
+      <path value="$PROJECT_DIR$/backend/vendor/nelmio/cors-bundle" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/http-client-contracts" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/stopwatch" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/polyfill-uuid" />
+      <path value="$PROJECT_DIR$/backend/vendor/symfony/http-client" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/dbal" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/event-manager" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/lexer" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/sql-formatter" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/orm" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/deprecations" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/collections" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/instantiator" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/doctrine-bundle" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/migrations" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/persistence" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/doctrine-migrations-bundle" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/doctrine-fixtures-bundle" />
+      <path value="$PROJECT_DIR$/backend/vendor/fakerphp/faker" />
+      <path value="$PROJECT_DIR$/backend/vendor/doctrine/data-fixtures" />
     </include_path>
   </component>
   <component name="ProjectColorInfo">{
@@ -101,11 +136,12 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "/home/aethyal/Documents/School/Turfje/turfje",
     "node.js.detected.package.eslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "ts.external.directory.path": "/home/aethyal/Code/Turfje/frontend/node_modules/typescript/lib",
+    "ts.external.directory.path": "C:\\Users\\aethyal\\PhpstormProjects\\turfje\\frontend\\node_modules\\typescript\\lib",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -133,6 +169,8 @@
       <workItem from="1768485121613" duration="814000" />
       <workItem from="1768503802509" duration="2000" />
       <workItem from="1768647864184" duration="32000" />
+      <workItem from="1769364516532" duration="4251000" />
+      <workItem from="1769508695661" duration="1506000" />
     </task>
     <servers />
   </component>

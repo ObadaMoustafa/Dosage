@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Gebruikers;
 use App\Entity\GebruikerMedicijn;
+use App\Entity\VoorraadItem;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -52,6 +53,7 @@ class GebruikerMedicijnController extends AbstractController
             'sterkte' => $m->getSterkte(),
             'beschrijving' => $m->getBeschrijving(),
             'bijsluiter' => $m->getBijsluiter(),
+            'stock_id' => $m->getVoorraadItem()?->getId(),
             'added_at' => $m->getAangemaaktOp()->format('Y-m-d H:i:s'),
             'is_owner' => ($targetUser === $currentUser)
         ], $medicines);
@@ -94,6 +96,7 @@ class GebruikerMedicijnController extends AbstractController
             'sterkte' => $med->getSterkte(),
             'beschrijving' => $med->getBeschrijving(),
             'bijsluiter' => $med->getBijsluiter(),
+            'stock_id' => $med->getVoorraadItem()?->getId(),
             'added_at' => $med->getAangemaaktOp()->format('Y-m-d H:i:s'),
             'owner_id' => $owner->getId()
         ]);
@@ -145,6 +148,20 @@ class GebruikerMedicijnController extends AbstractController
         $med->setBeschrijving($payload['beschrijving'] ?? null);
         $med->setBijsluiter($payload['bijsluiter'] ?? null);
 
+        if (array_key_exists('stock_id', $payload)) {
+            $stockId = $payload['stock_id'];
+            if ($stockId) {
+                /** @var VoorraadItem|null $stockItem */
+                $stockItem = $em->getRepository(VoorraadItem::class)->find($stockId);
+                if (!$stockItem || $stockItem->getGebruiker() !== $user) {
+                    return $this->json(['error' => 'Ongeldige voorraad koppeling.'], 400);
+                }
+                $med->setVoorraadItem($stockItem);
+            } else {
+                $med->setVoorraadItem(null);
+            }
+        }
+
         $em->persist($med);
         $em->flush();
 
@@ -191,6 +208,19 @@ class GebruikerMedicijnController extends AbstractController
         }
         if (array_key_exists('bijsluiter', $data)) {
             $med->setBijsluiter($data['bijsluiter']);
+        }
+        if (array_key_exists('stock_id', $data)) {
+            $stockId = $data['stock_id'];
+            if ($stockId) {
+                /** @var VoorraadItem|null $stockItem */
+                $stockItem = $em->getRepository(VoorraadItem::class)->find($stockId);
+                if (!$stockItem || $stockItem->getGebruiker() !== $currentUser) {
+                    return $this->json(['error' => 'Ongeldige voorraad koppeling.'], 400);
+                }
+                $med->setVoorraadItem($stockItem);
+            } else {
+                $med->setVoorraadItem(null);
+            }
         }
 
         $em->flush();

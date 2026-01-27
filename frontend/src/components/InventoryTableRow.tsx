@@ -4,9 +4,10 @@ import { formatStockDetails, getTotalPills, type StockItem } from "@/data/stock"
 
 type InventoryTableRowProps = {
   item: StockItem;
+  onEdit?: (next: StockItem) => Promise<boolean> | boolean | void;
 };
 
-export default function InventoryTableRow({ item }: InventoryTableRowProps) {
+export default function InventoryTableRow({ item, onEdit }: InventoryTableRowProps) {
   return (
     <TableRow>
       <TableCell className="font-medium">{item.name}</TableCell>
@@ -35,7 +36,7 @@ export default function InventoryTableRow({ item }: InventoryTableRowProps) {
       </TableCell>
       <TableCell className="text-right">
         <div className="flex items-center justify-end gap-2">
-          <DrawerStockEdit stock={item} />
+          <DrawerStockEdit stock={item} onSave={onEdit} />
         </div>
       </TableCell>
     </TableRow>

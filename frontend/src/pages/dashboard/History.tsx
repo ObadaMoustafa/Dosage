@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,109 +19,159 @@ import {
 } from '@/components/ui/select';
 import HistoryTableRow, { type HistoryEntry } from '@/components/HistoryTableRow';
 import HistoryLineChart from '@/components/dashboard/HistoryLineChart';
+import { logsApi } from '@/lib/api';
+import { toast } from 'sonner';
 
-const historyEntries: HistoryEntry[] = [
-  {
-    id: 'history-1',
-    medicine: 'Paracetamol 500/50mg',
-    details: '3 Strips (10 p/strip) · 2 stuks',
-    scheduledAt: '24-01-2026 · 14:00',
-    status: 'Op tijd',
-  },
-  {
-    id: 'history-2',
-    medicine: 'Paracetamol 500/50mg',
-    details: '1 Strip · 2 stuks',
-    scheduledAt: '23-01-2026 · 20:00',
-    status: 'Gemist',
-  },
-  {
-    id: 'history-3',
-    medicine: 'Omeprazol 20mg',
-    details: '1 Strip · 1 stuk',
-    scheduledAt: '23-01-2026 · 08:00',
-    status: 'Op tijd',
-  },
-  {
-    id: 'history-4',
-    medicine: 'Ibuprofen 250mg',
-    details: '2 Strips · 1 stuk',
-    scheduledAt: '22-01-2026 · 19:00',
-    status: 'Gemist',
-  },
-  {
-    id: 'history-5',
-    medicine: 'Omeprazol 20mg',
-    details: '1 Strip · 1 stuk',
-    scheduledAt: '22-01-2026 · 08:00',
-    status: 'Op tijd',
-  },
-];
+const formatLogTimestamp = (value: string) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('nl-NL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
 
-const chartData = [
-  {
-    label: 'Ma',
-    value: 3,
-    details: [
-      { time: '08:00', status: 'Op tijd', medicine: 'Paracetamol' },
-      { time: '12:00', status: 'Op tijd', medicine: 'Omeprazol' },
-      { time: '20:00', status: 'Gemist', medicine: 'Paracetamol' },
-    ],
-  },
-  {
-    label: 'Di',
-    value: 3,
-    details: [
-      { time: '09:00', status: 'Op tijd', medicine: 'Omeprazol' },
-      { time: '14:00', status: 'Op tijd', medicine: 'Paracetamol' },
-      { time: '20:00', status: 'Gemist', medicine: 'Paracetamol' },
-    ],
-  },
-  {
-    label: 'Wo',
-    value: 2,
-    details: [
-      { time: '08:00', status: 'Op tijd', medicine: 'Omeprazol' },
-      { time: '18:00', status: 'Op tijd', medicine: 'Paracetamol' },
-    ],
-  },
-  {
-    label: 'Do',
-    value: 3,
-    details: [
-      { time: '09:00', status: 'Op tijd', medicine: 'Omeprazol' },
-      { time: '14:00', status: 'Gemist', medicine: 'Paracetamol' },
-      { time: '20:00', status: 'Op tijd', medicine: 'Paracetamol' },
-    ],
-  },
-  {
-    label: 'Vr',
-    value: 2,
-    details: [
-      { time: '12:00', status: 'Op tijd', medicine: 'Omeprazol' },
-      { time: '19:00', status: 'Gemist', medicine: 'Paracetamol' },
-    ],
-  },
-  {
-    label: 'Za',
-    value: 1,
-    details: [{ time: '09:00', status: 'Op tijd', medicine: 'Omeprazol' }],
-  },
-  {
-    label: 'Zo',
-    value: 2,
-    details: [
-      { time: '14:00', status: 'Op tijd', medicine: 'Paracetamol' },
-      { time: '20:00', status: 'Op tijd', medicine: 'Omeprazol' },
-    ],
-  },
-];
+const normalizeStatus = (status?: string | null) => {
+  if (!status) return 'Op tijd' as const;
+  const lowered = status.toLowerCase();
+  if (lowered.includes('gemist')) return 'Gemist' as const;
+  if (lowered.includes('op_tijd') || lowered.includes('op tijd')) return 'Op tijd' as const;
+  return 'Op tijd' as const;
+};
+
+const buildChartData = (
+  logs: {
+    medicijn_naam: string;
+    medicijn_turven: number;
+    aangemaakt_op: string;
+    status?: string | null;
+  }[],
+  statusFilter: 'all' | 'Op tijd' | 'Gemist',
+) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() - (6 - index));
+    return date;
+  });
+
+  const keyForDate = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+      date.getDate(),
+    ).padStart(2, '0')}`;
+
+  const logsByDay = new Map<string, typeof logs>();
+  logs.forEach((log) => {
+    const date = new Date(log.aangemaakt_op);
+    if (Number.isNaN(date.getTime())) return;
+    const key = keyForDate(date);
+    const existing = logsByDay.get(key) ?? [];
+    existing.push(log);
+    logsByDay.set(key, existing);
+  });
+
+  const weekdayFormatter = new Intl.DateTimeFormat('nl-NL', { weekday: 'short' });
+  const timeFormatter = new Intl.DateTimeFormat('nl-NL', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  return days.map((date) => {
+    const key = keyForDate(date);
+    const dayLogs = logsByDay.get(key) ?? [];
+    const filteredDayLogs =
+      statusFilter === 'all'
+        ? dayLogs
+        : dayLogs.filter((log) => normalizeStatus(log.status) === statusFilter);
+    dayLogs.sort(
+      (a, b) => new Date(a.aangemaakt_op).getTime() - new Date(b.aangemaakt_op).getTime(),
+    );
+
+    const labelRaw = weekdayFormatter.format(date);
+    const label = labelRaw.charAt(0).toUpperCase() + labelRaw.slice(1);
+    const value = filteredDayLogs.reduce(
+      (sum, item) => sum + (item.medicijn_turven || 0),
+      0,
+    );
+    const details = filteredDayLogs.map((log) => ({
+      time: timeFormatter.format(new Date(log.aangemaakt_op)),
+      status: normalizeStatus(log.status),
+      medicine: log.medicijn_naam,
+    }));
+
+    return {
+      label,
+      value,
+      details,
+    };
+  });
+};
 
 export default function DashboardHistory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | HistoryEntry['status']>(
     'all',
   );
+  const [loading, setLoading] = useState(true);
+  const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
+  const [logs, setLogs] = useState<
+    {
+      medicijn_naam: string;
+      medicijn_turven: number;
+      aangemaakt_op: string;
+      status?: string | null;
+    }[]
+  >([]);
+  const [chartData, setChartData] = useState<
+    {
+      label: string;
+      value: number;
+      details?: { time: string; status: 'Op tijd' | 'Gemist'; medicine: string }[];
+    }[]
+  >([]);
+
+  const loadLogs = async () => {
+    setLoading(true);
+    try {
+      const data = await logsApi.list();
+      const entries = data.map((item) => ({
+        id: item.id,
+        medicine: item.medicijn_naam,
+        details: `${item.medicijn_turven} stuks`,
+        scheduledAt: formatLogTimestamp(item.aangemaakt_op),
+        status: normalizeStatus(item.status),
+      }));
+      setHistoryEntries(entries);
+      setLogs(data);
+    } catch (error) {
+      toast.error((error as Error).message || 'Kon historie niet laden.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    const runLoad = async () => {
+      if (!mounted) return;
+      await loadLogs();
+    };
+
+    const handleLogCreated = () => {
+      void runLoad();
+    };
+
+    window.addEventListener('turfje:log-created', handleLogCreated);
+    void runLoad();
+    return () => {
+      mounted = false;
+      window.removeEventListener('turfje:log-created', handleLogCreated);
+    };
+  }, []);
 
   const filteredEntries = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -133,7 +183,11 @@ export default function DashboardHistory() {
       const matchesStatus = statusFilter === 'all' || entry.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, historyEntries]);
+
+  useEffect(() => {
+    setChartData(buildChartData(logs, statusFilter));
+  }, [logs, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -195,7 +249,7 @@ export default function DashboardHistory() {
               </TableBody>
             </Table>
             <div className="text-xs text-muted-foreground">
-              {filteredEntries.length} registraties
+              {loading ? 'Historie laden...' : `${filteredEntries.length} registraties`}
             </div>
           </CardContent>
         </Card>

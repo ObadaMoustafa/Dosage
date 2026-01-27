@@ -15,6 +15,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import TextReveal from '@/components/TextReveal';
+import { authApi } from '@/lib/api';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,26 +36,11 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!res.ok) {
-        toast('Login failed');
-        return;
-      }
-
-      const data = (await res.json()) as { token?: string };
-      if (!data.token) {
-        toast('Missing token');
-        return;
-      }
-
-      localStorage.setItem('token', data.token);
+      await authApi.login(email, password);
       await refreshAuth();
       navigate(from, { replace: true });
+    } catch (error) {
+      toast((error as Error).message || 'Login failed');
     } finally {
       setLoading(false);
     }

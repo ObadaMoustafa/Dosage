@@ -13,6 +13,8 @@ type HistoryTableRowProps = {
 };
 
 export default function HistoryTableRow({ entry }: HistoryTableRowProps) {
+  const statusLabel = entry.status ?? "Op tijd";
+
   return (
     <TableRow>
       <TableCell className="font-medium">{entry.medicine}</TableCell>
@@ -21,12 +23,12 @@ export default function HistoryTableRow({ entry }: HistoryTableRowProps) {
       <TableCell className="text-right">
         <span
           className={
-            entry.status === "Op tijd"
+            statusLabel === "Op tijd"
               ? "text-green-400 text-xs font-semibold"
               : "text-red-400 text-xs font-semibold"
           }
         >
-          {entry.status}
+          {statusLabel}
         </span>
       </TableCell>
     </TableRow>

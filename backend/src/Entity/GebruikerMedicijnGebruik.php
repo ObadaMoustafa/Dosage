@@ -12,6 +12,9 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Table(name: 'gebruiker_medicijn_gebruik')]
 class GebruikerMedicijnGebruik
 {
+    public const STATUS_OP_TIJD = 'op_tijd';
+    public const STATUS_GEMIST = 'gemist';
+
     #[ORM\Id]
     #[ORM\Column(type: UuidType::NAME, unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
@@ -30,6 +33,9 @@ class GebruikerMedicijnGebruik
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $medicijn_turven = null;
 
+    #[ORM\Column(length: 20)]
+    private ?string $status = null;
+
     // Last time taken or updated
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $aangemaakt_op = null;
@@ -38,6 +44,7 @@ class GebruikerMedicijnGebruik
     {
         $this->aangemaakt_op = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
         $this->medicijn_turven = 0; // Default starts at 0
+        $this->status = self::STATUS_OP_TIJD;
     }
 
     public function getId(): ?Uuid
@@ -72,6 +79,16 @@ class GebruikerMedicijnGebruik
     public function setMedicijnTurven(int $medicijn_turven): static
     {
         $this->medicijn_turven = $medicijn_turven;
+        return $this;
+    }
+
+    public function getStatus(): ?string
+    {
+        return $this->status;
+    }
+    public function setStatus(string $status): static
+    {
+        $this->status = $status;
         return $this;
     }
 

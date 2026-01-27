@@ -1,29 +1,38 @@
 import * as React from 'react';
-import { Pencil, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { StockItem, StockStatus } from '@/data/stock';
 
-type DrawerStockEditProps = {
-  stock: StockItem;
-  onSave?: (next: StockItem) => Promise<boolean> | boolean | void;
+type DrawerStockCreateProps = {
+  onSave?: (next: Omit<StockItem, 'id' | 'lastUpdated'>) => Promise<boolean> | boolean | void;
 };
 
 const statusOptions: StockStatus[] = ['Op peil', 'Bijna op', 'Bijna leeg'];
 
-export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps) {
+export default function DrawerStockCreate({ onSave }: DrawerStockCreateProps) {
   const [open, setOpen] = React.useState(false);
-  const [form, setForm] = React.useState<StockItem>(stock);
   const [saving, setSaving] = React.useState(false);
-
-  React.useEffect(() => {
-    if (open) {
-      setForm(stock);
-    }
-  }, [open, stock]);
+  const [form, setForm] = React.useState({
+    name: '',
+    stripsCount: 0,
+    pillsPerStrip: 0,
+    loosePills: 0,
+    threshold: 0,
+    status: 'Op peil' as StockStatus,
+  });
 
   const handleSave = async () => {
     if (!onSave) {
@@ -36,6 +45,14 @@ export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps)
       const result = await onSave(form);
       if (result === false) return;
       setOpen(false);
+      setForm({
+        name: '',
+        stripsCount: 0,
+        pillsPerStrip: 0,
+        loosePills: 0,
+        threshold: 0,
+        status: 'Op peil',
+      });
     } finally {
       setSaving(false);
     }
@@ -44,19 +61,18 @@ export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps)
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Pencil className="h-4 w-4" />
+        <Button size="sm" className="gap-2">
+          <Plus className="h-4 w-4" />
+          Nieuwe voorraad
         </Button>
       </DrawerTrigger>
       <DrawerContent className="dialog-main sm:left-1/2 sm:right-auto sm:w-lg sm:-translate-x-1/2">
         <div className="mx-auto w-full max-w-2xl pb-2">
           <div className="relative">
             <DrawerHeader className="dialog-text-color">
-              <DrawerTitle className="text-white/90">
-                Voorraad: {stock.name}
-              </DrawerTitle>
+              <DrawerTitle className="text-white/90">Nieuwe voorraad</DrawerTitle>
               <DrawerDescription className="text-white/50">
-                Werk de voorraadwaarden bij voor dit medicijn.
+                Voeg een nieuw voorraaditem toe.
               </DrawerDescription>
             </DrawerHeader>
             <DrawerClose asChild>
@@ -175,7 +191,7 @@ export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps)
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? 'Opslaan...' : 'Opslaan'}
+              {saving ? 'Opslaan...' : 'Toevoegen'}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" className="main-button-nb">

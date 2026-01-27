@@ -45,6 +45,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
+import { authApi, pairingApi, type PairingType } from '@/lib/api';
 type ProfileForm = {
   firstName: string;
   lastName: string;
@@ -84,22 +85,13 @@ export default function DashboardSettings() {
   const [shareRole, setShareRole] = useState<'Zorgverlener' | 'Vertrouweling' | null>(
     null,
   );
+  const [pairingLoading, setPairingLoading] = useState(false);
   const [otpValue, setOtpValue] = useState('');
   const [viewingUserId, setViewingUserId] = useState('self');
-  const [sharedWith, setSharedWith] = useState<ShareConnection[]>([
-    {
-      id: 'share-1',
-      name: 'Sanne de Vries',
-      email: 'sanne@voorbeeld.nl',
-      role: 'Zorgverlener',
-    },
-    {
-      id: 'share-2',
-      name: 'Mark Jansen',
-      email: 'mark@voorbeeld.nl',
-      role: 'Familie',
-    },
-  ]);
+  const [sharedWith, setSharedWith] = useState<ShareConnection[]>([]);
+  const [viewingUsers, setViewingUsers] = useState<
+    { id: string; label: string }[]
+  >([]);
 
   useEffect(() => {
     if (auth.status !== 'authed') return;
@@ -124,12 +116,6 @@ export default function DashboardSettings() {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    if (!token) {
-      toast.error('Je bent niet ingelogd.');
-      return;
-    }
-
     if (!profile.firstName || !profile.lastName) {
       toast.error('Voornaam en achternaam zijn verplicht.');
       return;
@@ -137,29 +123,15 @@ export default function DashboardSettings() {
 
     setSavingProfile(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          first_name: profile.firstName,
-          last_name: profile.lastName,
-          email: profile.email || null,
-        }),
+      await authApi.updateProfile({
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        email: profile.email || null,
       });
-
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        toast.error(data?.error ?? 'Opslaan mislukt');
-        return;
-      }
-
       await refreshAuth();
       toast.success('Profiel bijgewerkt');
+    } catch (error) {
+      toast.error((error as Error).message || 'Opslaan mislukt');
     } finally {
       setSavingProfile(false);
     }
@@ -189,29 +161,10 @@ export default function DashboardSettings() {
 
     setSavingPassword(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/auth/change-password`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            current_password: passwords.currentPassword,
-            new_password: passwords.newPassword,
-          }),
-        },
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data?.error || 'Wachtwoord wijzigen mislukt');
-        return;
-      }
-
+      await authApi.changePassword({
+        current_password: passwords.currentPassword,
+        new_password: passwords.newPassword,
+      });
       toast.success('Wachtwoord succesvol gewijzigd');
       setPasswords({
         currentPassword: '',
@@ -219,7 +172,7 @@ export default function DashboardSettings() {
         confirmPassword: '',
       });
     } catch (error) {
-      toast.error('Er is een fout opgetreden.');
+      toast.error((error as Error).message || 'Er is een fout opgetreden.');
     } finally {
       setSavingPassword(false);
     }
@@ -229,25 +182,63 @@ export default function DashboardSettings() {
     e.preventDefault();
     setDeletingAccount(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/me`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        toast.error('Fout bij verwijderen account.');
-        setDeletingAccount(false); // Reset loading only on error
-        return;
-      }
-
+      await authApi.deleteAccount();
       toast.success('Account verwijderd. Tot ziens!');
       logout();
     } catch (error) {
-      toast.error('Er is een fout opgetreden.');
+      toast.error((error as Error).message || 'Er is een fout opgetreden.');
       setDeletingAccount(false);
+    }
+  };
+
+  const loadPairingData = async () => {
+    try {
+      const [viewers, subjects] = await Promise.all([
+        pairingApi.viewers(),
+        pairingApi.subjects(),
+      ]);
+
+      setSharedWith([
+        ...viewers.therapists.map((viewer) => ({
+          id: viewer.user_id,
+          name: viewer.name,
+          email: viewer.role ?? '',
+          role: 'Zorgverlener',
+        })),
+        ...viewers.trusted.map((viewer) => ({
+          id: viewer.user_id,
+          name: viewer.name,
+          email: viewer.role ?? '',
+          role: 'Vertrouweling',
+        })),
+      ]);
+
+      const nextViewingUsers = [
+        { id: 'self', label: 'Jij' },
+        ...subjects.full_access.map((subject) => ({
+          id: subject.user_id,
+          label: `${subject.name} (volledige toegang)`,
+        })),
+        ...subjects.read_only.map((subject) => ({
+          id: subject.user_id,
+          label: `${subject.name} (alleen lezen)`,
+        })),
+      ];
+      setViewingUsers(nextViewingUsers);
+
+      setViewingUserId((prev) => {
+        if (
+          prev !== 'self' &&
+          !subjects.full_access
+            .concat(subjects.read_only)
+            .some((subject) => subject.user_id === prev)
+        ) {
+          return 'self';
+        }
+        return prev;
+      });
+    } catch (error) {
+      toast.error((error as Error).message || 'Koppelingen laden mislukt.');
     }
   };
 
@@ -256,18 +247,13 @@ export default function DashboardSettings() {
   ) => {
     setShareLoading(true);
     try {
-      const code = `${Math.floor(100000 + Math.random() * 900000)}`;
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toLocaleTimeString(
-        'nl-NL',
-        {
-          hour: '2-digit',
-          minute: '2-digit',
-        },
-      );
+      const apiType: PairingType = role === 'Zorgverlener' ? 'THERAPIST' : 'TRUSTED';
+      const result = await pairingApi.invite(apiType);
       setShareRole(role);
-      setShareCode(code);
-      setShareExpiresAt(expiresAt);
+      setShareCode(result.code);
+      setShareExpiresAt(result.expires_at);
       toast.success('Deelcode gegenereerd');
+      await loadPairingData();
     } finally {
       setShareLoading(false);
     }
@@ -286,12 +272,32 @@ export default function DashboardSettings() {
       toast.error('Vul de 6-cijferige code in.');
       return;
     }
-    toast.success('Verbinding gemaakt (demo).');
-    setOtpValue('');
+
+    setPairingLoading(true);
+    try {
+      await pairingApi.link(otpValue);
+      toast.success('Verbinding gemaakt.');
+      setOtpValue('');
+      await loadPairingData();
+    } catch (error) {
+      toast.error((error as Error).message || 'Koppelen mislukt.');
+    } finally {
+      setPairingLoading(false);
+    }
   };
 
   const handleRemoveShare = async (shareId: string) => {
-    setSharedWith((prev) => prev.filter((item) => item.id !== shareId));
+    setPairingLoading(true);
+    try {
+      await pairingApi.unlink(shareId);
+      setSharedWith((prev) => prev.filter((item) => item.id !== shareId));
+      toast.success('Koppeling verwijderd.');
+      await loadPairingData();
+    } catch (error) {
+      toast.error((error as Error).message || 'Verwijderen mislukt.');
+    } finally {
+      setPairingLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -299,6 +305,7 @@ export default function DashboardSettings() {
     if (stored) {
       setViewingUserId(stored);
     }
+    void loadPairingData();
   }, []);
 
   const handleViewingUserChange = (nextValue: string) => {
@@ -306,10 +313,10 @@ export default function DashboardSettings() {
     localStorage.setItem('turfje:viewing-user', nextValue);
   };
 
-  const viewingOptions = [
-    { id: 'self', label: 'Jij' },
-    ...sharedWith.map((share) => ({ id: share.id, label: share.name })),
-  ];
+  const viewingOptions =
+    viewingUsers.length > 0
+      ? viewingUsers
+      : [{ id: 'self', label: 'Jij' }];
 
   return (
     <div className="space-y-6">
@@ -501,7 +508,7 @@ export default function DashboardSettings() {
                 <Button
                   type="button"
                   onClick={() => setShareDrawerOpen(true)}
-                  disabled={shareLoading}
+                  disabled={shareLoading || pairingLoading}
                 >
                   {shareLoading ? 'Genereren...' : 'Genereer code'}
                 </Button>
@@ -538,7 +545,7 @@ export default function DashboardSettings() {
                       <Button
                         type="button"
                         className="bg-white/10 text-white/90 hover:bg-white/20"
-                        disabled={shareLoading}
+                        disabled={shareLoading || pairingLoading}
                         onClick={() => handleShareRoleSelect('Zorgverlener')}
                       >
                         Zorgverlener
@@ -546,7 +553,7 @@ export default function DashboardSettings() {
                       <Button
                         type="button"
                         className="bg-white/10 text-white/90 hover:bg-white/20"
-                        disabled={shareLoading}
+                        disabled={shareLoading || pairingLoading}
                         onClick={() => handleShareRoleSelect('Vertrouweling')}
                       >
                         Vertrouweling
@@ -582,8 +589,11 @@ export default function DashboardSettings() {
                 </InputOTPGroup>
               </InputOTP>
               <div>
-                <Button type="submit" disabled={otpValue.length !== 6}>
-                  Verbinden
+                <Button
+                  type="submit"
+                  disabled={otpValue.length !== 6 || pairingLoading}
+                >
+                  {pairingLoading ? 'Verbinden...' : 'Verbinden'}
                 </Button>
               </div>
             </form>
@@ -629,9 +639,10 @@ export default function DashboardSettings() {
                         type="button"
                         variant="outline"
                         className="main-button-nb"
+                        disabled={pairingLoading}
                         onClick={() => handleRemoveShare(share.id)}
                       >
-                        Verwijderen
+                        {pairingLoading ? 'Bezig...' : 'Verwijderen'}
                       </Button>
                     </div>
                   ))}

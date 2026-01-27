@@ -18,7 +18,7 @@ export default function UpcomingDoseCard({
   etaLabel,
 }: UpcomingDoseCardProps) {
   return (
-    <Card className="bg-[#1b2441] border-border/60">
+    <Card className="bg-[#1b2441] border-border/60 flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-sm font-medium">Aankomende Inname</CardTitle>
         <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold text-muted-foreground">
@@ -26,23 +26,25 @@ export default function UpcomingDoseCard({
           {etaLabel}
         </span>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-semibold mb-1">{timeLabel}</div>
-        <p className="text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 py-0.5 text-xs font-semibold text-muted-foreground">
-            <LucidePillBottle className="h-4 w-4 mr-0.5" />
-            {medicineLabel}
-          </span>
-        </p>
-        <p className="text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 py-0.5 mt-1 text-xs font-semibold text-muted-foreground">
-            <LucideTablets className="h-4 w-4 mr-0.5" />
-            {quantityLabel}
-          </span>
-        </p>
+      <CardContent className="flex min-h-[140px] flex-col">
+        <div className="flex-1">
+          <div className="text-2xl font-semibold mb-1">{timeLabel}</div>
+          <p className="text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 py-0.5 text-xs font-semibold text-muted-foreground">
+              <LucidePillBottle className="h-4 w-4 mr-0.5" />
+              {medicineLabel}
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1 py-0.5 mt-1 text-xs font-semibold text-muted-foreground">
+              <LucideTablets className="h-4 w-4 mr-0.5" />
+              {quantityLabel}
+            </span>
+          </p>
+        </div>
         <Separator className="mt-4 mb-0 pb-0" />
       </CardContent>
-      <CardFooter className="my-0">
+      <CardFooter className="my-0 mt-auto">
         <div className="grid w-full grid-cols-1 items-stretch gap-2 sm:grid-cols-3">
           <Button
             size="sm"
