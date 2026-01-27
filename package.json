@@ -7,8 +7,7 @@
     "dev": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev\"",
     "dev:host": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev -- --host\"",
     "init-db": "cd backend && composer migrate && composer get-meds",
-    "clear-cache": "cd backend && php bin/console cache:clear",
-    "reset-db": "cd backend && rm -fr migrations/* && rm var/turfje.db && npm run init-db"
+    "clear-cache": "cd backend && php bin/console cache:clear"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -45,11 +45,11 @@ This document covers all implemented endpoints made till now.
 
 ## 💊 2. Medicines (Mijn Medicijnen)
 
-**Base URL:** `/api/my-medicines`
+**Base URL:** `/api/medicines/me`
 
 ### **2.1 Add Medicine**
 
-- **Endpoint:** `POST /add`
+- **Endpoint:** `POST /`
 - **Description:** Add a new medicine to the user's list.
 - **Body (JSON):**
   ```json
@@ -220,3 +220,87 @@ This document covers all implemented endpoints made till now.
 
 - **Endpoint:** `DELETE /{id}`
 - **Description:** Remove a log entry (e.g., if clicked by mistake).
+
+---
+
+## 📅 5. Schedules (Medicijn Schemas)
+
+**Base URL:** `/api/schema`
+
+### **5.1 List All Schemas**
+
+- **Endpoint:** `GET /`
+- **Description:** Get all active schedules for the current user.
+- **Response:** Returns an array including `dagen` (object), `tijden` (array), and current `innemen_status`.
+
+### **5.2 Create Schema**
+
+- **Endpoint:** `POST /`
+- **Description:** Create a new schedule for a specific medicine.
+- **Rules:** One schema per medicine (`gmn_id`). All 7 days are required in the `dagen` object.
+- **Body (JSON):**
+  ```json
+  {
+    "gmn_id": "UUID-OF-MEDICINE", // Required
+    "dagen": {
+      "maandag": true,
+      "dinsdag": false,
+      "woensdag": true,
+      "donderdag": false,
+      "vrijdag": true,
+      "zaterdag": false,
+      "zondag": false
+    },
+    "tijden": ["08:00", "20:00"], // At least one time
+    "aantal": 1,
+    "beschrijving": "Take with water"
+  }
+  ```
+
+### **5.3 Update Schema (Edit Info)**
+
+- **Endpoint:** `PUT /update_schema/{id}`
+- **Description:** Update schedule details. Supports changing the medicine (`gmn_id`) if the new medicine doesn't have a schema yet.
+- **Body (JSON):**
+  ```json
+  {
+  "gmn_id": "UUID-OF-NEW-MEDICINE", // Optional (can change medicine)
+  "dagen": { "maandag": true, ... }, // Required (Full object)
+  "tijden": ["09:00"],
+  "aantal": 2,
+  "beschrijving": "New instructions"
+  }
+  ```
+
+### **5.4 Update Status (Taken/Missed)**
+
+- **Endpoint:** `POST /update_status`
+- **Description:** Mark a schedule as "Taken" (optijd) or "Missed" (gemist).
+- **Auto-Log:** If status is `optijd`, a new record is **automatically created** in Logs (Turven) using the schema's amount.
+- **Body (JSON):**
+  ```json
+  {
+    "id": "UUID-OF-SCHEMA",
+    "innemen_status": "optijd" // or "gemist"
+  }
+  ```
+
+### **5.5 Delete Schema**
+
+- **Endpoint:** `DELETE /{id}`
+- **Description:** Remove a schedule permanently.
+
+---
+
+##  6. Console Commands
+
+### **6.1 Seed Global Medicines**
+
+- **Command:** `php bin/console app:seed-medicines`
+- **Description:** Seeds 1000 real Dutch medicines into the global `Medicijnen` table.
+- **Note:** Does **not** purge existing data (Safe to run).
+
+### **6.2 Seed Patient Medicines**
+
+- **Command:** `php bin/console app:seed-patient-medicines`
+- **Description:** Copies 5 random medicines from the global list to patients (User IDs 7, 8, 9, 10) for testing.
