@@ -21,8 +21,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, X } from "lucide-react";
+import type { ScheduleRow } from "@/components/ScheduleTableRow";
 
-const medicineOptions = ["Paracetamol 500/50mg", "Omeprazol 20mg", "Salbutamol"];
+type ScheduleCreatePayload = {
+  gmnId: string;
+  count: number;
+  description: string;
+  days: string[];
+  times: string[];
+};
 const dayOptions = [
   "Maandag",
   "Dinsdag",
@@ -33,9 +40,22 @@ const dayOptions = [
   "Zondag",
 ];
 
-export default function DrawerScheduleCreate() {
+type DrawerScheduleCreateProps = {
+  onSubmit?: (payload: ScheduleCreatePayload) => Promise<boolean> | boolean | void;
+  medicineOptions?: { id: string; label: string }[];
+};
+
+export default function DrawerScheduleCreate({
+  onSubmit,
+  medicineOptions = [],
+}: DrawerScheduleCreateProps) {
   const [times, setTimes] = React.useState(["09:00"]);
   const [selectedDays, setSelectedDays] = React.useState<string[]>([]);
+  const [selectedMedicine, setSelectedMedicine] = React.useState<string>("");
+  const [count, setCount] = React.useState(1);
+  const [description, setDescription] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
 
   const toggleDay = (day: string) => {
     setSelectedDays((prev) =>
@@ -51,8 +71,38 @@ export default function DrawerScheduleCreate() {
   const removeTime = (index: number) =>
     setTimes((prev) => prev.filter((_, i) => i !== index));
 
+  const handleSubmit = async () => {
+    if (!onSubmit) {
+      setOpen(false);
+      return;
+    }
+    if (!selectedMedicine) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await onSubmit({
+        gmnId: selectedMedicine,
+        count,
+        description,
+        days: selectedDays,
+        times,
+      });
+      if (result === false) return;
+      setOpen(false);
+      setTimes(["09:00"]);
+      setSelectedDays([]);
+      setSelectedMedicine("");
+      setCount(1);
+      setDescription("");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <Drawer>
+    <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <Button size="sm" className="gap-2">
           <Plus className="h-4 w-4" />
@@ -82,18 +132,18 @@ export default function DrawerScheduleCreate() {
           <div className="space-y-6 px-4 pb-4">
             <div className="grid gap-2">
               <Label className="text-white/80">Medicijn</Label>
-              <Select>
+              <Select value={selectedMedicine} onValueChange={setSelectedMedicine}>
                 <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
                   <SelectValue placeholder="Selecteer medicijn" />
                 </SelectTrigger>
                 <SelectContent className="bg-[#141c33] text-foreground border-white/15">
                   {medicineOptions.map((option) => (
                     <SelectItem
-                      key={option}
-                      value={option}
+                      key={option.id}
+                      value={option.id}
                       className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
                     >
-                      {option}
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -102,7 +152,7 @@ export default function DrawerScheduleCreate() {
 
             <div className="grid gap-2">
               <Label className="text-white/80">Aantal</Label>
-              <Select>
+              <Select value={`${count}x`} onValueChange={(value) => setCount(Number(value.replace("x", "")))}>
                 <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
                   <SelectValue placeholder="Kies aantal" />
                 </SelectTrigger>
@@ -134,6 +184,8 @@ export default function DrawerScheduleCreate() {
               <Textarea
                 placeholder="Bijv. Na het ontbijt innemen"
                 className="bg-white/5 border-white/15 text-white/90"
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
               />
             </div>
 
@@ -195,8 +247,13 @@ export default function DrawerScheduleCreate() {
           </div>
 
           <DrawerFooter>
-            <Button className="bg-white/10 text-white/90 hover:bg-white/20">
-              Toevoegen
+            <Button
+              className="bg-white/10 text-white/90 hover:bg-white/20"
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+            >
+              {saving ? "Opslaan..." : "Toevoegen"}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" className="main-button-nb">

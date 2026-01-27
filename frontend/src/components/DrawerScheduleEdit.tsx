@@ -21,17 +21,10 @@ import {
 } from "@/components/ui/select";
 import { Pencil, X } from "lucide-react";
 
-export type ScheduleRow = {
-  medicine: string;
-  count: string;
-  description: string;
-  days: string[];
-  times: string[];
-};
-
 type DrawerScheduleEditProps = {
-  schedule: ScheduleRow;
-  onSave?: (next: ScheduleRow) => void;
+  schedule: import("@/components/ScheduleTableRow").ScheduleRow;
+  onSave?: (next: import("@/components/ScheduleTableRow").ScheduleRow) => Promise<boolean> | boolean | void;
+  medicineOptions?: { id: string; label: string }[];
 };
 
 const countOptions = ["1x", "2x", "3x"];
@@ -48,9 +41,11 @@ const dayOptions = [
 export default function DrawerScheduleEdit({
   schedule,
   onSave,
+  medicineOptions = [],
 }: DrawerScheduleEditProps) {
   const [open, setOpen] = React.useState(false);
-  const [form, setForm] = React.useState<ScheduleRow>(schedule);
+  const [form, setForm] = React.useState(schedule);
+  const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
     if (open) {
@@ -58,9 +53,20 @@ export default function DrawerScheduleEdit({
     }
   }, [open, schedule]);
 
-  const handleSave = () => {
-    onSave?.(form);
-    setOpen(false);
+  const handleSave = async () => {
+    if (!onSave) {
+      setOpen(false);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const result = await onSave(form);
+      if (result === false) return;
+      setOpen(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleDay = (day: string) => {
@@ -118,21 +124,43 @@ export default function DrawerScheduleEdit({
           <div className="space-y-6 px-4 pb-4">
             <div className="grid gap-2">
               <Label className="text-white/80">Medicijn</Label>
-              <Input
-                value={form.medicine}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, medicine: event.target.value }))
-                }
-                className="bg-white/5 border-white/15 text-white/90"
-              />
+              <Select
+                value={form.gmnId ?? ""}
+                onValueChange={(value) => {
+                  const selected = medicineOptions.find((opt) => opt.id === value);
+                  setForm((prev) => ({
+                    ...prev,
+                    gmnId: value,
+                    medicine: selected?.label ?? prev.medicine,
+                  }));
+                }}
+              >
+                <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
+                  <SelectValue placeholder="Selecteer medicijn" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#141c33] text-foreground border-white/15">
+                  {medicineOptions.map((option) => (
+                    <SelectItem
+                      key={option.id}
+                      value={option.id}
+                      className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-2">
               <Label className="text-white/80">Aantal</Label>
               <Select
-                value={form.count}
+                value={`${form.count}x`}
                 onValueChange={(value) =>
-                  setForm((prev) => ({ ...prev, count: value }))
+                  setForm((prev) => ({
+                    ...prev,
+                    count: Number(value.replace("x", "")),
+                  }))
                 }
               >
                 <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
@@ -228,8 +256,9 @@ export default function DrawerScheduleEdit({
               type="button"
               className="bg-white/10 text-white/90 hover:bg-white/20"
               onClick={handleSave}
+              disabled={saving}
             >
-              Opslaan
+              {saving ? "Opslaan..." : "Opslaan"}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" className="main-button-nb">

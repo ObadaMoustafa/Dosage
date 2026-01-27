@@ -503,3 +503,89 @@ export const stockApi = {
     }
   },
 };
+
+export type ScheduleApi = {
+  id: string;
+  gmn_id: string;
+  medicijn_naam: string;
+  dagen: Record<string, boolean>;
+  tijden: string[];
+  innemen_status?: string | null;
+  aantal: number;
+  beschrijving: string;
+  aangemaakt_op: string;
+};
+
+export type SchedulePayload = {
+  gmn_id: string;
+  dagen: Record<string, boolean>;
+  tijden: string[];
+  aantal: number;
+  beschrijving: string;
+};
+
+export const schedulesApi = {
+  async list() {
+    const { res, data } = await apiRequest<ScheduleApi[] | ApiErrorBody>(
+      "/schema",
+      { method: "GET" },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(data.error ?? data.message ?? "Schema's laden mislukt.");
+    }
+
+    return data as ScheduleApi[];
+  },
+
+  async create(payload: SchedulePayload) {
+    const { res, data } = await apiRequest<{ id?: string } & ApiErrorBody>(
+      "/schema",
+      { method: "POST", body: JSON.stringify(payload) },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(data.error ?? data.message ?? "Schema toevoegen mislukt.");
+    }
+
+    return data.id;
+  },
+
+  async update(id: string, payload: SchedulePayload) {
+    const { res, data } = await apiRequest<ApiErrorBody>(
+      `/schema/update_schema/${id}`,
+      { method: "PUT", body: JSON.stringify(payload) },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(data.error ?? data.message ?? "Schema bijwerken mislukt.");
+    }
+  },
+
+  async remove(id: string) {
+    const { res, data } = await apiRequest<ApiErrorBody>(
+      `/schema/${id}`,
+      { method: "DELETE" },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(data.error ?? data.message ?? "Schema verwijderen mislukt.");
+    }
+  },
+
+  async updateStatus(id: string, status: "optijd" | "gemist") {
+    const { res, data } = await apiRequest<ApiErrorBody>(
+      "/schema/update_status",
+      { method: "PUT", body: JSON.stringify({ id, innemen_status: status }) },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(data.error ?? data.message ?? "Status bijwerken mislukt.");
+    }
+  },
+};
