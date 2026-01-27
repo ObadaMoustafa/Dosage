@@ -125,7 +125,7 @@ class GebruikerMedicijnSchemaController extends AbstractController
     ], 201);
   }
 
-  #[Route('/{id}', methods: ['PUT'])]
+  #[Route('/update_schema/{id}', methods: ['PUT'])]
   public function update(string $id, Request $request, EntityManagerInterface $em): JsonResponse
   {
     /** @var Gebruikers $user */

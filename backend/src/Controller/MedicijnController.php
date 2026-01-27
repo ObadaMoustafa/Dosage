@@ -36,7 +36,7 @@ class MedicijnController extends AbstractController
         'beschrijving' => $medicine->getBeschrijving(),
         'bijsluiter' => $medicine->getBijsluiter(),
         // Formatting date is safer for JSON response
-        'aangemaakt_op' => $medicine->getAangemaaktOp() ? $medicine->getAangemaaktOp()->format('Y-m-d H:i:s') : null,
+        'aangemaakt_op' => $medicine->getAangemaaktOp()?->$medicine->getAangemaaktOp()->format('Y-m-d H:i:s'),
       ];
     }
 

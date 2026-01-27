@@ -11,19 +11,37 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/api/my-medicines')]
+#[Route('/api/medicines/me')]
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class GebruikerMedicijnController extends AbstractController
 {
     #[Route('', methods: ['GET'])]
-    public function getAll(EntityManagerInterface $em): JsonResponse
+    public function getAll(Request $request, EntityManagerInterface $em): JsonResponse
     {
-        /** @var Gebruikers $user */
-        $user = $this->getUser();
+        /** @var Gebruikers $currentUser */
+        $currentUser = $this->getUser();
+        $targetUser = $currentUser;
 
-        // Fetch ONLY current user's medicines
+        // 1. Check if requesting another user's data
+        $targetUserId = $request->query->get('user_id');
+
+        if ($targetUserId && $targetUserId !== $currentUser->getId()->toRfc4122()) {
+            // Search for ANY connection (existence means valid)
+            $connection = $em->getRepository(\App\Entity\GebruikerKoppelingen::class)->findOneBy([
+                'gekoppelde_gebruiker' => $currentUser,
+                'gebruiker' => $targetUserId
+            ]);
+
+            if (!$connection) {
+                return $this->json(['error' => 'Geen toegang tot de medicijnen van deze gebruiker.'], 403);
+            }
+
+            $targetUser = $connection->getGebruiker();
+        }
+
+        // 2. Fetch medicines for the Target User
         $medicines = $em->getRepository(GebruikerMedicijn::class)->findBy(
-            ['gebruiker' => $user],
+            ['gebruiker' => $targetUser],
             ['aangemaakt_op' => 'DESC']
         );
 
@@ -35,6 +53,7 @@ class GebruikerMedicijnController extends AbstractController
             'beschrijving' => $m->getBeschrijving(),
             'bijsluiter' => $m->getBijsluiter(),
             'added_at' => $m->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'is_owner' => ($targetUser === $currentUser)
         ], $medicines);
 
         return $this->json($data);
@@ -46,13 +65,26 @@ class GebruikerMedicijnController extends AbstractController
         /** @var Gebruikers $currentUser */
         $currentUser = $this->getUser();
 
-        $med = $em->getRepository(GebruikerMedicijn::class)->findOneBy([
-            'id' => $id,
-            'gebruiker' => $currentUser // Force ownership check
-        ]);
+        // 1. Find Medicine
+        $med = $em->getRepository(GebruikerMedicijn::class)->find($id);
 
         if (!$med) {
             return $this->json(['error' => 'Medicijn niet gevonden.'], 404);
+        }
+
+        // 2. Security Check: Is it mine? OR Am I connected to the owner?
+        $owner = $med->getGebruiker();
+
+        if ($owner !== $currentUser) {
+            // Check existence of connection only
+            $connection = $em->getRepository(\App\Entity\GebruikerKoppelingen::class)->findOneBy([
+                'gekoppelde_gebruiker' => $currentUser,
+                'gebruiker' => $owner
+            ]);
+
+            if (!$connection) {
+                return $this->json(['error' => 'Geen toegang tot dit medicijn.'], 403);
+            }
         }
 
         return $this->json([
@@ -63,10 +95,11 @@ class GebruikerMedicijnController extends AbstractController
             'beschrijving' => $med->getBeschrijving(),
             'bijsluiter' => $med->getBijsluiter(),
             'added_at' => $med->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'owner_id' => $owner->getId()
         ]);
     }
 
-    #[Route('/add', methods: ['POST'])]
+    #[Route('/', methods: ['POST'])]
     #[IsGranted('ROLE_PATIENT')]
     public function add(Request $request, EntityManagerInterface $em): JsonResponse
     {
@@ -74,27 +107,26 @@ class GebruikerMedicijnController extends AbstractController
         $user = $this->getUser();
         $payload = json_decode($request->getContent(), true);
 
-        // 1. تنظيف المدخلات (Trim)
+        // 1. trim inputs
         $inputName = trim($payload['medicijn_naam'] ?? '');
         $inputStrength = trim($payload['sterkte'] ?? '');
 
-        // 2. التحقق إن الحقول مش فاضية
+        // 2. Check empty fields
         if ($inputName === '' || $inputStrength === '') {
             return $this->json([
                 'error' => 'Medicijn naam en sterkte zijn verplicht.'
             ], 400);
         }
 
-        // 3. الحل الجذري: نجيب أدوية اليوزر ونقارن بـ PHP
-        // ده بيحل مشاكل الـ Database Collation و SQLite
+        // get the medicines list of user.
         $existingMedicines = $em->getRepository(GebruikerMedicijn::class)->findBy([
             'gebruiker' => $user
         ]);
 
         foreach ($existingMedicines as $med) {
-            // بنقارن الاسم والقوة بعد توحيد حالة الأحرف (Lower Case)
+            // checking if the medicine is duplicated
             $dbName = strtolower(trim($med->getMedicijnNaam()));
-            $dbStrength = strtolower(trim($med->getSterkte() ?? '')); // الـ ?? '' عشان لو القيمة NULL
+            $dbStrength = strtolower(trim($med->getSterkte() ?? ''));
 
             if ($dbName === strtolower($inputName) && $dbStrength === strtolower($inputStrength)) {
                 return $this->json([
@@ -103,10 +135,10 @@ class GebruikerMedicijnController extends AbstractController
             }
         }
 
-        // 4. لو مفيش تطابق، كمل حفظ
+        // 4. Continue if it's a new medicine to user.
         $med = new GebruikerMedicijn();
         $med->setGebruiker($user);
-        $med->setMedicijnNaam($inputName); // بنحفظ الاسم زي ما اليوزر كتبه (Case Sensitive for display)
+        $med->setMedicijnNaam($inputName);
         $med->setSterkte($inputStrength);
 
         $med->setToedieningsvorm($payload['toedieningsvorm'] ?? null);
