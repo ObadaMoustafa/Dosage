@@ -158,6 +158,18 @@ export default function DashboardHistory() {
     }
   };
 
+  const handleDeleteLog = async (id: string) => {
+    try {
+      await logsApi.remove(id);
+      setHistoryEntries((prev) => prev.filter((entry) => entry.id !== id));
+      setLogs((prev) => prev.filter((log) => log.id !== id));
+      toast.success('Log verwijderd.');
+      window.dispatchEvent(new CustomEvent('turfje:log-created'));
+    } catch (error) {
+      toast.error((error as Error).message || 'Log verwijderen mislukt.');
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     const runLoad = async () => {
@@ -252,11 +264,16 @@ export default function DashboardHistory() {
                   <TableHead>Details</TableHead>
                   <TableHead>Moment</TableHead>
                   <TableHead className="text-right">Status</TableHead>
+                  <TableHead className="text-right">Acties</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredEntries.map((entry) => (
-                  <HistoryTableRow key={entry.id} entry={entry} />
+                  <HistoryTableRow
+                    key={entry.id}
+                    entry={entry}
+                    onDelete={handleDeleteLog}
+                  />
                 ))}
               </TableBody>
             </Table>

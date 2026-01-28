@@ -1,4 +1,17 @@
 import { TableCell, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 export type HistoryEntry = {
   id: string;
@@ -10,9 +23,10 @@ export type HistoryEntry = {
 
 type HistoryTableRowProps = {
   entry: HistoryEntry;
+  onDelete?: (id: string) => Promise<void> | void;
 };
 
-export default function HistoryTableRow({ entry }: HistoryTableRowProps) {
+export default function HistoryTableRow({ entry, onDelete }: HistoryTableRowProps) {
   const statusLabel = entry.status ?? "Op tijd";
 
   return (
@@ -30,6 +44,31 @@ export default function HistoryTableRow({ entry }: HistoryTableRowProps) {
         >
           {statusLabel}
         </span>
+      </TableCell>
+      <TableCell className="text-right">
+        {onDelete ? (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="bg-[#1b2441] border-border/60">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Deze log wordt verwijderd en kan niet worden hersteld.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuleren</AlertDialogCancel>
+                <AlertDialogAction onClick={() => onDelete(entry.id)}>
+                  Verwijderen
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : null}
       </TableCell>
     </TableRow>
   );

@@ -28,8 +28,9 @@ type UpcomingDose = {
 export default function DashboardHome() {
   const { auth } = useAuth();
   const firstName = auth.status === "authed" ? auth.user.first_name : "User";
-  const viewingUserId =
-    localStorage.getItem("turfje:viewing-user") ?? "self";
+  const [viewingUserId, setViewingUserId] = useState(
+    () => localStorage.getItem("turfje:viewing-user") ?? "self",
+  );
   const isViewingSelf = viewingUserId === "self";
   const [recentHistory, setRecentHistory] = useState<HistoryCardItem[]>([]);
   const [stockSummary, setStockSummary] = useState({
@@ -70,7 +71,11 @@ export default function DashboardHome() {
   const formatTimeLabel = (value: string) => {
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
-    return parsed.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+    return parsed.toLocaleTimeString("nl-NL", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Amsterdam",
+    });
   };
 
   const formatEtaLabel = (value: Date) => {
@@ -85,12 +90,10 @@ export default function DashboardHome() {
     return `Over ${diffDays} dagen`;
   };
 
-  const loadUpcomingDose = async () => {
+  const loadUpcomingDose = async (targetUserId = viewingUserId) => {
     try {
-      const viewingUserId =
-        localStorage.getItem("turfje:viewing-user") ?? "self";
       const schedules = await schedulesApi.list(
-        viewingUserId === "self" ? {} : { user_id: viewingUserId },
+        targetUserId === "self" ? {} : { user_id: targetUserId },
       );
       const now = new Date();
       const next = schedules
@@ -111,7 +114,7 @@ export default function DashboardHome() {
       const { schedule, nextDate } = next;
       setUpcomingDose({
         id: schedule.id,
-        timeLabel: formatTimeLabel(nextDate!.toISOString()),
+        timeLabel: formatTimeLabel(schedule.next_occurrence ?? nextDate!.toISOString()),
         etaLabel: formatEtaLabel(nextDate!),
         medicineLabel: schedule.medicijn_naam ?? "Onbekend",
         quantityLabel: `${schedule.aantal ?? 1} stuks`,
@@ -123,7 +126,10 @@ export default function DashboardHome() {
 
   const handleUpcomingStatus = async (status: "optijd" | "gemist") => {
     if (!upcomingDose) return;
-    if (!isViewingSelf) return;
+    if (!isViewingSelf) {
+      toast.info("Je kunt alleen je eigen inname bijwerken.");
+      return;
+    }
     try {
       await schedulesApi.updateStatus(upcomingDose.id, status);
       toast.success(
@@ -204,12 +210,10 @@ export default function DashboardHome() {
     });
   };
 
-  const loadRecentHistory = async () => {
+  const loadRecentHistory = async (targetUserId = viewingUserId) => {
     try {
-      const viewingUserId =
-        localStorage.getItem('turfje:viewing-user') ?? 'self';
       const data = await logsApi.list(
-        viewingUserId === 'self' ? {} : { user_id: viewingUserId },
+        targetUserId === "self" ? {} : { user_id: targetUserId },
       );
       const items = data.slice(0, 2).map((item) => ({
         id: item.id,
@@ -280,16 +284,22 @@ export default function DashboardHome() {
   };
 
   useEffect(() => {
-    void loadRecentHistory();
+    const stored = localStorage.getItem("turfje:viewing-user") ?? "self";
+    if (stored !== viewingUserId) {
+      setViewingUserId(stored);
+    }
+    void loadRecentHistory(stored);
     void loadStockSummary();
-    void loadUpcomingDose();
+    void loadUpcomingDose(stored);
     const handleLogCreated = () => {
       void loadRecentHistory();
       void loadUpcomingDose();
     };
     const handleViewingChange = () => {
-      void loadRecentHistory();
-      void loadUpcomingDose();
+      const next = localStorage.getItem("turfje:viewing-user") ?? "self";
+      setViewingUserId(next);
+      void loadRecentHistory(next);
+      void loadUpcomingDose(next);
     };
     window.addEventListener("turfje:log-created", handleLogCreated);
     window.addEventListener("turfje:viewing-user-changed", handleViewingChange);

@@ -64,7 +64,7 @@ class GebruikerMedicijnSchemaController extends AbstractController
       'medicijn_naam' => $s->getGebruikerMedicijn()->getMedicijnNaam(),
       'dagen' => $s->getDagen(),
       'tijden' => $s->getTijden(),
-      'next_occurrence' => $s->getNextOccurrence()?->format('c'),
+      'next_occurrence' => $this->formatNextOccurrence($s->getNextOccurrence()),
       'aantal' => $s->getAantal(),
       'beschrijving' => $s->getBeschrijving(),
       'aangemaakt_op' => $s->getAangemaaktOp()->format('c'),
@@ -149,11 +149,11 @@ class GebruikerMedicijnSchemaController extends AbstractController
     return $this->json([
       'message' => 'Schema succesvol aangemaakt.',
       'id' => $schema->getId(),
-      'next_occurrence' => $nextDate?->format('c')
+      'next_occurrence' => $this->formatNextOccurrence($nextDate)
     ], 201);
   }
 
-  #[Route('/{id}', methods: ['PUT'])]
+  #[Route('/{id}', methods: ['PUT'], requirements: ['id' => '[0-9a-fA-F-]{36}'])]
   public function update(string $id, Request $request, EntityManagerInterface $em): JsonResponse
   {
     /** @var Gebruikers $user */
@@ -216,11 +216,11 @@ class GebruikerMedicijnSchemaController extends AbstractController
 
     return $this->json([
       'message' => 'Schema bijgewerkt.',
-      'next_occurrence' => $nextDate?->format('c')
+      'next_occurrence' => $this->formatNextOccurrence($nextDate)
     ]);
   }
 
-  #[Route('/{id}', methods: ['DELETE'])]
+  #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '[0-9a-fA-F-]{36}'])]
   public function delete(string $id, EntityManagerInterface $em): JsonResponse
   {
     $user = $this->getUser();
@@ -311,8 +311,24 @@ class GebruikerMedicijnSchemaController extends AbstractController
     return $this->json([
       'message' => 'Status bijgewerkt.',
       'status' => $log->getStatus(),
-      'next_occurrence' => $nextDate?->format('c')
+      'next_occurrence' => $this->formatNextOccurrence($nextDate)
     ]);
+  }
+
+  private function formatNextOccurrence(?\DateTimeInterface $date): ?string
+  {
+    if (!$date) {
+      return null;
+    }
+
+    $timezone = new \DateTimeZone('Europe/Amsterdam');
+    if ($date instanceof \DateTimeImmutable) {
+      return $date->setTimezone($timezone)->format('c');
+    }
+
+    $mutable = clone $date;
+    $mutable->setTimezone($timezone);
+    return $mutable->format('c');
   }
 
   private function calculateNextDose(array $daysConfig, array $timesConfig, ?\DateTimeInterface $startDate = null): ?\DateTimeInterface
