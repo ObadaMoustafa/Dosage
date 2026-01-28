@@ -538,6 +538,7 @@ export type ScheduleApi = {
   medicijn_naam: string;
   dagen: Record<string, boolean>;
   tijden: string[];
+  next_occurrence?: string | null;
   innemen_status?: string | null;
   aantal: number;
   beschrijving: string;

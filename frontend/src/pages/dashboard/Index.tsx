@@ -5,7 +5,7 @@ import RemainingMedsCard from "@/components/dashboard/RemainingMedsCard";
 import HistoryCard from "@/components/dashboard/HistoryCard";
 import HistoryLineChart from "@/components/dashboard/HistoryLineChart";
 import { useAuth } from "@/auth/AuthProvider";
-import { logsApi, stockApi } from "@/lib/api";
+import { logsApi, schedulesApi, stockApi } from "@/lib/api";
 import { toast } from "sonner";
 
 type HistoryCardItem = {
@@ -17,9 +17,20 @@ type HistoryCardItem = {
   statusClassName: string;
 };
 
+type UpcomingDose = {
+  id: string;
+  timeLabel: string;
+  etaLabel: string;
+  medicineLabel: string;
+  quantityLabel: string;
+};
+
 export default function DashboardHome() {
   const { auth } = useAuth();
   const firstName = auth.status === "authed" ? auth.user.first_name : "User";
+  const viewingUserId =
+    localStorage.getItem("turfje:viewing-user") ?? "self";
+  const isViewingSelf = viewingUserId === "self";
   const [recentHistory, setRecentHistory] = useState<HistoryCardItem[]>([]);
   const [stockSummary, setStockSummary] = useState({
     deltaLabel: "0 stuks",
@@ -27,6 +38,7 @@ export default function DashboardHome() {
     packLabel: "0 verpakkingen (0 p/verpakking)",
     nextDoseLabel: "Drempel: 0 stuks",
   });
+  const [upcomingDose, setUpcomingDose] = useState<UpcomingDose | null>(null);
   const [chartData, setChartData] = useState<
     {
       label: string;
@@ -53,6 +65,77 @@ export default function DashboardHome() {
     if (lowered.includes("gemist")) return "Gemist" as const;
     if (lowered.includes("optijd") || lowered.includes("op_tijd") || lowered.includes("op tijd")) return "Op tijd" as const;
     return "Op tijd" as const;
+  };
+
+  const formatTimeLabel = (value: string) => {
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return value;
+    return parsed.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatEtaLabel = (value: Date) => {
+    const now = new Date();
+    const diffMs = value.getTime() - now.getTime();
+    if (diffMs <= 0) return "Nu";
+    const diffMinutes = Math.round(diffMs / 60000);
+    if (diffMinutes < 60) return `Over ${diffMinutes} min`;
+    const diffHours = Math.round(diffMinutes / 60);
+    if (diffHours < 24) return `Over ${diffHours} uur`;
+    const diffDays = Math.round(diffHours / 24);
+    return `Over ${diffDays} dagen`;
+  };
+
+  const loadUpcomingDose = async () => {
+    try {
+      const viewingUserId =
+        localStorage.getItem("turfje:viewing-user") ?? "self";
+      const schedules = await schedulesApi.list(
+        viewingUserId === "self" ? {} : { user_id: viewingUserId },
+      );
+      const now = new Date();
+      const next = schedules
+        .map((schedule) => ({
+          schedule,
+          nextDate: schedule.next_occurrence
+            ? new Date(schedule.next_occurrence)
+            : null,
+        }))
+        .filter((item) => item.nextDate && item.nextDate > now)
+        .sort((a, b) => (a.nextDate!.getTime() - b.nextDate!.getTime()))[0];
+
+      if (!next) {
+        setUpcomingDose(null);
+        return;
+      }
+
+      const { schedule, nextDate } = next;
+      setUpcomingDose({
+        id: schedule.id,
+        timeLabel: formatTimeLabel(nextDate!.toISOString()),
+        etaLabel: formatEtaLabel(nextDate!),
+        medicineLabel: schedule.medicijn_naam ?? "Onbekend",
+        quantityLabel: `${schedule.aantal ?? 1} stuks`,
+      });
+    } catch (error) {
+      toast.error((error as Error).message || "Aankomende inname laden mislukt.");
+    }
+  };
+
+  const handleUpcomingStatus = async (status: "optijd" | "gemist") => {
+    if (!upcomingDose) return;
+    if (!isViewingSelf) return;
+    try {
+      await schedulesApi.updateStatus(upcomingDose.id, status);
+      toast.success(
+        status === "optijd"
+          ? "Inname gemarkeerd als op tijd."
+          : "Inname gemarkeerd als gemist.",
+      );
+      window.dispatchEvent(new CustomEvent("turfje:log-created"));
+      void loadUpcomingDose();
+    } catch (error) {
+      toast.error((error as Error).message || "Status bijwerken mislukt.");
+    }
   };
 
   const buildChartData = (
@@ -199,11 +282,14 @@ export default function DashboardHome() {
   useEffect(() => {
     void loadRecentHistory();
     void loadStockSummary();
+    void loadUpcomingDose();
     const handleLogCreated = () => {
       void loadRecentHistory();
+      void loadUpcomingDose();
     };
     const handleViewingChange = () => {
       void loadRecentHistory();
+      void loadUpcomingDose();
     };
     window.addEventListener("turfje:log-created", handleLogCreated);
     window.addEventListener("turfje:viewing-user-changed", handleViewingChange);
@@ -228,10 +314,14 @@ export default function DashboardHome() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <UpcomingDoseCard
-          timeLabel="14:00 uur"
-          medicineLabel="Paracetamol 500/50mg"
-          quantityLabel="2 stuks"
-          etaLabel="Over 2 uur"
+          timeLabel={upcomingDose?.timeLabel ?? "Geen geplande inname"}
+          medicineLabel={upcomingDose?.medicineLabel ?? "Geen medicijn"}
+          quantityLabel={upcomingDose?.quantityLabel ?? "-"}
+          etaLabel={upcomingDose?.etaLabel ?? "Geen"}
+          hasUpcoming={Boolean(upcomingDose)}
+          onTaken={() => handleUpcomingStatus("optijd")}
+          onMissed={() => handleUpcomingStatus("gemist")}
+          actionsDisabled={!upcomingDose || !isViewingSelf}
         />
         <RemainingMedsCard
           title="Medicijnen over"
