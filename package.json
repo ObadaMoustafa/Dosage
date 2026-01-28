@@ -7,6 +7,7 @@
     "dev": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev\"",
     "dev:host": "concurrently \"cd backend && symfony server:start\" \"cd frontend && npm run dev -- --host\"",
     "init-db": "cd backend && powershell -Command \"Remove-Item var\\turfje.db -Force -ErrorAction SilentlyContinue\" && php bin/console doctrine:migrations:migrate --no-interaction && php bin/console app:seed-users && php bin/console app:seed-connections && php bin/console app:seed-medicines && php bin/console app:seed-patient-medicines",
+    "fresh-db": "cd backend && composer fresh-db",
     "clear-cache": "cd backend && php bin/console cache:clear"
   },
   "devDependencies": {

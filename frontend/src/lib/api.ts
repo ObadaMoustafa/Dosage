@@ -6,7 +6,7 @@ type ApiErrorBody = {
 const API_URL = import.meta.env.VITE_API_URL as string;
 
 function getAuthToken() {
-  return localStorage.getItem("token");
+  return localStorage.getItem('token');
 }
 
 async function readJson<T>(res: Response): Promise<T> {
@@ -19,17 +19,17 @@ async function apiRequest<T>(
   withAuth = false,
 ): Promise<{ res: Response; data: T }> {
   const headers = new Headers(options.headers);
-  if (!headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
+  if (!headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
   }
-  if (!headers.has("Accept")) {
-    headers.set("Accept", "application/json");
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json');
   }
 
   if (withAuth) {
     const token = getAuthToken();
     if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
+      headers.set('Authorization', `Bearer ${token}`);
     }
   }
 
@@ -46,7 +46,7 @@ export type RegisterPayload = {
   last_name: string;
   email: string;
   password: string;
-  role?: "patient";
+  role?: 'patient';
 };
 
 export type UpdateProfilePayload = {
@@ -94,38 +94,35 @@ export type UpdateMedicinePayload = Partial<CreateMedicinePayload>;
 
 export const authApi = {
   async login(email: string, password: string) {
-    const { res, data } = await apiRequest<{ token?: string }>(
-      "/auth/login",
-      {
-        method: "POST",
-        body: JSON.stringify({ email, password }),
-      },
-    );
+    const { res, data } = await apiRequest<{ token?: string }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
     if (!res.ok || !data.token) {
       const errorData = data as ApiErrorBody;
-      throw new Error(errorData.error ?? errorData.message ?? "Login failed");
+      throw new Error(errorData.error ?? errorData.message ?? 'Login failed');
     }
 
-    localStorage.setItem("token", data.token);
+    localStorage.setItem('token', data.token);
     return data.token;
   },
 
   async register(payload: RegisterPayload) {
-    const { res, data } = await apiRequest<ApiErrorBody>("/auth/register", {
-      method: "POST",
+    const { res, data } = await apiRequest<ApiErrorBody>('/auth/register', {
+      method: 'POST',
       body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Registratie mislukt");
+      throw new Error(data.error ?? data.message ?? 'Registratie mislukt');
     }
   },
 
   async me() {
     const { res, data } = await apiRequest<AuthUser | ApiErrorBody>(
-      "/auth/me",
-      { method: "GET" },
+      '/auth/me',
+      { method: 'GET' },
       true,
     );
 
@@ -133,50 +130,54 @@ export const authApi = {
       return null;
     }
     if (!res.ok) {
-      throw new Error((data as ApiErrorBody).error ?? "Auth check failed");
+      throw new Error((data as ApiErrorBody).error ?? 'Auth check failed');
     }
     return data as AuthUser;
   },
 
   async updateProfile(payload: UpdateProfilePayload) {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      "/auth/me",
+      '/auth/me',
       {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(payload),
       },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Opslaan mislukt");
+      throw new Error(data.error ?? data.message ?? 'Opslaan mislukt');
     }
   },
 
   async changePassword(payload: ChangePasswordPayload) {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      "/auth/change-password",
+      '/auth/change-password',
       {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(payload),
       },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Wachtwoord wijzigen mislukt");
+      throw new Error(
+        data.error ?? data.message ?? 'Wachtwoord wijzigen mislukt',
+      );
     }
   },
 
   async deleteAccount() {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      "/auth/me",
-      { method: "DELETE" },
+      '/auth/me',
+      { method: 'DELETE' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Fout bij verwijderen account.");
+      throw new Error(
+        data.error ?? data.message ?? 'Fout bij verwijderen account.',
+      );
     }
   },
 };
@@ -184,13 +185,15 @@ export const authApi = {
 export const medicinesApi = {
   async listMy() {
     const { res, data } = await apiRequest<ApiMedicine[] | ApiErrorBody>(
-      "/medicines/me",
-      { method: "GET" },
+      '/medicines/me',
+      { method: 'GET' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error((data as ApiErrorBody).error ?? "Kon medicijnen niet laden.");
+      throw new Error(
+        (data as ApiErrorBody).error ?? 'Kon medicijnen niet laden.',
+      );
     }
 
     return data as ApiMedicine[];
@@ -198,16 +201,18 @@ export const medicinesApi = {
 
   async create(payload: CreateMedicinePayload) {
     const { res, data } = await apiRequest<{ id?: string } & ApiErrorBody>(
-      "/medicines/me",
+      '/medicines/me',
       {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify(payload),
       },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Medicijn toevoegen mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Medicijn toevoegen mislukt.',
+      );
     }
 
     return data.id;
@@ -217,31 +222,35 @@ export const medicinesApi = {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/medicines/me/${id}`,
       {
-        method: "PUT",
+        method: 'PUT',
         body: JSON.stringify(payload),
       },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Medicijn bijwerken mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Medicijn bijwerken mislukt.',
+      );
     }
   },
 
   async remove(id: string) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/medicines/me/${id}`,
-      { method: "DELETE" },
+      { method: 'DELETE' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Medicijn verwijderen mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Medicijn verwijderen mislukt.',
+      );
     }
   },
 };
 
-export type PairingType = "TRUSTED" | "THERAPIST";
+export type PairingType = 'TRUSTED' | 'THERAPIST';
 
 export type PairingInviteResponse = {
   code: string;
@@ -279,17 +288,21 @@ export type PairingSubjectsResponse = {
 
 export const pairingApi = {
   async invite(type: PairingType) {
-    const { res, data } = await apiRequest<PairingInviteResponse | ApiErrorBody>(
-      "/pairing/invite",
+    const { res, data } = await apiRequest<
+      PairingInviteResponse | ApiErrorBody
+    >(
+      '/pairing/invite',
       {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ type }),
       },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Deelcode genereren mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Deelcode genereren mislukt.',
+      );
     }
 
     return data as PairingInviteResponse;
@@ -297,42 +310,42 @@ export const pairingApi = {
 
   async link(code: string) {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      "/pairing/link",
+      '/pairing/link',
       {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify({ code }),
       },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Koppelen mislukt.");
+      throw new Error(data.error ?? data.message ?? 'Koppelen mislukt.');
     }
   },
 
   async viewers() {
-    const { res, data } = await apiRequest<PairingViewersResponse | ApiErrorBody>(
-      "/pairing/viewers",
-      { method: "GET" },
-      true,
-    );
+    const { res, data } = await apiRequest<
+      PairingViewersResponse | ApiErrorBody
+    >('/pairing/viewers', { method: 'GET' }, true);
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Kan koppelingen niet laden.");
+      throw new Error(
+        data.error ?? data.message ?? 'Kan koppelingen niet laden.',
+      );
     }
 
     return data as PairingViewersResponse;
   },
 
   async subjects() {
-    const { res, data } = await apiRequest<PairingSubjectsResponse | ApiErrorBody>(
-      "/pairing/subjects",
-      { method: "GET" },
-      true,
-    );
+    const { res, data } = await apiRequest<
+      PairingSubjectsResponse | ApiErrorBody
+    >('/pairing/subjects', { method: 'GET' }, true);
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Kan gekoppelde personen niet laden.");
+      throw new Error(
+        data.error ?? data.message ?? 'Kan gekoppelde personen niet laden.',
+      );
     }
 
     return data as PairingSubjectsResponse;
@@ -341,12 +354,14 @@ export const pairingApi = {
   async unlink(userId: string) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/pairing/unlink/${userId}`,
-      { method: "DELETE" },
+      { method: 'DELETE' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Verbinding verwijderen mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Verbinding verwijderen mislukt.',
+      );
     }
   },
 };
@@ -386,13 +401,13 @@ export const logsApi = {
 
     const query = params.toString();
     const { res, data } = await apiRequest<LogItem[] | ApiErrorBody>(
-      `/logs${query ? `?${query}` : ""}`,
-      { method: "GET" },
+      `/logs${query ? `?${query}` : ''}`,
+      { method: 'GET' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Kon historie niet laden.");
+      throw new Error(data.error ?? data.message ?? 'Kon historie niet laden.');
     }
 
     return data as LogItem[];
@@ -400,16 +415,16 @@ export const logsApi = {
 
   async create(payload: CreateLogPayload) {
     const { res, data } = await apiRequest<{ id?: string } & ApiErrorBody>(
-      "/logs",
+      '/logs',
       {
-        method: "POST",
+        method: 'POST',
         body: JSON.stringify(payload),
       },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Log toevoegen mislukt.");
+      throw new Error(data.error ?? data.message ?? 'Log toevoegen mislukt.');
     }
 
     return data.id;
@@ -418,17 +433,17 @@ export const logsApi = {
   async remove(id: string) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/logs/${id}`,
-      { method: "DELETE" },
+      { method: 'DELETE' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Log verwijderen mislukt.");
+      throw new Error(data.error ?? data.message ?? 'Log verwijderen mislukt.');
     }
   },
 };
 
-export type StockStatus = "Op peil" | "Bijna op" | "Bijna leeg";
+export type StockStatus = 'Op peil' | 'Bijna op' | 'Bijna leeg';
 
 export type StockItemApi = {
   id: string;
@@ -453,13 +468,13 @@ export type StockItemPayload = {
 export const stockApi = {
   async list() {
     const { res, data } = await apiRequest<StockItemApi[] | ApiErrorBody>(
-      "/stock",
-      { method: "GET" },
+      '/stock',
+      { method: 'GET' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Voorraad laden mislukt.");
+      throw new Error(data.error ?? data.message ?? 'Voorraad laden mislukt.');
     }
 
     return data as StockItemApi[];
@@ -467,13 +482,15 @@ export const stockApi = {
 
   async create(payload: StockItemPayload) {
     const { res, data } = await apiRequest<{ id?: string } & ApiErrorBody>(
-      "/stock",
-      { method: "POST", body: JSON.stringify(payload) },
+      '/stock',
+      { method: 'POST', body: JSON.stringify(payload) },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Voorraad toevoegen mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Voorraad toevoegen mislukt.',
+      );
     }
 
     return data.id;
@@ -482,24 +499,28 @@ export const stockApi = {
   async update(id: string, payload: Partial<StockItemPayload>) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/stock/${id}`,
-      { method: "PUT", body: JSON.stringify(payload) },
+      { method: 'PUT', body: JSON.stringify(payload) },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Voorraad bijwerken mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Voorraad bijwerken mislukt.',
+      );
     }
   },
 
   async remove(id: string) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/stock/${id}`,
-      { method: "DELETE" },
+      { method: 'DELETE' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Voorraad verwijderen mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Voorraad verwijderen mislukt.',
+      );
     }
   },
 };
@@ -527,8 +548,8 @@ export type SchedulePayload = {
 export const schedulesApi = {
   async list() {
     const { res, data } = await apiRequest<ScheduleApi[] | ApiErrorBody>(
-      "/schema",
-      { method: "GET" },
+      '/schema',
+      { method: 'GET' },
       true,
     );
 
@@ -541,13 +562,15 @@ export const schedulesApi = {
 
   async create(payload: SchedulePayload) {
     const { res, data } = await apiRequest<{ id?: string } & ApiErrorBody>(
-      "/schema",
-      { method: "POST", body: JSON.stringify(payload) },
+      '/schema',
+      { method: 'POST', body: JSON.stringify(payload) },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Schema toevoegen mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Schema toevoegen mislukt.',
+      );
     }
 
     return data.id;
@@ -556,36 +579,42 @@ export const schedulesApi = {
   async update(id: string, payload: SchedulePayload) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/schema/update_schema/${id}`,
-      { method: "PUT", body: JSON.stringify(payload) },
+      { method: 'PUT', body: JSON.stringify(payload) },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Schema bijwerken mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Schema bijwerken mislukt.',
+      );
     }
   },
 
   async remove(id: string) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/schema/${id}`,
-      { method: "DELETE" },
+      { method: 'DELETE' },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Schema verwijderen mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Schema verwijderen mislukt.',
+      );
     }
   },
 
-  async updateStatus(id: string, status: "optijd" | "gemist") {
+  async updateStatus(id: string, status: 'optijd' | 'gemist') {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      "/schema/update_status",
-      { method: "PUT", body: JSON.stringify({ id, innemen_status: status }) },
+      '/schema/update_status',
+      { method: 'PUT', body: JSON.stringify({ id, innemen_status: status }) },
       true,
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? "Status bijwerken mislukt.");
+      throw new Error(
+        data.error ?? data.message ?? 'Status bijwerken mislukt.',
+      );
     }
   },
 };
