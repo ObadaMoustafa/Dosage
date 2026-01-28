@@ -183,9 +183,14 @@ export const authApi = {
 };
 
 export const medicinesApi = {
-  async listMy() {
+  async listMy(filters: { user_id?: string } = {}) {
+    const params = new URLSearchParams();
+    if (filters.user_id) {
+      params.set('user_id', filters.user_id);
+    }
+    const query = params.toString();
     const { res, data } = await apiRequest<ApiMedicine[] | ApiErrorBody>(
-      '/medicines/me',
+      `/medicines/me${query ? `?${query}` : ''}`,
       { method: 'GET' },
       true,
     );
@@ -389,7 +394,7 @@ export type LogsFilters = {
   from?: string;
   to?: string;
   gmn_id?: string;
-  patient_id?: string;
+  user_id?: string;
 };
 
 export const logsApi = {
@@ -448,8 +453,10 @@ export type StockStatus = 'Op peil' | 'Bijna op' | 'Bijna leeg';
 export type StockItemApi = {
   id: string;
   name: string;
-  strips_count: number;
-  pills_per_strip: number;
+  packs_count?: number;
+  pills_per_pack?: number;
+  strips_count?: number;
+  pills_per_strip?: number;
   loose_pills: number;
   threshold: number;
   status: StockStatus;
@@ -458,8 +465,8 @@ export type StockItemApi = {
 
 export type StockItemPayload = {
   name: string;
-  strips_count: number;
-  pills_per_strip: number;
+  packs_count: number;
+  pills_per_pack: number;
   loose_pills: number;
   threshold: number;
   status: StockStatus;
@@ -546,9 +553,14 @@ export type SchedulePayload = {
 };
 
 export const schedulesApi = {
-  async list() {
+  async list(filters: { user_id?: string } = {}) {
+    const params = new URLSearchParams();
+    if (filters.user_id) {
+      params.set('user_id', filters.user_id);
+    }
+    const query = params.toString();
     const { res, data } = await apiRequest<ScheduleApi[] | ApiErrorBody>(
-      '/schema',
+      `/schema${query ? `?${query}` : ''}`,
       { method: 'GET' },
       true,
     );
@@ -578,7 +590,7 @@ export const schedulesApi = {
 
   async update(id: string, payload: SchedulePayload) {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      `/schema/update_schema/${id}`,
+      `/schema/${id}`,
       { method: 'PUT', body: JSON.stringify(payload) },
       true,
     );

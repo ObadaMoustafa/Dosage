@@ -12,7 +12,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Table(name: 'gebruiker_medicijn_gebruik')]
 class GebruikerMedicijnGebruik
 {
-    public const STATUS_OP_TIJD = 'op_tijd';
+    public const STATUS_OPTIJD = 'optijd';
     public const STATUS_GEMIST = 'gemist';
 
     #[ORM\Id]
@@ -44,7 +44,7 @@ class GebruikerMedicijnGebruik
     {
         $this->aangemaakt_op = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
         $this->medicijn_turven = 0; // Default starts at 0
-        $this->status = self::STATUS_OP_TIJD;
+        $this->status = self::STATUS_OPTIJD;
     }
 
     public function getId(): ?Uuid

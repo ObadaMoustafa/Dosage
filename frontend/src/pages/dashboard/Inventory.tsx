@@ -55,8 +55,8 @@ export default function DashboardVoorraad() {
       const mapped = data.map((item) => ({
         id: item.id,
         name: item.name,
-        stripsCount: item.strips_count,
-        pillsPerStrip: item.pills_per_strip,
+        packsCount: item.packs_count ?? item.strips_count ?? 0,
+        pillsPerPack: item.pills_per_pack ?? item.pills_per_strip ?? 0,
         loosePills: item.loose_pills,
         threshold: item.threshold,
         lastUpdated: item.last_updated,
@@ -78,8 +78,8 @@ export default function DashboardVoorraad() {
     try {
       await stockApi.update(next.id, {
         name: next.name,
-        strips_count: next.stripsCount,
-        pills_per_strip: next.pillsPerStrip,
+        packs_count: next.packsCount,
+        pills_per_pack: next.pillsPerPack,
         loose_pills: next.loosePills,
         threshold: next.threshold,
         status: next.status,
@@ -98,8 +98,8 @@ export default function DashboardVoorraad() {
     try {
       const id = await stockApi.create({
         name: next.name,
-        strips_count: next.stripsCount,
-        pills_per_strip: next.pillsPerStrip,
+        packs_count: next.packsCount,
+        pills_per_pack: next.pillsPerPack,
         loose_pills: next.loosePills,
         threshold: next.threshold,
         status: next.status,
@@ -107,8 +107,8 @@ export default function DashboardVoorraad() {
       const created: StockItem = {
         id: id ?? `temp-${Date.now()}`,
         name: next.name,
-        stripsCount: next.stripsCount,
-        pillsPerStrip: next.pillsPerStrip,
+        packsCount: next.packsCount,
+        pillsPerPack: next.pillsPerPack,
         loosePills: next.loosePills,
         threshold: next.threshold,
         status: next.status,

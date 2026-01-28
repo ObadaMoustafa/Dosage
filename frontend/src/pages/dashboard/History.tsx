@@ -38,7 +38,7 @@ const normalizeStatus = (status?: string | null) => {
   if (!status) return 'Op tijd' as const;
   const lowered = status.toLowerCase();
   if (lowered.includes('gemist')) return 'Gemist' as const;
-  if (lowered.includes('op_tijd') || lowered.includes('op tijd')) return 'Op tijd' as const;
+  if (lowered.includes('optijd') || lowered.includes('op_tijd') || lowered.includes('op tijd')) return 'Op tijd' as const;
   return 'Op tijd' as const;
 };
 
@@ -137,7 +137,11 @@ export default function DashboardHistory() {
   const loadLogs = async () => {
     setLoading(true);
     try {
-      const data = await logsApi.list();
+      const viewingUserId =
+        localStorage.getItem('turfje:viewing-user') ?? 'self';
+      const data = await logsApi.list(
+        viewingUserId === 'self' ? {} : { user_id: viewingUserId },
+      );
       const entries = data.map((item) => ({
         id: item.id,
         medicine: item.medicijn_naam,
@@ -164,12 +168,20 @@ export default function DashboardHistory() {
     const handleLogCreated = () => {
       void runLoad();
     };
+    const handleViewingChange = () => {
+      void runLoad();
+    };
 
     window.addEventListener('turfje:log-created', handleLogCreated);
+    window.addEventListener('turfje:viewing-user-changed', handleViewingChange);
     void runLoad();
     return () => {
       mounted = false;
       window.removeEventListener('turfje:log-created', handleLogCreated);
+      window.removeEventListener(
+        'turfje:viewing-user-changed',
+        handleViewingChange,
+      );
     };
   }, []);
 

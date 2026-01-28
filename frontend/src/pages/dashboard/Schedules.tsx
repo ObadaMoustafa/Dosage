@@ -77,7 +77,11 @@ export default function DashboardSchedules() {
   const loadSchedules = async () => {
     setLoading(true);
     try {
-      const data = await schedulesApi.list();
+      const viewingUserId =
+        localStorage.getItem("turfje:viewing-user") ?? "self";
+      const data = await schedulesApi.list(
+        viewingUserId === "self" ? {} : { user_id: viewingUserId },
+      );
       setSchedules(data.map(mapSchedule));
     } catch (error) {
       toast.error((error as Error).message || "Schema's laden mislukt.");
@@ -88,7 +92,11 @@ export default function DashboardSchedules() {
 
   const loadMedicines = async () => {
     try {
-      const data = await medicinesApi.listMy();
+      const viewingUserId =
+        localStorage.getItem("turfje:viewing-user") ?? "self";
+      const data = await medicinesApi.listMy(
+        viewingUserId === "self" ? {} : { user_id: viewingUserId },
+      );
       setMedicineOptions(
         data.map((item) => ({ id: item.id, label: item.medicijn_naam })),
       );
@@ -100,6 +108,19 @@ export default function DashboardSchedules() {
   React.useEffect(() => {
     void loadSchedules();
     void loadMedicines();
+  }, []);
+  React.useEffect(() => {
+    const handleViewingChange = () => {
+      void loadSchedules();
+      void loadMedicines();
+    };
+    window.addEventListener("turfje:viewing-user-changed", handleViewingChange);
+    return () => {
+      window.removeEventListener(
+        "turfje:viewing-user-changed",
+        handleViewingChange,
+      );
+    };
   }, []);
 
   const handleCreate = async (payload: {

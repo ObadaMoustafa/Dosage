@@ -311,6 +311,11 @@ export default function DashboardSettings() {
   const handleViewingUserChange = (nextValue: string) => {
     setViewingUserId(nextValue);
     localStorage.setItem('turfje:viewing-user', nextValue);
+    window.dispatchEvent(
+      new CustomEvent('turfje:viewing-user-changed', {
+        detail: { userId: nextValue },
+      }),
+    );
   };
 
   const viewingOptions =

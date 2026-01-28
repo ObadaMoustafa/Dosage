@@ -47,7 +47,11 @@ export default function DashboardMedicines() {
     const loadMedicines = async () => {
       setLoading(true);
       try {
-        const data = await medicinesApi.listMy();
+        const viewingUserId =
+          localStorage.getItem("turfje:viewing-user") ?? "self";
+        const data = await medicinesApi.listMy(
+          viewingUserId === "self" ? {} : { user_id: viewingUserId },
+        );
         if (!mounted) return;
         setMedicines(data.map(mapApiMedicine));
       } catch (error) {
@@ -59,14 +63,20 @@ export default function DashboardMedicines() {
     };
 
       const loadStock = async () => {
+        const viewingUserId =
+          localStorage.getItem("turfje:viewing-user") ?? "self";
+        if (viewingUserId !== "self") {
+          setStockItems([]);
+          return;
+        }
         try {
           const data = await stockApi.list();
           if (!mounted) return;
           const mapped = data.map((item) => ({
             id: item.id,
             name: item.name,
-            stripsCount: item.strips_count,
-            pillsPerStrip: item.pills_per_strip,
+            packsCount: item.packs_count ?? item.strips_count ?? 0,
+            pillsPerPack: item.pills_per_pack ?? item.pills_per_strip ?? 0,
             loosePills: item.loose_pills,
             threshold: item.threshold,
             lastUpdated: item.last_updated,
@@ -83,9 +93,15 @@ export default function DashboardMedicines() {
       void loadStock();
     };
     window.addEventListener("turfje:stock-updated", handleStockUpdate);
+    const handleViewingChange = () => {
+      void loadMedicines();
+      void loadStock();
+    };
+    window.addEventListener("turfje:viewing-user-changed", handleViewingChange);
     return () => {
       mounted = false;
       window.removeEventListener("turfje:stock-updated", handleStockUpdate);
+      window.removeEventListener("turfje:viewing-user-changed", handleViewingChange);
     };
   }, []);
 

@@ -27,6 +27,8 @@ class VoorraadController extends AbstractController
         $data = array_map(fn(VoorraadItem $item) => [
             'id' => $item->getId(),
             'name' => $item->getName(),
+            'packs_count' => $item->getStripsCount(),
+            'pills_per_pack' => $item->getPillsPerStrip(),
             'strips_count' => $item->getStripsCount(),
             'pills_per_strip' => $item->getPillsPerStrip(),
             'loose_pills' => $item->getLoosePills(),
@@ -53,8 +55,10 @@ class VoorraadController extends AbstractController
         $item = new VoorraadItem();
         $item->setGebruiker($user);
         $item->setName($name);
-        $item->setStripsCount((int) ($data['strips_count'] ?? 0));
-        $item->setPillsPerStrip((int) ($data['pills_per_strip'] ?? 0));
+        $packsCount = $data['packs_count'] ?? $data['strips_count'] ?? 0;
+        $pillsPerPack = $data['pills_per_pack'] ?? $data['pills_per_strip'] ?? 0;
+        $item->setStripsCount((int) $packsCount);
+        $item->setPillsPerStrip((int) $pillsPerPack);
         $item->setLoosePills((int) ($data['loose_pills'] ?? 0));
         $item->setThreshold((int) ($data['threshold'] ?? 0));
 
@@ -90,11 +94,13 @@ class VoorraadController extends AbstractController
         if (isset($data['name'])) {
             $item->setName(trim($data['name']));
         }
-        if (array_key_exists('strips_count', $data)) {
-            $item->setStripsCount((int) $data['strips_count']);
+        if (array_key_exists('packs_count', $data) || array_key_exists('strips_count', $data)) {
+            $packsCount = $data['packs_count'] ?? $data['strips_count'] ?? $item->getStripsCount();
+            $item->setStripsCount((int) $packsCount);
         }
-        if (array_key_exists('pills_per_strip', $data)) {
-            $item->setPillsPerStrip((int) $data['pills_per_strip']);
+        if (array_key_exists('pills_per_pack', $data) || array_key_exists('pills_per_strip', $data)) {
+            $pillsPerPack = $data['pills_per_pack'] ?? $data['pills_per_strip'] ?? $item->getPillsPerStrip();
+            $item->setPillsPerStrip((int) $pillsPerPack);
         }
         if (array_key_exists('loose_pills', $data)) {
             $item->setLoosePills((int) $data['loose_pills']);

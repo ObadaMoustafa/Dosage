@@ -5,7 +5,9 @@ namespace App\Controller;
 use App\Entity\Gebruikers;
 use App\Entity\GebruikerKoppelingen;
 use App\Entity\GebruikerMedicijn;
+use App\Entity\GebruikerMedicijnGebruik;
 use App\Entity\GebruikerMedicijnSchema;
+use App\Entity\VoorraadItem;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -234,11 +236,91 @@ class GebruikerMedicijnSchemaController extends AbstractController
     return $this->json(['message' => 'Schema verwijderd.']);
   }
 
-  private function calculateNextDose(array $daysConfig, array $timesConfig): ?\DateTimeInterface
+  #[Route('/update_status', methods: ['PUT'])]
+  public function updateStatus(Request $request, EntityManagerInterface $em): JsonResponse
+  {
+    /** @var Gebruikers $user */
+    $user = $this->getUser();
+    $payload = json_decode($request->getContent(), true);
+
+    $schemaId = $payload['id'] ?? null;
+    if (!$schemaId) {
+      return $this->json(['error' => 'id is verplicht.'], 400);
+    }
+
+    $rawStatus = $payload['innemen_status'] ?? '';
+    $status = strtolower(trim($rawStatus));
+    if ($status === 'op_tijd') {
+      $status = 'optijd';
+    }
+    if (!in_array($status, ['optijd', 'gemist'], true)) {
+      return $this->json([
+        'error' => "Status '$rawStatus' is ongeldig. Gebruik: optijd, gemist"
+      ], 400);
+    }
+
+    $schema = $em->getRepository(GebruikerMedicijnSchema::class)->find($schemaId);
+    if (!$schema || $schema->getGebruikerMedicijn()->getGebruiker() !== $user) {
+      return $this->json(['error' => 'Niet gevonden of geen toegang.'], 404);
+    }
+
+    $medicijn = $schema->getGebruikerMedicijn();
+    $log = new GebruikerMedicijnGebruik();
+    $log->setGebruikerMedicijn($medicijn);
+    $log->setGebruikerMedicijnSchema($schema);
+    $log->setStatus($status);
+    $log->setMedicijnTurven((int) ($schema->getAantal() ?? 1));
+
+    // Calculate next occurrence starting after the current slot (if any)
+    $timezone = new \DateTimeZone('Europe/Amsterdam');
+    $now = new \DateTime('now', $timezone);
+    $searchStartDate = clone $now;
+    if ($schema->getNextOccurrence() && $schema->getNextOccurrence() > $now) {
+      $searchStartDate = clone $schema->getNextOccurrence();
+    }
+
+    $nextDate = $this->calculateNextDose($schema->getDagen(), $schema->getTijden(), $searchStartDate);
+    $schema->setNextOccurrence($nextDate);
+
+    $em->persist($log);
+    $em->flush();
+
+    if ($status === 'optijd') {
+      $stockItem = $medicijn->getVoorraadItem();
+      if ($stockItem instanceof VoorraadItem) {
+        $pillsPerStrip = max(1, $stockItem->getPillsPerStrip());
+        $total = ($stockItem->getStripsCount() * $pillsPerStrip) + $stockItem->getLoosePills();
+        $newTotal = max(0, $total - $log->getMedicijnTurven());
+
+        $stockItem->setStripsCount((int) floor($newTotal / $pillsPerStrip));
+        $stockItem->setLoosePills((int) ($newTotal % $pillsPerStrip));
+
+        if ($newTotal <= (int) floor($stockItem->getThreshold() / 2)) {
+          $stockItem->setStatus(VoorraadItem::STATUS_BIJNA_LEEG);
+        } elseif ($newTotal <= $stockItem->getThreshold()) {
+          $stockItem->setStatus(VoorraadItem::STATUS_BIJNA_OP);
+        } else {
+          $stockItem->setStatus(VoorraadItem::STATUS_OP_PEIL);
+        }
+
+        $stockItem->setLastUpdated(new \DateTime('now', new \DateTimeZone('Europe/Amsterdam')));
+        $em->flush();
+      }
+    }
+
+    return $this->json([
+      'message' => 'Status bijgewerkt.',
+      'status' => $log->getStatus(),
+      'next_occurrence' => $nextDate?->format('c')
+    ]);
+  }
+
+  private function calculateNextDose(array $daysConfig, array $timesConfig, ?\DateTimeInterface $startDate = null): ?\DateTimeInterface
   {
     $timezone = new \DateTimeZone('Europe/Amsterdam');
     $now = new \DateTime('now', $timezone);
-    $searchDate = clone $now;
+    $searchDate = $startDate ? clone $startDate : clone $now;
+    $comparisonBase = clone $searchDate;
 
     $dayMap = [
       'zondag' => 0,
@@ -264,7 +346,7 @@ class GebruikerMedicijnSchemaController extends AbstractController
           $slot->setTime((int) $hour, (int) $minute);
 
           // Must be strictly in the future
-          if ($slot > $now) {
+          if ($slot > $comparisonBase) {
             return $slot;
           }
         }

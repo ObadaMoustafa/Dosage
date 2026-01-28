@@ -79,15 +79,15 @@ export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps)
             </div>
 
             <div className="grid gap-2">
-              <Label className="text-white/80">Aantal strips</Label>
+              <Label className="text-white/80">Aantal verpakkingen</Label>
               <Input
                 type="number"
                 min={0}
-                value={form.stripsCount}
+                value={form.packsCount}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
-                    stripsCount: Number(event.target.value),
+                    packsCount: Number(event.target.value),
                   }))
                 }
                 className="bg-white/5 border-white/15 text-white/90"
@@ -95,15 +95,15 @@ export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps)
             </div>
 
             <div className="grid gap-2">
-              <Label className="text-white/80">Pillen per strip</Label>
+              <Label className="text-white/80">Pillen per verpakking</Label>
               <Input
                 type="number"
                 min={1}
-                value={form.pillsPerStrip}
+                value={form.pillsPerPack}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
-                    pillsPerStrip: Number(event.target.value),
+                    pillsPerPack: Number(event.target.value),
                   }))
                 }
                 className="bg-white/5 border-white/15 text-white/90"

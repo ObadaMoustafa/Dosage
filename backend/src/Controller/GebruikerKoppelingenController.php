@@ -41,8 +41,8 @@ class GebruikerKoppelingenController extends AbstractController
             $em->remove($oldCode);
         }
 
-        // Generate New 5-digit Code
-        $codeString = (string) random_int(10000, 99999);
+        // Generate New 6-digit Code
+        $codeString = (string) random_int(100000, 999999);
 
         $pairingCode = new PairingCode();
         $pairingCode->setCode($codeString);

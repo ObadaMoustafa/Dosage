@@ -73,7 +73,7 @@ export default function QuickMedicineUse() {
     item.label.toLowerCase().includes(medicineQuery.trim().toLowerCase()),
   );
 
-  const handleSubmit = async (status: "op_tijd" | "gemist") => {
+  const handleSubmit = async (status: "optijd" | "gemist") => {
     if (!selectedMedicine) {
       toast.error("Selecteer een medicijn.");
       return;
@@ -199,7 +199,7 @@ export default function QuickMedicineUse() {
               <Button
                 type="button"
                 className="h-10 w-full bg-green-500/15 text-green-200 hover:bg-green-500/25"
-                onClick={() => handleSubmit("op_tijd")}
+                onClick={() => handleSubmit("optijd")}
                 disabled={submitting || loading}
               >
                 {submitting ? "Bezig..." : "Ingenomen"}

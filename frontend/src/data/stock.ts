@@ -3,8 +3,8 @@ export type StockStatus = "Op peil" | "Bijna op" | "Bijna leeg";
 export type StockItem = {
   id: string;
   name: string;
-  stripsCount: number;
-  pillsPerStrip: number;
+  packsCount: number;
+  pillsPerPack: number;
   loosePills: number;
   threshold: number;
   lastUpdated: string;
@@ -14,13 +14,13 @@ export type StockItem = {
 export const stockItems: StockItem[] = [];
 
 export function getTotalPills(item: StockItem) {
-  return item.stripsCount * item.pillsPerStrip + item.loosePills;
+  return item.packsCount * item.pillsPerPack + item.loosePills;
 }
 
 export function formatStockDetails(item: StockItem) {
-  return `${item.stripsCount} strips · ${item.pillsPerStrip} p/strip · ${item.loosePills} los`;
+  return `${item.packsCount} verpakkingen - ${item.pillsPerPack} p/verpakking - ${item.loosePills} los`;
 }
 
 export function formatStockLabel(item: StockItem) {
-  return `${getTotalPills(item)} stuks · ${formatStockDetails(item)}`;
+  return `${getTotalPills(item)} stuks - ${formatStockDetails(item)}`;
 }

@@ -41,6 +41,9 @@ class GebruikerMedicijnGebruikController extends AbstractController
     // Validate Status
     $rawStatus = $data['status'] ?? 'optijd';
     $status = strtolower(trim($rawStatus));
+    if ($status === 'op_tijd') {
+      $status = 'optijd';
+    }
 
     if (!in_array($status, ['optijd', 'gemist'])) {
       return $this->json([
@@ -56,8 +59,11 @@ class GebruikerMedicijnGebruikController extends AbstractController
     $log->setMedicijnTurven((int) ($data['medicijn_turven'] ?? 1));
 
     // 2b. Set Status (Optional)
-    $status = $data['status'] ?? GebruikerMedicijnGebruik::STATUS_OP_TIJD;
-    if (!in_array($status, [GebruikerMedicijnGebruik::STATUS_OP_TIJD, GebruikerMedicijnGebruik::STATUS_GEMIST], true)) {
+    $status = strtolower(trim($data['status'] ?? GebruikerMedicijnGebruik::STATUS_OPTIJD));
+    if ($status === 'op_tijd') {
+      $status = 'optijd';
+    }
+    if (!in_array($status, [GebruikerMedicijnGebruik::STATUS_OPTIJD, GebruikerMedicijnGebruik::STATUS_GEMIST], true)) {
       return $this->json(['error' => 'Ongeldige status.'], 400);
     }
     $log->setStatus($status);
@@ -135,7 +141,7 @@ class GebruikerMedicijnGebruikController extends AbstractController
     $em->flush();
 
     // 5. Decrease stock when logged as taken
-    if ($log->getStatus() === GebruikerMedicijnGebruik::STATUS_OP_TIJD) {
+    if ($log->getStatus() === GebruikerMedicijnGebruik::STATUS_OPTIJD) {
       $stockItem = $gebruikerMedicijn->getVoorraadItem();
       if ($stockItem instanceof VoorraadItem) {
         $pillsPerStrip = max(1, $stockItem->getPillsPerStrip());

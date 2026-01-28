@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import QuickMedicineUse from '@/components/QuickMedicineUse';
@@ -49,6 +49,7 @@ import {
   sidebarPaths,
   userMenuPaths,
 } from '@/layouts/dashboardConfig';
+import { pairingApi } from '@/lib/api';
 
 export default function DashboardLayout() {
   const { auth, logout } = useAuth();
@@ -57,6 +58,9 @@ export default function DashboardLayout() {
   const isMobile = useIsMobile();
   const pathname = location.pathname;
   const [viewingUserId, setViewingUserId] = useState('self');
+  const [viewingOptions, setViewingOptions] = useState<
+    { id: string; label: string }[]
+  >([{ id: 'self', label: 'Jij' }]);
 
   const user =
     auth.status === 'authed'
@@ -77,15 +81,37 @@ export default function DashboardLayout() {
     targetPath === '/dashboard'
       ? pathname === targetPath
       : pathname.startsWith(targetPath);
-  const viewingOptions = useMemo(
-    () => [
-      { id: 'self', label: 'Jij' },
-      { id: 'share-1', label: 'Sanne de Vries' },
-      { id: 'share-2', label: 'Mark Jansen' },
-    ],
-    [],
-  );
   const storageKey = 'turfje:viewing-user';
+  useEffect(() => {
+    let mounted = true;
+    const loadViewingOptions = async () => {
+      if (auth.status !== 'authed') return;
+      try {
+        const subjects = await pairingApi.subjects();
+        const options = [
+          { id: 'self', label: 'Jij' },
+          ...subjects.full_access.map((subject) => ({
+            id: subject.user_id,
+            label: `${subject.name} (volledige toegang)`,
+          })),
+          ...subjects.read_only.map((subject) => ({
+            id: subject.user_id,
+            label: `${subject.name} (alleen lezen)`,
+          })),
+        ];
+        if (!mounted) return;
+        setViewingOptions(options);
+      } catch {
+        if (!mounted) return;
+        setViewingOptions([{ id: 'self', label: 'Jij' }]);
+      }
+    };
+
+    void loadViewingOptions();
+    return () => {
+      mounted = false;
+    };
+  }, [auth.status]);
   useEffect(() => {
     const stored = localStorage.getItem(storageKey);
     if (stored && viewingOptions.some((option) => option.id === stored)) {
@@ -94,6 +120,11 @@ export default function DashboardLayout() {
   }, [viewingOptions]);
   useEffect(() => {
     localStorage.setItem(storageKey, viewingUserId);
+    window.dispatchEvent(
+      new CustomEvent('turfje:viewing-user-changed', {
+        detail: { userId: viewingUserId },
+      }),
+    );
   }, [viewingUserId]);
   const viewingLabel =
     viewingOptions.find((option) => option.id === viewingUserId)?.label ?? 'Jij';

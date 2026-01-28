@@ -24,7 +24,7 @@ export default function DashboardHome() {
   const [stockSummary, setStockSummary] = useState({
     deltaLabel: "0 stuks",
     totalLabel: "Geen voorraad",
-    packLabel: "0 Strips (0 p/strip)",
+    packLabel: "0 verpakkingen (0 p/verpakking)",
     nextDoseLabel: "Drempel: 0 stuks",
   });
   const [chartData, setChartData] = useState<
@@ -51,7 +51,7 @@ export default function DashboardHome() {
     if (!status) return "Op tijd" as const;
     const lowered = status.toLowerCase();
     if (lowered.includes("gemist")) return "Gemist" as const;
-    if (lowered.includes("op_tijd") || lowered.includes("op tijd")) return "Op tijd" as const;
+    if (lowered.includes("optijd") || lowered.includes("op_tijd") || lowered.includes("op tijd")) return "Op tijd" as const;
     return "Op tijd" as const;
   };
 
@@ -123,7 +123,11 @@ export default function DashboardHome() {
 
   const loadRecentHistory = async () => {
     try {
-      const data = await logsApi.list();
+      const viewingUserId =
+        localStorage.getItem('turfje:viewing-user') ?? 'self';
+      const data = await logsApi.list(
+        viewingUserId === 'self' ? {} : { user_id: viewingUserId },
+      );
       const items = data.slice(0, 2).map((item) => ({
         id: item.id,
         title: item.medicijn_naam,
@@ -149,7 +153,7 @@ export default function DashboardHome() {
         setStockSummary({
           deltaLabel: "0 stuks",
           totalLabel: "Geen voorraad",
-          packLabel: "0 Strips (0 p/strip)",
+          packLabel: "0 verpakkingen (0 p/verpakking)",
           nextDoseLabel: "Drempel: 0 stuks",
         });
         return;
@@ -165,20 +169,26 @@ export default function DashboardHome() {
         const rankA = statusRank[a.status] ?? 3;
         const rankB = statusRank[b.status] ?? 3;
         if (rankA !== rankB) return rankA - rankB;
-        const totalA = a.strips_count * a.pills_per_strip;
-        const totalB = b.strips_count * b.pills_per_strip;
+        const packsA = a.packs_count ?? a.strips_count ?? 0;
+        const perA = a.pills_per_pack ?? a.pills_per_strip ?? 0;
+        const packsB = b.packs_count ?? b.strips_count ?? 0;
+        const perB = b.pills_per_pack ?? b.pills_per_strip ?? 0;
+        const totalA = packsA * perA;
+        const totalB = packsB * perB;
         return totalA - totalB;
       });
 
       const item = sorted[0];
-      const totalPills = item.strips_count * item.pills_per_strip + item.loose_pills;
+      const packsCount = item.packs_count ?? item.strips_count ?? 0;
+      const pillsPerPack = item.pills_per_pack ?? item.pills_per_strip ?? 0;
+      const totalPills = packsCount * pillsPerPack + item.loose_pills;
       const delta = totalPills - item.threshold;
       const deltaLabel = `${delta >= 0 ? "+" : ""}${delta} stuks`;
 
       setStockSummary({
         deltaLabel,
         totalLabel: `${totalPills} ${item.name}`,
-        packLabel: `${item.strips_count} Strips (${item.pills_per_strip} p/strip) · ${item.loose_pills} los`,
+        packLabel: `${packsCount} verpakkingen (${pillsPerPack} p/verpakking) - ${item.loose_pills} los`,
         nextDoseLabel: `Drempel: ${item.threshold} stuks`,
       });
     } catch (error) {
@@ -192,9 +202,17 @@ export default function DashboardHome() {
     const handleLogCreated = () => {
       void loadRecentHistory();
     };
+    const handleViewingChange = () => {
+      void loadRecentHistory();
+    };
     window.addEventListener("turfje:log-created", handleLogCreated);
+    window.addEventListener("turfje:viewing-user-changed", handleViewingChange);
     return () => {
       window.removeEventListener("turfje:log-created", handleLogCreated);
+      window.removeEventListener(
+        "turfje:viewing-user-changed",
+        handleViewingChange,
+      );
     };
   }, []);
 
