@@ -24,13 +24,21 @@ security:
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            user_checker: App\Security\UserChecker
 
         api:
             pattern: ^/api
             stateless: true
             provider: app_user_provider
+            entry_point: App\Security\AuthenticationEntryPoint
             jwt: ~
             access_denied_handler: App\Security\AccessDeniedHandler
+            user_checker: App\Security\UserChecker
+
+        main:
+            lazy: true
+            provider: app_user_provider
+            user_checker: App\Security\UserChecker
 
     access_control:
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }

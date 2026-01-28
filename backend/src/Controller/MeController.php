@@ -12,9 +12,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
+#[Route('/api/auth')]
 class MeController extends AbstractController
 {
-    #[Route('/api/auth/me', name: 'api_me', methods: ['GET'])]
+    #[Route('/me', methods: ['GET'])]
     public function me(Request $request, EntityManagerInterface $em): JsonResponse
     {
         /** @var Gebruikers|null $currentUser */
@@ -58,12 +59,14 @@ class MeController extends AbstractController
             'first_name' => $currentUser->getVoornaam(),
             'last_name' => $currentUser->getAchternaam(),
             'role' => $currentUser->getRol(),
+            'isActive' => $currentUser->getIsActive(),
             'avatar_url' => $currentUser->getAvatarUrl(),
             'created_at' => $currentUser->getAangemaaktOp()->format('Y-m-d H:i:s'),
+            'last_login' => $currentUser->getLaatsteLogin()->format('Y-m-d H:i:s')
         ]);
     }
 
-    #[Route('/api/auth/me', name: 'api_me_update', methods: ['PUT'])]
+    #[Route('/me', methods: ['PUT'])]
     public function updateProfile(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var Gebruikers|null $user */
@@ -107,7 +110,23 @@ class MeController extends AbstractController
         return $this->json(['message' => 'Profile updated successfully']);
     }
 
-    #[Route('/api/auth/change-password', name: 'api_change_password', methods: ['PUT'])]
+    #[Route('/me', methods: ['DELETE'])]
+    public function deleteAccount(EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var Gebruikers|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $entityManager->remove($user);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Account deleted successfully']);
+    }
+
+    #[Route('/change-password', methods: ['PUT'])]
     public function changePassword(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var Gebruikers|null $user */
@@ -138,19 +157,5 @@ class MeController extends AbstractController
         return $this->json(['message' => 'Password changed successfully']);
     }
 
-    #[Route('/api/auth/me', name: 'api_me_delete', methods: ['DELETE'])]
-    public function deleteAccount(EntityManagerInterface $entityManager): JsonResponse
-    {
-        /** @var Gebruikers|null $user */
-        $user = $this->getUser();
 
-        if (!$user) {
-            return $this->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $entityManager->remove($user);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Account deleted successfully']);
-    }
 }

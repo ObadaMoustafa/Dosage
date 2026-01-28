@@ -2,11 +2,10 @@
 
 namespace App\EventSubscriber;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use App\Entity\GebruikerAuth;
+use App\Entity\Gebruikers;
 use Doctrine\ORM\EntityManagerInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
-use Lexik\Bundle\JWTAuthenticationBundle\Events;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 
 class AuthenticationSuccessSubscriber implements EventSubscriberInterface
 {
@@ -17,20 +16,18 @@ class AuthenticationSuccessSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            Events::AUTHENTICATION_SUCCESS => 'onLogin',
+            LoginSuccessEvent::class => 'onLogin',
         ];
     }
 
-    public function onLogin(AuthenticationSuccessEvent $event): void
+    public function onLogin(LoginSuccessEvent $event): void
     {
         $user = $event->getUser();
 
-        // confirm the user is an instance of GebruikerAuth
-        if (!$user instanceof GebruikerAuth) {
+        if (!$user instanceof Gebruikers) {
             return;
         }
 
-        // Update the last login timestamp in the db
         $user->setLaatsteLogin(new \DateTime('now', new \DateTimeZone('Europe/Amsterdam')));
 
         $this->entityManager->persist($user);
