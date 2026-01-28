@@ -1,31 +1,37 @@
-import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search } from "lucide-react";
-import {Separator} from "@/components/ui/separator.tsx";
-import { type MedicineRow } from "@/components/DrawerMedicineEdit";
+import * as React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Search } from 'lucide-react';
+import { Separator } from '@/components/ui/separator.tsx';
+import { type MedicineRow } from '@/components/DrawerMedicineEdit';
 import DrawerMedicineCreate, {
   type CreateMedicinePayload,
-} from "@/components/DrawerMedicineCreate";
-import MedicineTableRow from "@/components/MedicineTableRow";
-import { formatStockLabel, type StockItem } from "@/data/stock";
-import { medicinesApi, stockApi, type ApiMedicine } from "@/lib/api";
-import { toast } from "sonner";
+} from '@/components/DrawerMedicineCreate';
+import MedicineTableRow from '@/components/MedicineTableRow';
+import { formatStockLabel, type StockItem } from '@/data/stock';
+import { medicinesApi, stockApi, type ApiMedicine } from '@/lib/api';
+import { toast } from 'sonner';
 
 const mapApiMedicine = (medicine: ApiMedicine): MedicineRow => ({
   id: medicine.id,
-  name: medicine.medicijn_naam ?? "",
-  brand: "",
-  route: medicine.toedieningsvorm ?? "",
-  strength: medicine.sterkte ?? "",
-  description: medicine.beschrijving ?? "",
-  leaflet: medicine.bijsluiter ?? "",
+  name: medicine.medicijn_naam ?? '',
+  brand: '',
+  route: medicine.toedieningsvorm ?? '',
+  strength: medicine.sterkte ?? '',
+  description: medicine.beschrijving ?? '',
+  leaflet: medicine.bijsluiter ?? '',
   stockId: medicine.stock_id ?? undefined,
 });
 
 export default function DashboardMedicines() {
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [medicines, setMedicines] = React.useState<MedicineRow[]>([]);
   const [stockItems, setStockItems] = React.useState<StockItem[]>([]);
@@ -48,31 +54,33 @@ export default function DashboardMedicines() {
       setLoading(true);
       try {
         const data = await medicinesApi.listMy();
+        console.log('data is:', data);
+
         if (!mounted) return;
         setMedicines(data.map(mapApiMedicine));
       } catch (error) {
         if (!mounted) return;
-        toast.error((error as Error).message || "Kon medicijnen niet laden.");
+        toast.error((error as Error).message || 'Kon medicijnen niet laden.');
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-      const loadStock = async () => {
-        try {
-          const data = await stockApi.list();
-          if (!mounted) return;
-          const mapped = data.map((item) => ({
-            id: item.id,
-            name: item.name,
-            stripsCount: item.strips_count,
-            pillsPerStrip: item.pills_per_strip,
-            loosePills: item.loose_pills,
-            threshold: item.threshold,
-            lastUpdated: item.last_updated,
-            status: item.status,
-          }));
-          setStockItems(mapped);
+    const loadStock = async () => {
+      try {
+        const data = await stockApi.list();
+        if (!mounted) return;
+        const mapped = data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          stripsCount: item.strips_count,
+          pillsPerStrip: item.pills_per_strip,
+          loosePills: item.loose_pills,
+          threshold: item.threshold,
+          lastUpdated: item.last_updated,
+          status: item.status,
+        }));
+        setStockItems(mapped);
       } finally {
         if (!mounted) return;
       }
@@ -82,16 +90,17 @@ export default function DashboardMedicines() {
     const handleStockUpdate = () => {
       void loadStock();
     };
-    window.addEventListener("turfje:stock-updated", handleStockUpdate);
+    window.addEventListener('turfje:stock-updated', handleStockUpdate);
     return () => {
       mounted = false;
-      window.removeEventListener("turfje:stock-updated", handleStockUpdate);
+      window.removeEventListener('turfje:stock-updated', handleStockUpdate);
     };
   }, []);
 
   const handleCreate = async (payload: CreateMedicinePayload) => {
     try {
-      const leaflet = payload.leafletText || (payload.useFdaLeaflet ? "FDA" : "");
+      const leaflet =
+        payload.leafletText || (payload.useFdaLeaflet ? 'FDA' : '');
       const id = await medicinesApi.create({
         medicijn_naam: payload.name.trim(),
         toedieningsvorm: payload.route || null,
@@ -111,10 +120,10 @@ export default function DashboardMedicines() {
         stockId: payload.stockId,
       };
       setMedicines((prev) => [next, ...prev]);
-      window.dispatchEvent(new CustomEvent("turfje:medicines-updated"));
-      toast.success("Medicijn toegevoegd.");
+      window.dispatchEvent(new CustomEvent('turfje:medicines-updated'));
+      toast.success('Medicijn toegevoegd.');
     } catch (error) {
-      toast.error((error as Error).message || "Medicijn toevoegen mislukt.");
+      toast.error((error as Error).message || 'Medicijn toevoegen mislukt.');
     }
   };
 
@@ -138,27 +147,29 @@ export default function DashboardMedicines() {
       setMedicines((prev) =>
         prev.map((item) => (item.id === next.id ? next : item)),
       );
-      toast.success("Medicijn bijgewerkt.");
+      toast.success('Medicijn bijgewerkt.');
       return true;
     } catch (error) {
-      toast.error((error as Error).message || "Medicijn bijwerken mislukt.");
+      toast.error((error as Error).message || 'Medicijn bijwerken mislukt.');
       return false;
     }
   };
 
   const handleDelete = async (medicine: MedicineRow) => {
     if (!medicine.id) {
-      setMedicines((prev) => prev.filter((item) => item.name !== medicine.name));
+      setMedicines((prev) =>
+        prev.filter((item) => item.name !== medicine.name),
+      );
       return true;
     }
 
     try {
       await medicinesApi.remove(medicine.id);
       setMedicines((prev) => prev.filter((item) => item.id !== medicine.id));
-      toast.success("Medicijn verwijderd.");
+      toast.success('Medicijn verwijderd.');
       return true;
     } catch (error) {
-      toast.error((error as Error).message || "Medicijn verwijderen mislukt.");
+      toast.error((error as Error).message || 'Medicijn verwijderen mislukt.');
       return false;
     }
   };
@@ -189,7 +200,10 @@ export default function DashboardMedicines() {
         <CardHeader className="space-y-3 pb-3">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <CardTitle className="text-base">Je medicijnen</CardTitle>
-            <DrawerMedicineCreate onSubmit={handleCreate} stockOptions={stockOptions} />
+            <DrawerMedicineCreate
+              onSubmit={handleCreate}
+              stockOptions={stockOptions}
+            />
           </div>
           <div className="relative w-full md:max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -230,7 +244,9 @@ export default function DashboardMedicines() {
           </Table>
 
           <div className="text-xs text-muted-foreground">
-            {loading ? "Medicijnen laden..." : `${filteredMedicines.length} medicijnen`}
+            {loading
+              ? 'Medicijnen laden...'
+              : `${filteredMedicines.length} medicijnen`}
           </div>
         </CardContent>
       </Card>

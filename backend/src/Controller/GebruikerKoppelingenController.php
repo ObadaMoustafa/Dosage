@@ -165,6 +165,7 @@ class GebruikerKoppelingenController extends AbstractController
                 'name' => $viewer->getVoornaam() . ' ' . $viewer->getAchternaam(),
                 'avatar' => $viewer->getAvatarUrl(),
                 'role' => $viewer->getRol(),
+                'access' => $conn->getConnectionType(),
                 'since' => $conn->getCreatedAt()->format('Y-m-d')
             ];
 

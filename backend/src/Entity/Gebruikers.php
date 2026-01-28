@@ -38,6 +38,9 @@ class Gebruikers implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $avatar_url = null;
 
+    #[ORM\Column(type: Types::BOOLEAN, options: ['default' => true])]
+    private ?bool $is_active = true;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $publieke_sleutel = null;
 
@@ -54,6 +57,7 @@ class Gebruikers implements UserInterface, PasswordAuthenticatedUserInterface
     public function __construct()
     {
         $this->aangemaakt_op = new \DateTime('now', new \DateTimeZone('Europe/Amsterdam'));
+        $this->is_active = true;
     }
 
     public function getId(): ?Uuid
@@ -172,6 +176,17 @@ class Gebruikers implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAvatarUrl(?string $avatar_url): static
     {
         $this->avatar_url = $avatar_url;
+        return $this;
+    }
+
+    public function getIsActive(): ?bool
+    {
+        return $this->is_active;
+    }
+
+    public function setIsActive(bool $is_active): static
+    {
+        $this->is_active = $is_active;
         return $this;
     }
 

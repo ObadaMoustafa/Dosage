@@ -89,7 +89,19 @@ class GebruikerKoppelingen
     }
     public function setConnectionType(string $connectionType): static
     {
-        $this->connectionType = $connectionType;
+        $upperType = strtoupper($connectionType);
+
+        if (!\in_array($upperType, [self::TYPE_TRUSTED, self::TYPE_THERAPIST])) {
+            throw new \InvalidArgumentException(\sprintf(
+                'Invalid connection type "%s". Allowed types are: %s, %s.',
+                $connectionType,
+                self::TYPE_TRUSTED,
+                self::TYPE_THERAPIST
+            ));
+        }
+
+        $this->connectionType = $upperType;
+
         return $this;
     }
 

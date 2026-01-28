@@ -53,6 +53,7 @@ class SeedUsersCommand extends Command
       // 3. Hash Password
       $hashedPassword = $this->passwordHasher->hashPassword($user, $password);
       $user->setPassword($hashedPassword);
+      $user->setIsActive(true);
 
       // 4. Set Role using setRol() as defined in your Entity
       if ($i <= 3) {
