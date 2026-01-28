@@ -237,7 +237,7 @@ export default function DashboardMedicines() {
             <TableHeader>
               <TableRow>
                 <TableHead>Medicijn</TableHead>
-                <TableHead>Merk</TableHead>
+                {/*<TableHead>Merk</TableHead>*/}
                 <TableHead>Toedieningsvorm</TableHead>
                 <TableHead>Sterkte</TableHead>
                 <TableHead>Beschrijving</TableHead>

@@ -66,6 +66,7 @@ export default function DashboardLayout() {
     auth.status === 'authed'
       ? auth.user
       : { first_name: 'User', last_name: '', email: '', avatar_url: null };
+  const isAdmin = auth.status === 'authed' && auth.user.role === 'admin';
 
   const initials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`
     .toUpperCase()
@@ -171,6 +172,7 @@ export default function DashboardLayout() {
             <SidebarGroupContent>
               <SidebarMenu>
                 {settingsPaths.map((item) => (
+                  item.path === '/dashboard/admin' && !isAdmin ? null : (
                   <SidebarMenuItem key={item.path}>
                     <MobileAwareNavLink
                       to={item.path}
@@ -180,6 +182,7 @@ export default function DashboardLayout() {
                       {item.text}
                     </MobileAwareNavLink>
                   </SidebarMenuItem>
+                  )
                 ))}
               </SidebarMenu>
             </SidebarGroupContent>

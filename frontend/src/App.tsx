@@ -14,6 +14,7 @@ import DashboardSchedules from "./pages/dashboard/Schedules";
 import DashboardSettings from "./pages/dashboard/Settings";
 import DashboardHistory from "./pages/dashboard/History";
 import DashboardVoorraad from "./pages/dashboard/Inventory.tsx";
+import DashboardAdmin from "./pages/dashboard/Admin";
 
 import "./App.css";
 
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="settings" element={<DashboardSettings />} />
+            <Route path="admin" element={<DashboardAdmin />} />
           </Route>
           <Route path="/medicines" element={<DashboardLayout />}>
             <Route index element={<DashboardMedicines />} />

@@ -24,13 +24,13 @@ export default function MedicineTableRow({
       ? formatStockLabel(stockItem)
       : "Onbekend"
     : "Niet gekoppeld";
-  const brandLabel = medicine.brand?.trim() ? medicine.brand : "—";
+  // const brandLabel = medicine.brand?.trim() ? medicine.brand : "—";
   const leafletLabel = medicine.leaflet?.trim() ? medicine.leaflet : "—";
 
   return (
     <TableRow>
       <TableCell className="font-medium">{medicine.name}</TableCell>
-      <TableCell className="text-muted-foreground">{brandLabel}</TableCell>
+      {/*<TableCell className="text-muted-foreground">{brandLabel}</TableCell>*/}
       <TableCell>{medicine.route}</TableCell>
       <TableCell>{medicine.strength}</TableCell>
       <TableCell>{medicine.description}</TableCell>

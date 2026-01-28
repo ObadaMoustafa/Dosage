@@ -463,6 +463,57 @@ export type StockItemApi = {
   last_updated: string;
 };
 
+export type AdminUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'behandelaar' | 'patient';
+  is_active: boolean;
+  created_at: string;
+};
+
+export const adminApi = {
+  async users() {
+    const { res, data } = await apiRequest<AdminUser[] | ApiErrorBody>(
+      '/admin/users',
+      { method: 'GET' },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(data.error ?? data.message ?? 'Gebruikers laden mislukt.');
+    }
+
+    return data as AdminUser[];
+  },
+
+  async updateRole(userId: string, role: AdminUser['role']) {
+    const { res, data } = await apiRequest<ApiErrorBody>(
+      `/admin/users/role/${userId}`,
+      { method: 'PUT', body: JSON.stringify({ role }) },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(data.error ?? data.message ?? 'Rol bijwerken mislukt.');
+    }
+  },
+
+  async toggleStatus(userId: string, isActive: boolean) {
+    const { res, data } = await apiRequest<ApiErrorBody>(
+      `/admin/users/toggle-status/${userId}`,
+      { method: 'POST', body: JSON.stringify({ isActive }) },
+      true,
+    );
+
+    if (!res.ok) {
+      throw new Error(
+        data.error ?? data.message ?? 'Status bijwerken mislukt.',
+      );
+    }
+  },
+};
+
 export type StockItemPayload = {
   name: string;
   packs_count: number;

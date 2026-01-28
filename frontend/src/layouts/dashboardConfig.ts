@@ -40,6 +40,11 @@ export const settingsPaths: NavItem[] = [
     path: '/dashboard/inventory',
   },
   {
+    text: 'Admin',
+    icon: 'fas fa-user-shield',
+    path: '/dashboard/admin',
+  },
+  {
     text: 'Instellingen',
     icon: 'fas fa-cog',
     path: '/dashboard/settings',
@@ -60,6 +65,7 @@ const breadcrumbRoutes = [
   { path: '/history', label: 'Historie' },
   { path: '/dashboard/settings', label: 'Instellingen' },
   { path: '/dashboard/inventory', label: 'Voorraad' },
+  { path: '/dashboard/admin', label: 'Admin' },
 ];
 
 export function getBreadcrumbItems(pathname: string): BreadcrumbItem[] {

@@ -215,23 +215,23 @@ export default function DrawerMedicineCreate({
 
               <div className="grid gap-3">
                 <Label className="text-white/80">Bijsluiter</Label>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <input
-                    id="fda-leaflet"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border border-white/20 bg-white/10 text-primary accent-primary"
-                    checked={form.useFdaLeaflet}
-                    onChange={(event) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        useFdaLeaflet: event.target.checked,
-                      }))
-                    }
-                  />
-                  <Label htmlFor="fda-leaflet" className="text-sm font-normal">
-                    Gebruik bijsluiter vanuit FDA API
-                  </Label>
-                </div>
+                {/*<div className="flex items-center gap-2 text-sm text-muted-foreground">*/}
+                {/*  <input*/}
+                {/*    id="fda-leaflet"*/}
+                {/*    type="checkbox"*/}
+                {/*    className="h-4 w-4 rounded border border-white/20 bg-white/10 text-primary accent-primary"*/}
+                {/*    checked={form.useFdaLeaflet}*/}
+                {/*    onChange={(event) =>*/}
+                {/*      setForm((prev) => ({*/}
+                {/*        ...prev,*/}
+                {/*        useFdaLeaflet: event.target.checked,*/}
+                {/*      }))*/}
+                {/*    }*/}
+                {/*  />*/}
+                {/*  <Label htmlFor="fda-leaflet" className="text-sm font-normal">*/}
+                {/*    Gebruik bijsluiter vanuit FDA API*/}
+                {/*  </Label>*/}
+                {/*</div>*/}
                 <Textarea
                   placeholder="Extra informatie over de bijsluiter..."
                   className="bg-white/5 border-white/15 text-white/90"
