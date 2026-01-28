@@ -102,7 +102,7 @@ class GebruikerMedicijnController extends AbstractController
         ]);
     }
 
-    #[Route('/', methods: ['POST'])]
+    #[Route('', methods: ['POST'])]
     #[IsGranted('ROLE_PATIENT')]
     public function add(Request $request, EntityManagerInterface $em): JsonResponse
     {

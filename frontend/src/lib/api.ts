@@ -184,7 +184,7 @@ export const authApi = {
 export const medicinesApi = {
   async listMy() {
     const { res, data } = await apiRequest<ApiMedicine[] | ApiErrorBody>(
-      "/my-medicines",
+      "/medicines/me",
       { method: "GET" },
       true,
     );
@@ -198,7 +198,7 @@ export const medicinesApi = {
 
   async create(payload: CreateMedicinePayload) {
     const { res, data } = await apiRequest<{ id?: string } & ApiErrorBody>(
-      "/my-medicines/add",
+      "/medicines/me",
       {
         method: "POST",
         body: JSON.stringify(payload),
@@ -215,7 +215,7 @@ export const medicinesApi = {
 
   async update(id: string, payload: UpdateMedicinePayload) {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      `/my-medicines/${id}`,
+      `/medicines/me/${id}`,
       {
         method: "PUT",
         body: JSON.stringify(payload),
@@ -230,7 +230,7 @@ export const medicinesApi = {
 
   async remove(id: string) {
     const { res, data } = await apiRequest<ApiErrorBody>(
-      `/my-medicines/${id}`,
+      `/medicines/me/${id}`,
       { method: "DELETE" },
       true,
     );
