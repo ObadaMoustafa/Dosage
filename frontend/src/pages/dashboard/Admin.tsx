@@ -205,20 +205,27 @@ export default function DashboardAdmin() {
                           </AlertDialogTrigger>
                           <AlertDialogContent className="bg-[#1b2441] border-border/60">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
+                              <AlertDialogTitle className="text-white/90">
                                 Weet je het zeker?
                               </AlertDialogTitle>
-                              <AlertDialogDescription>
+                              <AlertDialogDescription className="text-white/70">
                                 {user.is_active
                                   ? 'Deze gebruiker wordt geblokkeerd.'
                                   : 'Deze gebruiker wordt geactiveerd.'}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Annuleren</AlertDialogCancel>
+                              <AlertDialogCancel className="bg-transparent text-white hover:bg-white/10 border-white/20">
+                                Annuleren
+                              </AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() =>
                                   handleToggleStatus(user.id, !user.is_active)
+                                }
+                                className={
+                                  user.is_active
+                                    ? 'bg-red-900 text-red-100 hover:bg-red-950 border border-red-800'
+                                    : 'bg-green-900 text-green-100 hover:bg-green-950 border border-green-800'
                                 }
                               >
                                 Bevestigen

@@ -40,6 +40,11 @@ export const settingsPaths: NavItem[] = [
     path: '/dashboard/inventory',
   },
   {
+    text: 'Koppelingen',
+    icon: 'fas fa-link',
+    path: '/dashboard/koppelingen',
+  },
+  {
     text: 'Admin',
     icon: 'fas fa-user-shield',
     path: '/dashboard/admin',
@@ -65,6 +70,7 @@ const breadcrumbRoutes = [
   { path: '/history', label: 'Historie' },
   { path: '/dashboard/settings', label: 'Instellingen' },
   { path: '/dashboard/inventory', label: 'Voorraad' },
+  { path: '/dashboard/koppelingen', label: 'Koppelingen' },
   { path: '/dashboard/admin', label: 'Admin' },
 ];
 

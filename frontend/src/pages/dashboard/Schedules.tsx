@@ -207,7 +207,7 @@ export default function DashboardSchedules() {
     schedule: ScheduleRow,
     status: 'optijd' | 'gemist',
   ) => {
-    if (!schedule.id) return;
+    if (!schedule.id) return false;
     try {
       await schedulesApi.updateStatus(schedule.id, status);
       toast.success(
@@ -218,8 +218,10 @@ export default function DashboardSchedules() {
       if (status === 'optijd') {
         window.dispatchEvent(new CustomEvent('turfje:log-created'));
       }
+      return true;
     } catch (error) {
       toast.error((error as Error).message || 'Status bijwerken mislukt.');
+      return false;
     }
   };
 
@@ -229,7 +231,7 @@ export default function DashboardSchedules() {
     const intervalLabel = formatInterval(schedule.days, schedule.times);
     return (
       schedule.medicine.toLowerCase().includes(query) ||
-      schedule.count.toLowerCase().includes(query) ||
+      schedule.count.toString().includes(query) ||
       intervalLabel.toLowerCase().includes(query) ||
       schedule.description.toLowerCase().includes(query)
     );

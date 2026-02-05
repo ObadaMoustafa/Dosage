@@ -2,7 +2,19 @@ import { Fragment, useEffect, useState } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import QuickMedicineUse from '@/components/QuickMedicineUse';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -148,6 +160,23 @@ export default function DashboardLayout() {
     viewingOptions.find((option) => option.id === viewingUserId)?.label ??
     'Jij';
 
+  const userInfoContent = (
+    <>
+      <Avatar className="h-9 w-9">
+        <AvatarImage src={user.avatar_url ?? undefined} />
+        <AvatarFallback>{initials || 'TU'}</AvatarFallback>
+      </Avatar>
+      <div className="flex min-w-0 flex-col text-left">
+        <span className="truncate text-sm font-medium">
+          {`${user.first_name} ${user.last_name}`.trim()}
+        </span>
+        <span className="truncate text-xs text-muted-foreground">
+          {user.email}
+        </span>
+      </div>
+    </>
+  );
+
   return (
     <SidebarProvider className="dashboard-layout min-h-svh">
       <Sidebar
@@ -207,59 +236,91 @@ export default function DashboardLayout() {
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton className="h-12 items-center gap-3 px-2">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={user.avatar_url ?? undefined} />
-                      <AvatarFallback>{initials || 'TU'}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col text-left">
-                      <span className="truncate text-sm font-medium">
-                        {`${user.first_name} ${user.last_name}`.trim()}
-                      </span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {user.email}
-                      </span>
-                    </div>
-                  </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  side="right"
-                  sideOffset={12}
-                  className="sidebar-dropdown w-48"
-                >
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">Gebruikersmenu</p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator className="bg-white/20" />
-
-                  {userMenuPaths.map((item) => (
-                    <DropdownMenuItem
-                      key={item.path}
-                      className="cursor-pointer"
-                      onClick={() => navigate(item.path)}
-                    >
-                      <span className={item.icon} aria-hidden="true" />
-                      {item.text}
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuItem
-                    className="cursor-pointer text-red-500 focus:text-red-500"
-                    onClick={handleLogout}
+            <SidebarMenuItem className="flex items-center gap-2">
+              {isMobile ? (
+                <div className="flex h-12 flex-1 items-center gap-3 px-2">
+                  {userInfoContent}
+                </div>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuButton className="h-12 flex-1 items-center gap-3 px-2">
+                      {userInfoContent}
+                    </SidebarMenuButton>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    side="right"
+                    sideOffset={12}
+                    className="sidebar-dropdown w-48"
                   >
-                    <span
-                      className="fas fa-person-running"
-                      aria-hidden="true"
-                    />
-                    Uitloggen
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex flex-col space-y-1 leading-none">
+                        <p className="font-medium">Gebruikersmenu</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator className="bg-white/20" />
+
+                    {userMenuPaths.map((item) => (
+                      <DropdownMenuItem
+                        key={item.path}
+                        className="cursor-pointer"
+                        onClick={() => navigate(item.path)}
+                      >
+                        <span className={item.icon} aria-hidden="true" />
+                        {item.text}
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuItem
+                      className="cursor-pointer text-red-500 focus:text-red-500"
+                      onClick={handleLogout}
+                    >
+                      <span
+                        className="fas fa-person-running"
+                        aria-hidden="true"
+                      />
+                      Uitloggen
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              {isMobile && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-400 hover:bg-red-400/10 hover:text-red-300 shrink-0"
+                    >
+                      <span
+                        className="fas fa-person-running text-xl"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-[#1b2441] border-border/60">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-white/90">
+                        Uitloggen
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="text-white/70">
+                        Weet je zeker dat je wilt uitloggen?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-transparent text-white hover:bg-white/10 border-white/20">
+                        Annuleren
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleLogout}
+                        className="bg-red-900 text-red-100 hover:bg-red-950 border border-red-800"
+                      >
+                        Uitloggen
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>

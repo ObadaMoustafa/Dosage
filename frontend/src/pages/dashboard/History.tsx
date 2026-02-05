@@ -131,6 +131,7 @@ export default function DashboardHistory() {
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [logs, setLogs] = useState<
     {
+      id: string;
       medicijn_naam: string;
       medicijn_turven: number;
       aangemaakt_op: string;

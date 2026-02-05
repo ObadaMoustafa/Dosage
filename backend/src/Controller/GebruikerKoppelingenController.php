@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class GebruikerKoppelingenController extends AbstractController
 {
     #[Route('/invite', methods: ['POST'])]
-    #[IsGranted(attribute: 'ROLE_PATIENT')]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function generateCode(Request $request, EntityManagerInterface $em): JsonResponse
     {
         /** @var Gebruikers $user */
@@ -163,6 +163,7 @@ class GebruikerKoppelingenController extends AbstractController
                 'connection_id' => $conn->getId(), // Needed for Unlink action
                 'user_id' => $viewer->getId(),
                 'name' => $viewer->getVoornaam() . ' ' . $viewer->getAchternaam(),
+                'email' => $viewer->getEmail(),
                 'avatar' => $viewer->getAvatarUrl(),
                 'role' => $viewer->getRol(),
                 'access' => $conn->getConnectionType(),

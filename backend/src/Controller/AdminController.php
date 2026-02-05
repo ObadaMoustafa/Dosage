@@ -22,7 +22,15 @@ class AdminController extends AbstractController
   #[Route('/users', methods: ['GET'])]
   public function getAllUsers(EntityManagerInterface $em): JsonResponse
   {
-    $users = $em->getRepository(Gebruikers::class)->findBy([], ['aangemaakt_op' => 'DESC']);
+    /** @var Gebruikers $currentUser */
+    $currentUser = $this->getUser();
+
+    $users = $em->getRepository(Gebruikers::class)->createQueryBuilder('u')
+      ->where('u.id != :currentUserId')
+      ->setParameter('currentUserId', $currentUser->getId(), 'uuid')
+      ->orderBy('u.aangemaakt_op', 'DESC')
+      ->getQuery()
+      ->getResult();
 
     $data = array_map(fn(Gebruikers $user) => [
       'id' => $user->getId(),
