@@ -1,40 +1,43 @@
-import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import * as React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
-import { Search } from "lucide-react";
-import DrawerScheduleCreate from "@/components/DrawerScheduleCreate";
-import ScheduleTableRow, { type ScheduleRow } from "@/components/ScheduleTableRow";
-import { medicinesApi, schedulesApi, type ScheduleApi } from "@/lib/api";
-import { toast } from "sonner";
+} from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
+import { Search } from 'lucide-react';
+import DrawerScheduleCreate from '@/components/DrawerScheduleCreate';
+import ScheduleTableRow, {
+  type ScheduleRow,
+} from '@/components/ScheduleTableRow';
+import { medicinesApi, schedulesApi, type ScheduleApi } from '@/lib/api';
+import { toast } from '@/lib/toast';
 
 const allDays = [
-  "Maandag",
-  "Dinsdag",
-  "Woensdag",
-  "Donderdag",
-  "Vrijdag",
-  "Zaterdag",
-  "Zondag",
+  'Maandag',
+  'Dinsdag',
+  'Woensdag',
+  'Donderdag',
+  'Vrijdag',
+  'Zaterdag',
+  'Zondag',
 ];
 
 const formatInterval = (days: string[], times: string[]) => {
   const isDaily =
-    days.length === allDays.length && allDays.every((day) => days.includes(day));
-  const dayLabel = isDaily ? "Elke dag" : days.join(", ");
-  const timeLabel = times.length ? `om ${times.join(", ")} uur` : "";
+    days.length === allDays.length &&
+    allDays.every((day) => days.includes(day));
+  const dayLabel = isDaily ? 'Elke dag' : days.join(', ');
+  const timeLabel = times.length ? `om ${times.join(', ')} uur` : '';
   return `${dayLabel} ${timeLabel}`.trim();
 };
 
 export default function DashboardSchedules() {
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [schedules, setSchedules] = React.useState<ScheduleRow[]>([]);
   const [medicineOptions, setMedicineOptions] = React.useState<
@@ -42,13 +45,13 @@ export default function DashboardSchedules() {
   >([]);
 
   const dayKeyToLabel: Record<string, string> = {
-    maandag: "Maandag",
-    dinsdag: "Dinsdag",
-    woensdag: "Woensdag",
-    donderdag: "Donderdag",
-    vrijdag: "Vrijdag",
-    zaterdag: "Zaterdag",
-    zondag: "Zondag",
+    maandag: 'Maandag',
+    dinsdag: 'Dinsdag',
+    woensdag: 'Woensdag',
+    donderdag: 'Donderdag',
+    vrijdag: 'Vrijdag',
+    zaterdag: 'Zaterdag',
+    zondag: 'Zondag',
   };
 
   const buildDaysObject = (days: string[]) => {
@@ -78,9 +81,9 @@ export default function DashboardSchedules() {
     setLoading(true);
     try {
       const viewingUserId =
-        localStorage.getItem("turfje:viewing-user") ?? "self";
+        localStorage.getItem('turfje:viewing-user') ?? 'self';
       const data = await schedulesApi.list(
-        viewingUserId === "self" ? {} : { user_id: viewingUserId },
+        viewingUserId === 'self' ? {} : { user_id: viewingUserId },
       );
       setSchedules(data.map(mapSchedule));
     } catch (error) {
@@ -93,15 +96,15 @@ export default function DashboardSchedules() {
   const loadMedicines = async () => {
     try {
       const viewingUserId =
-        localStorage.getItem("turfje:viewing-user") ?? "self";
+        localStorage.getItem('turfje:viewing-user') ?? 'self';
       const data = await medicinesApi.listMy(
-        viewingUserId === "self" ? {} : { user_id: viewingUserId },
+        viewingUserId === 'self' ? {} : { user_id: viewingUserId },
       );
       setMedicineOptions(
         data.map((item) => ({ id: item.id, label: item.medicijn_naam })),
       );
     } catch (error) {
-      toast.error((error as Error).message || "Medicijnen laden mislukt.");
+      toast.error((error as Error).message || 'Medicijnen laden mislukt.');
     }
   };
 
@@ -114,10 +117,10 @@ export default function DashboardSchedules() {
       void loadSchedules();
       void loadMedicines();
     };
-    window.addEventListener("turfje:viewing-user-changed", handleViewingChange);
+    window.addEventListener('turfje:viewing-user-changed', handleViewingChange);
     return () => {
       window.removeEventListener(
-        "turfje:viewing-user-changed",
+        'turfje:viewing-user-changed',
         handleViewingChange,
       );
     };
@@ -142,18 +145,18 @@ export default function DashboardSchedules() {
         id: id ?? `temp-${Date.now()}`,
         gmnId: payload.gmnId,
         medicine:
-          medicineOptions.find((option) => option.id === payload.gmnId)?.label ??
-          "Onbekend",
+          medicineOptions.find((option) => option.id === payload.gmnId)
+            ?.label ?? 'Onbekend',
         count: payload.count,
         description: payload.description,
         days: payload.days,
         times: payload.times,
       };
       setSchedules((prev) => [created, ...prev]);
-      toast.success("Schema toegevoegd.");
+      toast.success('Schema toegevoegd.');
       return true;
     } catch (error) {
-      toast.error((error as Error).message || "Schema toevoegen mislukt.");
+      toast.error((error as Error).message || 'Schema toevoegen mislukt.');
       return false;
     }
   };
@@ -176,10 +179,10 @@ export default function DashboardSchedules() {
       setSchedules((prev) =>
         prev.map((item) => (item.id === next.id ? next : item)),
       );
-      toast.success("Schema bijgewerkt.");
+      toast.success('Schema bijgewerkt.');
       return true;
     } catch (error) {
-      toast.error((error as Error).message || "Schema bijwerken mislukt.");
+      toast.error((error as Error).message || 'Schema bijwerken mislukt.');
       return false;
     }
   };
@@ -192,28 +195,31 @@ export default function DashboardSchedules() {
     try {
       await schedulesApi.remove(schedule.id);
       setSchedules((prev) => prev.filter((item) => item.id !== schedule.id));
-      toast.success("Schema verwijderd.");
+      toast.success('Schema verwijderd.');
       return true;
     } catch (error) {
-      toast.error((error as Error).message || "Schema verwijderen mislukt.");
+      toast.error((error as Error).message || 'Schema verwijderen mislukt.');
       return false;
     }
   };
 
-  const handleStatus = async (schedule: ScheduleRow, status: "optijd" | "gemist") => {
+  const handleStatus = async (
+    schedule: ScheduleRow,
+    status: 'optijd' | 'gemist',
+  ) => {
     if (!schedule.id) return;
     try {
       await schedulesApi.updateStatus(schedule.id, status);
       toast.success(
-        status === "optijd"
-          ? "Inname gemarkeerd als op tijd."
-          : "Inname gemarkeerd als gemist.",
+        status === 'optijd'
+          ? 'Inname gemarkeerd als op tijd.'
+          : 'Inname gemarkeerd als gemist.',
       );
-      if (status === "optijd") {
-        window.dispatchEvent(new CustomEvent("turfje:log-created"));
+      if (status === 'optijd') {
+        window.dispatchEvent(new CustomEvent('turfje:log-created'));
       }
     } catch (error) {
-      toast.error((error as Error).message || "Status bijwerken mislukt.");
+      toast.error((error as Error).message || 'Status bijwerken mislukt.');
     }
   };
 
@@ -290,7 +296,9 @@ export default function DashboardSchedules() {
           </Table>
 
           <div className="text-xs text-muted-foreground">
-            {loading ? "Schema's laden..." : `${filteredSchedules.length} actieve schema's`}
+            {loading
+              ? "Schema's laden..."
+              : `${filteredSchedules.length} actieve schema's`}
           </div>
         </CardContent>
       </Card>

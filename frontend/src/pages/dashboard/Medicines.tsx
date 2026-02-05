@@ -17,7 +17,7 @@ import DrawerMedicineCreate, {
 import MedicineTableRow from '@/components/MedicineTableRow';
 import { formatStockLabel, type StockItem } from '@/data/stock';
 import { medicinesApi, stockApi, type ApiMedicine } from '@/lib/api';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const mapApiMedicine = (medicine: ApiMedicine): MedicineRow => ({
   id: medicine.id,

@@ -89,8 +89,10 @@ export default function DashboardLayout() {
       if (auth.status !== 'authed') return;
       try {
         const subjects = await pairingApi.subjects();
+        const userRole = auth.user.role || '';
+        const selfLabel = userRole ? `Jij - ${userRole}` : 'Jij';
         const options = [
-          { id: 'self', label: 'Jij' },
+          { id: 'self', label: selfLabel },
           ...subjects.full_access.map((subject) => ({
             id: subject.user_id,
             label: `${subject.name} (volledige toegang)`,
@@ -104,7 +106,9 @@ export default function DashboardLayout() {
         setViewingOptions(options);
       } catch {
         if (!mounted) return;
-        setViewingOptions([{ id: 'self', label: 'Jij' }]);
+        const userRole = auth.user.role || '';
+        const selfLabel = userRole ? `Jij - ${userRole}` : 'Jij';
+        setViewingOptions([{ id: 'self', label: selfLabel }]);
       }
     };
 
@@ -120,6 +124,19 @@ export default function DashboardLayout() {
     }
   }, [viewingOptions]);
   useEffect(() => {
+    const handleViewingChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userId: string }>;
+      setViewingUserId(customEvent.detail.userId);
+    };
+    window.addEventListener('turfje:viewing-user-changed', handleViewingChange);
+    return () => {
+      window.removeEventListener(
+        'turfje:viewing-user-changed',
+        handleViewingChange,
+      );
+    };
+  }, []);
+  useEffect(() => {
     localStorage.setItem(storageKey, viewingUserId);
     window.dispatchEvent(
       new CustomEvent('turfje:viewing-user-changed', {
@@ -128,7 +145,8 @@ export default function DashboardLayout() {
     );
   }, [viewingUserId]);
   const viewingLabel =
-    viewingOptions.find((option) => option.id === viewingUserId)?.label ?? 'Jij';
+    viewingOptions.find((option) => option.id === viewingUserId)?.label ??
+    'Jij';
 
   return (
     <SidebarProvider className="dashboard-layout min-h-svh">
@@ -144,7 +162,6 @@ export default function DashboardLayout() {
               alt="Turfje logo"
               className="h-6 w-auto"
             />
-
           </div>
         </SidebarHeader>
         <SidebarContent>
@@ -171,19 +188,19 @@ export default function DashboardLayout() {
             <SidebarGroupLabel>Instellingen</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {settingsPaths.map((item) => (
+                {settingsPaths.map((item) =>
                   item.path === '/dashboard/admin' && !isAdmin ? null : (
-                  <SidebarMenuItem key={item.path}>
-                    <MobileAwareNavLink
-                      to={item.path}
-                      isActive={isActivePath(item.path)}
-                    >
-                      <span className={item.icon} aria-hidden="true" />
-                      {item.text}
-                    </MobileAwareNavLink>
-                  </SidebarMenuItem>
-                  )
-                ))}
+                    <SidebarMenuItem key={item.path}>
+                      <MobileAwareNavLink
+                        to={item.path}
+                        isActive={isActivePath(item.path)}
+                      >
+                        <span className={item.icon} aria-hidden="true" />
+                        {item.text}
+                      </MobileAwareNavLink>
+                    </SidebarMenuItem>
+                  ),
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -216,9 +233,7 @@ export default function DashboardLayout() {
                 >
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">
-                        Gebruikersmenu
-                      </p>
+                      <p className="font-medium">Gebruikersmenu</p>
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-white/20" />
@@ -233,8 +248,14 @@ export default function DashboardLayout() {
                       {item.text}
                     </DropdownMenuItem>
                   ))}
-                  <DropdownMenuItem className="cursor-pointer text-red-500 focus:text-red-500" onClick={handleLogout} >
-                    <span className='fas fa-person-running' aria-hidden="true" />
+                  <DropdownMenuItem
+                    className="cursor-pointer text-red-500 focus:text-red-500"
+                    onClick={handleLogout}
+                  >
+                    <span
+                      className="fas fa-person-running"
+                      aria-hidden="true"
+                    />
                     Uitloggen
                   </DropdownMenuItem>
                 </DropdownMenuContent>

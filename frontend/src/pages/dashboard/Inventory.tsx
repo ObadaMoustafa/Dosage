@@ -19,9 +19,13 @@ import {
 } from '@/components/ui/select';
 import InventoryTableRow from '@/components/InventoryTableRow';
 import DrawerStockCreate from '@/components/DrawerStockCreate';
-import { formatStockLabel, type StockItem, type StockStatus } from '@/data/stock';
+import {
+  formatStockLabel,
+  type StockItem,
+  type StockStatus,
+} from '@/data/stock';
 import { stockApi } from '@/lib/api';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const statusLabels: Record<'all' | StockStatus, string> = {
   all: 'Alle statussen',
@@ -43,7 +47,8 @@ export default function DashboardVoorraad() {
         !query ||
         item.name.toLowerCase().includes(query) ||
         formatStockLabel(item).toLowerCase().includes(query);
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || item.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
   }, [searchQuery, statusFilter, stockItems]);
@@ -84,7 +89,9 @@ export default function DashboardVoorraad() {
         threshold: next.threshold,
         status: next.status,
       });
-      setStockItems((prev) => prev.map((item) => (item.id === next.id ? next : item)));
+      setStockItems((prev) =>
+        prev.map((item) => (item.id === next.id ? next : item)),
+      );
       window.dispatchEvent(new CustomEvent('turfje:stock-updated'));
       toast.success('Voorraad bijgewerkt.');
       return true;
@@ -184,7 +191,11 @@ export default function DashboardVoorraad() {
               </TableHeader>
               <TableBody>
                 {filteredItems.map((item) => (
-                  <InventoryTableRow key={item.id} item={item} onEdit={handleUpdate} />
+                  <InventoryTableRow
+                    key={item.id}
+                    item={item}
+                    onEdit={handleUpdate}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -212,7 +223,10 @@ export default function DashboardVoorraad() {
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Bijna leeg</span>
               <span className="font-semibold text-red-400">
-                {stockItems.filter((item) => item.status === 'Bijna leeg').length}
+                {
+                  stockItems.filter((item) => item.status === 'Bijna leeg')
+                    .length
+                }
               </span>
             </div>
             <div className="rounded-md bg-background/10 p-3 text-xs text-muted-foreground">

@@ -17,10 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import HistoryTableRow, { type HistoryEntry } from '@/components/HistoryTableRow';
+import HistoryTableRow, {
+  type HistoryEntry,
+} from '@/components/HistoryTableRow';
 import HistoryLineChart from '@/components/dashboard/HistoryLineChart';
 import { logsApi } from '@/lib/api';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const formatLogTimestamp = (value: string) => {
   const parsed = new Date(value);
@@ -38,7 +40,12 @@ const normalizeStatus = (status?: string | null) => {
   if (!status) return 'Op tijd' as const;
   const lowered = status.toLowerCase();
   if (lowered.includes('gemist')) return 'Gemist' as const;
-  if (lowered.includes('optijd') || lowered.includes('op_tijd') || lowered.includes('op tijd')) return 'Op tijd' as const;
+  if (
+    lowered.includes('optijd') ||
+    lowered.includes('op_tijd') ||
+    lowered.includes('op tijd')
+  )
+    return 'Op tijd' as const;
   return 'Op tijd' as const;
 };
 
@@ -74,7 +81,9 @@ const buildChartData = (
     logsByDay.set(key, existing);
   });
 
-  const weekdayFormatter = new Intl.DateTimeFormat('nl-NL', { weekday: 'short' });
+  const weekdayFormatter = new Intl.DateTimeFormat('nl-NL', {
+    weekday: 'short',
+  });
   const timeFormatter = new Intl.DateTimeFormat('nl-NL', {
     hour: '2-digit',
     minute: '2-digit',
@@ -88,7 +97,9 @@ const buildChartData = (
         ? dayLogs
         : dayLogs.filter((log) => normalizeStatus(log.status) === statusFilter);
     dayLogs.sort(
-      (a, b) => new Date(a.aangemaakt_op).getTime() - new Date(b.aangemaakt_op).getTime(),
+      (a, b) =>
+        new Date(a.aangemaakt_op).getTime() -
+        new Date(b.aangemaakt_op).getTime(),
     );
 
     const labelRaw = weekdayFormatter.format(date);
@@ -113,9 +124,9 @@ const buildChartData = (
 
 export default function DashboardHistory() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | HistoryEntry['status']>(
-    'all',
-  );
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | HistoryEntry['status']
+  >('all');
   const [loading, setLoading] = useState(true);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [logs, setLogs] = useState<
@@ -130,7 +141,11 @@ export default function DashboardHistory() {
     {
       label: string;
       value: number;
-      details?: { time: string; status: 'Op tijd' | 'Gemist'; medicine: string }[];
+      details?: {
+        time: string;
+        status: 'Op tijd' | 'Gemist';
+        medicine: string;
+      }[];
     }[]
   >([]);
 
@@ -204,7 +219,8 @@ export default function DashboardHistory() {
         !query ||
         entry.medicine.toLowerCase().includes(query) ||
         entry.details.toLowerCase().includes(query);
-      const matchesStatus = statusFilter === 'all' || entry.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || entry.status === statusFilter;
       return matchesQuery && matchesStatus;
     });
   }, [searchQuery, statusFilter, historyEntries]);
@@ -278,7 +294,9 @@ export default function DashboardHistory() {
               </TableBody>
             </Table>
             <div className="text-xs text-muted-foreground">
-              {loading ? 'Historie laden...' : `${filteredEntries.length} registraties`}
+              {loading
+                ? 'Historie laden...'
+                : `${filteredEntries.length} registraties`}
             </div>
           </CardContent>
         </Card>

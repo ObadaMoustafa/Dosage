@@ -1,12 +1,12 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "./AuthProvider";
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from './AuthProvider';
 
 export default function ProtectedRoute() {
   const { auth } = useAuth();
   const location = useLocation();
 
-  if (auth.status === "loading") {
+  if (auth.status === 'loading') {
     return (
       <div className="dashboard-layout min-h-svh">
         <aside className="hidden md:flex w-64 flex-col bg-[#1b2441] text-sidebar-foreground border-r">
@@ -49,7 +49,7 @@ export default function ProtectedRoute() {
     );
   }
 
-  if (auth.status === "unauthed") {
+  if (auth.status === 'unauthed') {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

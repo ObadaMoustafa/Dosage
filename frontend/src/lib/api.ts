@@ -481,7 +481,9 @@ export const adminApi = {
     );
 
     if (!res.ok) {
-      throw new Error(data.error ?? data.message ?? 'Gebruikers laden mislukt.');
+      throw new Error(
+        data.error ?? data.message ?? 'Gebruikers laden mislukt.',
+      );
     }
 
     return data as AdminUser[];

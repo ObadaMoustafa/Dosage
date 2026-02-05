@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class GebruikerKoppelingenController extends AbstractController
 {
     #[Route('/invite', methods: ['POST'])]
-    #[IsGranted('ROLE_PATIENT')]
+    #[IsGranted(attribute: 'ROLE_PATIENT')]
     public function generateCode(Request $request, EntityManagerInterface $em): JsonResponse
     {
         /** @var Gebruikers $user */

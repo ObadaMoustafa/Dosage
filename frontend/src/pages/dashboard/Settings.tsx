@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useAuth } from '@/auth/AuthProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -82,9 +82,9 @@ export default function DashboardSettings() {
   const [shareExpiresAt, setShareExpiresAt] = useState<string | null>(null);
   const [shareLoading, setShareLoading] = useState(false);
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
-  const [shareRole, setShareRole] = useState<'Zorgverlener' | 'Vertrouweling' | null>(
-    null,
-  );
+  const [shareRole, setShareRole] = useState<
+    'Zorgverlener' | 'Vertrouweling' | null
+  >(null);
   const [pairingLoading, setPairingLoading] = useState(false);
   const [otpValue, setOtpValue] = useState('');
   const [viewingUserId, setViewingUserId] = useState('self');
@@ -213,8 +213,11 @@ export default function DashboardSettings() {
         })),
       ]);
 
+      const userRole = auth.status === 'authed' ? auth.user.role : '';
+      const selfLabel = userRole ? `Jij - ${userRole}` : 'Jij';
+
       const nextViewingUsers = [
-        { id: 'self', label: 'Jij' },
+        { id: 'self', label: selfLabel },
         ...subjects.full_access.map((subject) => ({
           id: subject.user_id,
           label: `${subject.name} (volledige toegang)`,
@@ -247,7 +250,8 @@ export default function DashboardSettings() {
   ) => {
     setShareLoading(true);
     try {
-      const apiType: PairingType = role === 'Zorgverlener' ? 'THERAPIST' : 'TRUSTED';
+      const apiType: PairingType =
+        role === 'Zorgverlener' ? 'THERAPIST' : 'TRUSTED';
       const result = await pairingApi.invite(apiType);
       setShareRole(role);
       setShareCode(result.code);
@@ -301,6 +305,20 @@ export default function DashboardSettings() {
   };
 
   useEffect(() => {
+    const handleViewingChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ userId: string }>;
+      setViewingUserId(customEvent.detail.userId);
+    };
+    window.addEventListener('turfje:viewing-user-changed', handleViewingChange);
+    return () => {
+      window.removeEventListener(
+        'turfje:viewing-user-changed',
+        handleViewingChange,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     const stored = localStorage.getItem('turfje:viewing-user');
     if (stored) {
       setViewingUserId(stored);
@@ -321,7 +339,17 @@ export default function DashboardSettings() {
   const viewingOptions =
     viewingUsers.length > 0
       ? viewingUsers
-      : [{ id: 'self', label: 'Jij' }];
+      : [
+          {
+            id: 'self',
+            label:
+              auth.status === 'authed' && auth.user.role
+                ? `Jij - ${auth.user.role}`
+                : 'Jij',
+          },
+        ];
+
+  const isPatient = auth.status === 'authed' && auth.user.role === 'patient';
 
   return (
     <div className="space-y-6">
@@ -390,7 +418,7 @@ export default function DashboardSettings() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label>Emailadres</Label>
+                <Label>Email adres</Label>
                 <Input
                   value={profile.email}
                   onChange={(e) =>
@@ -489,7 +517,10 @@ export default function DashboardSettings() {
                   Kies wiens overzicht je wilt zien. Dit geldt voor je sessie.
                 </p>
               </div>
-              <Select value={viewingUserId} onValueChange={handleViewingUserChange}>
+              <Select
+                value={viewingUserId}
+                onValueChange={handleViewingUserChange}
+              >
                 <SelectTrigger className="bg-background/10 border-border/60 md:w-60">
                   <SelectValue placeholder="Kies gebruiker" />
                 </SelectTrigger>
@@ -502,79 +533,90 @@ export default function DashboardSettings() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-sm font-medium">Deelcode</p>
-                  <p className="text-xs text-muted-foreground">
-                    Code verloopt na 10 minuten.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  onClick={() => setShareDrawerOpen(true)}
-                  disabled={shareLoading || pairingLoading}
-                >
-                  {shareLoading ? 'Genereren...' : 'Genereer code'}
-                </Button>
-              </div>
-              {shareCode ? (
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div className="text-2xl font-semibold tracking-[0.3em]">
-                    {shareCode}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {shareRole ? `Voor: ${shareRole} · ` : ''}
-                    Geldig tot {shareExpiresAt}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  Nog geen actieve code.
-                </div>
-              )}
-            </div>
-            <Drawer open={shareDrawerOpen} onOpenChange={setShareDrawerOpen}>
-              <DrawerContent className="dialog-main sm:left-1/2 sm:right-auto sm:w-lg sm:-translate-x-1/2">
-                <div className="mx-auto w-full max-w-xl pb-2">
-                  <DrawerHeader className="dialog-text-color">
-                    <DrawerTitle className="text-white/90">
-                      Voor wie wil je een code genereren?
-                    </DrawerTitle>
-                    <DrawerDescription className="text-white/50">
-                      Kies de rol om een tijdelijke deelcode aan te maken.
-                    </DrawerDescription>
-                  </DrawerHeader>
-                  <div className="px-4 pb-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <Button
-                        type="button"
-                        className="bg-white/10 text-white/90 hover:bg-white/20"
-                        disabled={shareLoading || pairingLoading}
-                        onClick={() => handleShareRoleSelect('Zorgverlener')}
-                      >
-                        Zorgverlener
-                      </Button>
-                      <Button
-                        type="button"
-                        className="bg-white/10 text-white/90 hover:bg-white/20"
-                        disabled={shareLoading || pairingLoading}
-                        onClick={() => handleShareRoleSelect('Vertrouweling')}
-                      >
-                        Vertrouweling
-                      </Button>
+            {isPatient && (
+              <>
+                <div className="rounded-md border border-white/10 bg-white/5 p-4 space-y-3">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Deelcode</p>
+                      <p className="text-xs text-muted-foreground">
+                        Code verloopt na 10 minuten.
+                      </p>
                     </div>
+                    <Button
+                      type="button"
+                      onClick={() => setShareDrawerOpen(true)}
+                      disabled={shareLoading || pairingLoading}
+                    >
+                      {shareLoading ? 'Genereren...' : 'Genereer code'}
+                    </Button>
                   </div>
-                  <DrawerFooter>
-                    <DrawerClose asChild>
-                      <Button variant="outline" className="main-button-nb">
-                        Annuleren
-                      </Button>
-                    </DrawerClose>
-                  </DrawerFooter>
+                  {shareCode ? (
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <div className="text-2xl font-semibold tracking-[0.3em]">
+                        {shareCode}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {shareRole ? `Voor: ${shareRole} · ` : ''}
+                        Geldig tot {shareExpiresAt}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      Nog geen actieve code.
+                    </div>
+                  )}
                 </div>
-              </DrawerContent>
-            </Drawer>
+                <Drawer
+                  open={shareDrawerOpen}
+                  onOpenChange={setShareDrawerOpen}
+                >
+                  <DrawerContent className="dialog-main sm:left-1/2 sm:right-auto sm:w-lg sm:-translate-x-1/2">
+                    <div className="mx-auto w-full max-w-xl pb-2">
+                      <DrawerHeader className="dialog-text-color">
+                        <DrawerTitle className="text-white/90">
+                          Voor wie wil je een code genereren?
+                        </DrawerTitle>
+                        <DrawerDescription className="text-white/50">
+                          Kies de rol om een tijdelijke deelcode aan te maken.
+                        </DrawerDescription>
+                      </DrawerHeader>
+                      <div className="px-4 pb-4">
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Button
+                            type="button"
+                            className="bg-white/10 text-white/90 hover:bg-white/20"
+                            disabled={shareLoading || pairingLoading}
+                            onClick={() =>
+                              handleShareRoleSelect('Zorgverlener')
+                            }
+                          >
+                            Zorgverlener
+                          </Button>
+                          <Button
+                            type="button"
+                            className="bg-white/10 text-white/90 hover:bg-white/20"
+                            disabled={shareLoading || pairingLoading}
+                            onClick={() =>
+                              handleShareRoleSelect('Vertrouweling')
+                            }
+                          >
+                            Vertrouweling
+                          </Button>
+                        </div>
+                      </div>
+                      <DrawerFooter>
+                        <DrawerClose asChild>
+                          <Button variant="outline" className="main-button-nb">
+                            Annuleren
+                          </Button>
+                        </DrawerClose>
+                      </DrawerFooter>
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+              </>
+            )}
 
             <form
               className="rounded-md border border-white/10 bg-white/5 p-4 space-y-3"
@@ -660,9 +702,7 @@ export default function DashboardSettings() {
         {/* Danger Zone */}
         <Card className="bg-[#1b2441] border-red-900/60">
           <CardHeader>
-            <CardTitle className="text-red-600">
-              Gevarenzone
-            </CardTitle>
+            <CardTitle className="text-red-600">Gevarenzone</CardTitle>
             <CardDescription>
               Acties die niet ongedaan kunnen worden gemaakt.
             </CardDescription>
@@ -678,8 +718,8 @@ export default function DashboardSettings() {
 
               {/* New Alert Dialog Implementation */}
               <AlertDialog
-                  open={isDeleteDialogOpen}
-                  onOpenChange={setIsDeleteDialogOpen}
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
               >
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive">Account verwijderen</Button>
@@ -694,9 +734,7 @@ export default function DashboardSettings() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel
-                      disabled={deletingAccount}
-                    >
+                    <AlertDialogCancel disabled={deletingAccount}>
                       Annuleren
                     </AlertDialogCancel>
                     <AlertDialogAction

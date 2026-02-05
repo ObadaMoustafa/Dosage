@@ -1,16 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useEffect, useMemo, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,25 +27,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { TableCell } from "@/components/ui/table";
-import { toast } from "sonner";
-import { adminApi, type AdminUser } from "@/lib/api";
-import { useAuth } from "@/auth/AuthProvider";
-import { Navigate } from "react-router-dom";
+} from '@/components/ui/alert-dialog';
+import { TableCell } from '@/components/ui/table';
+import { toast } from '@/lib/toast';
+import { adminApi, type AdminUser } from '@/lib/api';
+import { useAuth } from '@/auth/AuthProvider';
+import { Navigate } from 'react-router-dom';
 
 const roleOptions = [
-  { value: "patient", label: "Patient" },
-  { value: "behandelaar", label: "Behandelaar" },
-  { value: "admin", label: "Admin" },
+  { value: 'patient', label: 'Patient' },
+  { value: 'behandelaar', label: 'Behandelaar' },
+  { value: 'admin', label: 'Admin' },
 ] as const;
 
 export default function DashboardAdmin() {
   const { auth } = useAuth();
-  const isAdmin = auth.status === "authed" && auth.user.role === "admin";
+  const isAdmin = auth.status === 'authed' && auth.user.role === 'admin';
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredUsers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -57,7 +63,7 @@ export default function DashboardAdmin() {
       const data = await adminApi.users();
       setUsers(data);
     } catch (error) {
-      toast.error((error as Error).message || "Gebruikers laden mislukt.");
+      toast.error((error as Error).message || 'Gebruikers laden mislukt.');
     } finally {
       setLoading(false);
     }
@@ -68,15 +74,15 @@ export default function DashboardAdmin() {
     void loadUsers();
   }, [isAdmin]);
 
-  const handleRoleChange = async (userId: string, role: AdminUser["role"]) => {
+  const handleRoleChange = async (userId: string, role: AdminUser['role']) => {
     try {
       await adminApi.updateRole(userId, role);
       setUsers((prev) =>
         prev.map((user) => (user.id === userId ? { ...user, role } : user)),
       );
-      toast.success("Rol bijgewerkt.");
+      toast.success('Rol bijgewerkt.');
     } catch (error) {
-      toast.error((error as Error).message || "Rol bijwerken mislukt.");
+      toast.error((error as Error).message || 'Rol bijwerken mislukt.');
     }
   };
 
@@ -88,13 +94,15 @@ export default function DashboardAdmin() {
           user.id === userId ? { ...user, is_active: isActive } : user,
         ),
       );
-      toast.success(isActive ? "Gebruiker geactiveerd." : "Gebruiker gedeactiveerd.");
+      toast.success(
+        isActive ? 'Gebruiker geactiveerd.' : 'Gebruiker gedeactiveerd.',
+      );
     } catch (error) {
-      toast.error((error as Error).message || "Status bijwerken mislukt.");
+      toast.error((error as Error).message || 'Status bijwerken mislukt.');
     }
   };
 
-  if (auth.status === "authed" && !isAdmin) {
+  if (auth.status === 'authed' && !isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -152,7 +160,10 @@ export default function DashboardAdmin() {
                         <Select
                           value={user.role}
                           onValueChange={(value) =>
-                            handleRoleChange(user.id, value as AdminUser["role"])
+                            handleRoleChange(
+                              user.id,
+                              value as AdminUser['role'],
+                            )
                           }
                         >
                           <SelectTrigger className="bg-background/10 border-border/60">
@@ -160,7 +171,10 @@ export default function DashboardAdmin() {
                           </SelectTrigger>
                           <SelectContent>
                             {roleOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
+                              <SelectItem
+                                key={option.value}
+                                value={option.value}
+                              >
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -171,11 +185,11 @@ export default function DashboardAdmin() {
                         <span
                           className={
                             user.is_active
-                              ? "text-green-400 text-xs font-semibold"
-                              : "text-red-400 text-xs font-semibold"
+                              ? 'text-green-400 text-xs font-semibold'
+                              : 'text-red-400 text-xs font-semibold'
                           }
                         >
-                          {user.is_active ? "Actief" : "Geblokkeerd"}
+                          {user.is_active ? 'Actief' : 'Geblokkeerd'}
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
@@ -186,16 +200,18 @@ export default function DashboardAdmin() {
                               className="main-button-nb"
                               size="sm"
                             >
-                              {user.is_active ? "Blokkeer" : "Activeer"}
+                              {user.is_active ? 'Blokkeer' : 'Activeer'}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent className="bg-[#1b2441] border-border/60">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Weet je het zeker?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Weet je het zeker?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
                                 {user.is_active
-                                  ? "Deze gebruiker wordt geblokkeerd."
-                                  : "Deze gebruiker wordt geactiveerd."}
+                                  ? 'Deze gebruiker wordt geblokkeerd.'
+                                  : 'Deze gebruiker wordt geactiveerd.'}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -217,7 +233,7 @@ export default function DashboardAdmin() {
               </Table>
               <div className="text-xs text-muted-foreground">
                 {loading
-                  ? "Gebruikers laden..."
+                  ? 'Gebruikers laden...'
                   : `${filteredUsers.length} gebruikers`}
               </div>
             </>
