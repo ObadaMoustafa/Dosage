@@ -1,6 +1,4 @@
-# Turfje
-
-<img src="https://r2.fivemanage.com/wqMuL8aYWTwEuuMyYBW4d/scuffedwhite.png" alt="Intro" width="500"/>
+# Dosage
 
 ## Documenten
 
