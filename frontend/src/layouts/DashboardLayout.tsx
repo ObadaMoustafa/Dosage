@@ -196,11 +196,12 @@ export default function DashboardLayout() {
         className="sticky top-0 h-svh border-r bg-[#1b2441] text-sidebar-foreground"
       >
         <SidebarHeader>
-          <div className="flex items-center gap-2 px-2 mt-4">
+          <div className="flex items-center gap-2 px-2 mt-4 w-full">
             <img
-              src="/turfje-logo-white.png"
+              src="/dosage-logo.png"
               alt="Turfje logo"
               className="h-6 w-auto"
+              style={{ width: 'auto', height: '80px' }}
             />
           </div>
         </SidebarHeader>
