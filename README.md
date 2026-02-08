@@ -1,5 +1,7 @@
 # Dosage
 
+![photo](/documentation/dosage-logo.png)
+
 ## Documenten
 
 ### Casus
