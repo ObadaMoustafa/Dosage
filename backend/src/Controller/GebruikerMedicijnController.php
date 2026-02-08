@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Gebruikers;
 use App\Entity\GebruikerMedicijn;
+use App\Entity\GebruikerKoppelingen;
 use App\Entity\VoorraadItem;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -103,11 +104,11 @@ class GebruikerMedicijnController extends AbstractController
     }
 
     #[Route('', methods: ['POST'])]
-    #[IsGranted('ROLE_PATIENT')]
     public function add(Request $request, EntityManagerInterface $em): JsonResponse
     {
         /** @var Gebruikers $user */
         $user = $this->getUser();
+        $currentUser = $user;
         $payload = json_decode($request->getContent(), true);
 
         // 1. trim inputs
@@ -119,6 +120,21 @@ class GebruikerMedicijnController extends AbstractController
             return $this->json([
                 'error' => 'Medicijn naam en sterkte zijn verplicht.'
             ], 400);
+        }
+
+        // 3. Check if adding for another user (Therapist flow)
+        $targetUserId = $payload['user_id'] ?? null;
+        if ($targetUserId && $targetUserId !== $currentUser->getId()->toRfc4122()) {
+            $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+                'gekoppelde_gebruiker' => $currentUser,
+                'gebruiker' => $targetUserId
+            ]);
+
+            if (!$connection || $connection->getAccessLevel() !== GebruikerKoppelingen::ACCESS_WRITE) {
+                return $this->json(['error' => 'Geen rechten om medicijnen toe te voegen voor deze gebruiker.'], 403);
+            }
+
+            $user = $connection->getGebruiker();
         }
 
         // get the medicines list of user.
@@ -190,7 +206,15 @@ class GebruikerMedicijnController extends AbstractController
 
         // Case B: Medicine exists, but belongs to someone else
         if ($med->getGebruiker() !== $currentUser) {
-            return $this->json(['error' => 'Geen rechten om dit medicijn te bewerken.'], 403);
+            // Check for Therapist connection
+            $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+                'gekoppelde_gebruiker' => $currentUser,
+                'gebruiker' => $med->getGebruiker()
+            ]);
+
+            if (!$connection || $connection->getAccessLevel() !== GebruikerKoppelingen::ACCESS_WRITE) {
+                return $this->json(['error' => 'Geen rechten om dit medicijn te bewerken.'], 403);
+            }
         }
 
         // Update fields if present
@@ -214,7 +238,7 @@ class GebruikerMedicijnController extends AbstractController
             if ($stockId) {
                 /** @var VoorraadItem|null $stockItem */
                 $stockItem = $em->getRepository(VoorraadItem::class)->find($stockId);
-                if (!$stockItem || $stockItem->getGebruiker() !== $currentUser) {
+                if (!$stockItem || $stockItem->getGebruiker() !== $med->getGebruiker()) {
                     return $this->json(['error' => 'Ongeldige voorraad koppeling.'], 400);
                 }
                 $med->setVoorraadItem($stockItem);
@@ -232,19 +256,26 @@ class GebruikerMedicijnController extends AbstractController
     }
 
     #[Route('/{id}', methods: ['DELETE'])]
-    #[IsGranted('ROLE_PATIENT')]
     public function delete(string $id, EntityManagerInterface $em): JsonResponse
     {
-        /** @var Gebruikers $user */
-        $user = $this->getUser();
+        /** @var Gebruikers $currentUser */
+        $currentUser = $this->getUser();
 
-        $med = $em->getRepository(GebruikerMedicijn::class)->findOneBy([
-            'id' => $id,
-            'gebruiker' => $user
-        ]);
+        $med = $em->getRepository(GebruikerMedicijn::class)->find($id);
 
         if (!$med) {
             return $this->json(['error' => 'Medicijn niet gevonden.'], 404);
+        }
+
+        if ($med->getGebruiker() !== $currentUser) {
+            $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+                'gekoppelde_gebruiker' => $currentUser,
+                'gebruiker' => $med->getGebruiker()
+            ]);
+
+            if (!$connection || $connection->getAccessLevel() !== GebruikerKoppelingen::ACCESS_WRITE) {
+                return $this->json(['error' => 'Geen rechten om dit medicijn te verwijderen.'], 403);
+            }
         }
 
         $em->remove($med);

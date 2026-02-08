@@ -154,39 +154,41 @@ export default function DrawerMedicineEdit({
                 </Select>
               </div>
 
-              <div className="grid gap-2">
-                <Label className="text-white/80">Voorraad koppelen</Label>
-                <Select
-                  value={form.stockId ?? 'none'}
-                  onValueChange={(value) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      stockId: value === 'none' ? undefined : value,
-                    }))
-                  }
-                >
-                  <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
-                    <SelectValue placeholder="Kies voorraad" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#141c33] text-foreground border-white/15">
-                    <SelectItem
-                      value="none"
-                      className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
-                    >
-                      Geen koppeling
-                    </SelectItem>
-                    {stockOptions.map((option) => (
+              {stockOptions.length > 0 && (
+                <div className="grid gap-2">
+                  <Label className="text-white/80">Voorraad koppelen</Label>
+                  <Select
+                    value={form.stockId ?? 'none'}
+                    onValueChange={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        stockId: value === 'none' ? undefined : value,
+                      }))
+                    }
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
+                      <SelectValue placeholder="Kies voorraad" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#141c33] text-foreground border-white/15">
                       <SelectItem
-                        key={option.id}
-                        value={option.id}
+                        value="none"
                         className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
                       >
-                        {option.label}
+                        Geen koppeling
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                      {stockOptions.map((option) => (
+                        <SelectItem
+                          key={option.id}
+                          value={option.id}
+                          className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="grid gap-2">
                 <Label className="text-white/80">Sterkte</Label>

@@ -158,14 +158,21 @@ export default function DashboardMedicines() {
     try {
       const leaflet =
         payload.leafletText || (payload.useFdaLeaflet ? 'FDA' : '');
-      const id = await medicinesApi.create({
+
+      const viewingUserId =
+        localStorage.getItem('turfje:viewing-user') ?? 'self';
+      const createPayload: any = {
         medicijn_naam: payload.name.trim(),
         toedieningsvorm: payload.route || null,
         sterkte: payload.strength || null,
         beschrijving: payload.description || null,
         bijsluiter: leaflet || null,
         stock_id: payload.stockId ?? null,
-      });
+      };
+      if (viewingUserId !== 'self') {
+        createPayload.user_id = viewingUserId;
+      }
+      const id = await medicinesApi.create(createPayload);
       const next: MedicineRow = {
         id: id ?? `temp-${Date.now()}`,
         name: payload.name,

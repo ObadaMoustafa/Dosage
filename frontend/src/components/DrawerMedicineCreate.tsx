@@ -1,8 +1,8 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Drawer,
   DrawerClose,
@@ -12,17 +12,17 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
+} from '@/components/ui/drawer';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Plus, X } from "lucide-react";
+} from '@/components/ui/select';
+import { Plus, X } from 'lucide-react';
 
-const routeOptions = ["Oraal", "Anaal", "Spuit", "Anders"];
+const routeOptions = ['Oraal', 'Anaal', 'Spuit', 'Anders'];
 
 export type CreateMedicinePayload = {
   name: string;
@@ -47,13 +47,13 @@ export default function DrawerMedicineCreate({
   const [open, setOpen] = React.useState(false);
   const initialForm = React.useMemo(
     () => ({
-      name: "",
-      brand: "",
-      route: "",
-      strength: "",
-      description: "",
-      stockId: "none",
-      leafletText: "",
+      name: '',
+      brand: '',
+      route: '',
+      strength: '',
+      description: '',
+      stockId: 'none',
+      leafletText: '',
       useFdaLeaflet: false,
     }),
     [],
@@ -67,7 +67,7 @@ export default function DrawerMedicineCreate({
       route: form.route,
       strength: form.strength.trim(),
       description: form.description.trim(),
-      stockId: form.stockId === "none" ? undefined : form.stockId,
+      stockId: form.stockId === 'none' ? undefined : form.stockId,
       leafletText: form.leafletText.trim(),
       useFdaLeaflet: form.useFdaLeaflet,
     };
@@ -88,7 +88,9 @@ export default function DrawerMedicineCreate({
         <div className="mx-auto w-full max-w-2xl pb-2">
           <div className="relative">
             <DrawerHeader className="dialog-text-color">
-              <DrawerTitle className="text-white/90">Nieuw Medicijn</DrawerTitle>
+              <DrawerTitle className="text-white/90">
+                Nieuw Medicijn
+              </DrawerTitle>
               <DrawerDescription className="text-white/50">
                 Voeg medicijninformatie toe voor je overzicht.
               </DrawerDescription>
@@ -155,36 +157,38 @@ export default function DrawerMedicineCreate({
                 </Select>
               </div>
 
-              <div className="grid gap-2">
-                <Label className="text-white/80">Voorraad koppelen</Label>
-                <Select
-                  value={form.stockId}
-                  onValueChange={(value) =>
-                    setForm((prev) => ({ ...prev, stockId: value }))
-                  }
-                >
-                  <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
-                    <SelectValue placeholder="Kies voorraad" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#141c33] text-foreground border-white/15">
-                    <SelectItem
-                      value="none"
-                      className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
-                    >
-                      Geen koppeling
-                    </SelectItem>
-                    {stockOptions.map((option) => (
+              {stockOptions.length > 0 && (
+                <div className="grid gap-2">
+                  <Label className="text-white/80">Voorraad koppelen</Label>
+                  <Select
+                    value={form.stockId}
+                    onValueChange={(value) =>
+                      setForm((prev) => ({ ...prev, stockId: value }))
+                    }
+                  >
+                    <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
+                      <SelectValue placeholder="Kies voorraad" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#141c33] text-foreground border-white/15">
                       <SelectItem
-                        key={option.id}
-                        value={option.id}
+                        value="none"
                         className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
                       >
-                        {option.label}
+                        Geen koppeling
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                      {stockOptions.map((option) => (
+                        <SelectItem
+                          key={option.id}
+                          value={option.id}
+                          className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               <div className="grid gap-2">
                 <Label className="text-white/80">Sterkte</Label>
@@ -193,7 +197,10 @@ export default function DrawerMedicineCreate({
                   className="bg-white/5 border-white/15 text-white/90"
                   value={form.strength}
                   onChange={(event) =>
-                    setForm((prev) => ({ ...prev, strength: event.target.value }))
+                    setForm((prev) => ({
+                      ...prev,
+                      strength: event.target.value,
+                    }))
                   }
                 />
               </div>
