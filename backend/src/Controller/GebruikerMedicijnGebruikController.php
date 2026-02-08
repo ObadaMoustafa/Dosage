@@ -88,7 +88,7 @@ class GebruikerMedicijnGebruikController extends AbstractController
     // 4. Set Time
     if (isset($data['aangemaakt_op']) && !empty($data['aangemaakt_op'])) {
       try {
-        $log->setAangemaaktOp(new \DateTime($data['aangemaakt_op']));
+        $log->setAangemaaktOp(new \DateTime($data['aangemaakt_op'], new \DateTimeZone('Europe/Amsterdam')));
       } catch (\Exception $e) {
       }
     }
@@ -207,6 +207,7 @@ class GebruikerMedicijnGebruikController extends AbstractController
       ->orderBy('l.aangemaakt_op', 'DESC');
 
     // C. Filters
+    $timezone = new \DateTimeZone('Europe/Amsterdam');
     if ($date = $request->query->get('date')) {
       $start = new \DateTime("{$date} 00:00:00");
       $end = new \DateTime("{$date} 23:59:59");

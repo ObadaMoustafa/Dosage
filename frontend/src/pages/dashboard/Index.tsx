@@ -61,6 +61,7 @@ export default function DashboardHome() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'UTC',
     });
   };
 
@@ -78,12 +79,14 @@ export default function DashboardHome() {
   };
 
   const formatTimeLabel = (value: string) => {
+    console.log('time', value);
+
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
     return parsed.toLocaleTimeString('nl-NL', {
       hour: '2-digit',
       minute: '2-digit',
-      timeZone: 'Europe/Amsterdam',
+      timeZone: 'UTC',
     });
   };
 
@@ -247,6 +250,10 @@ export default function DashboardHome() {
       toast.error((error as Error).message || 'Kon historie niet laden.');
     }
   };
+
+  useEffect(() => {
+    console.log('recent', recentHistory);
+  }, [recentHistory]);
 
   const loadStockSummary = async () => {
     try {

@@ -322,20 +322,20 @@ class GebruikerMedicijnSchemaController extends AbstractController
     }
 
     $timezone = new \DateTimeZone('Europe/Amsterdam');
-    if ($date instanceof \DateTimeImmutable) {
-      return $date->setTimezone($timezone)->format('c');
-    }
-
-    $mutable = clone $date;
-    $mutable->setTimezone($timezone);
-    return $mutable->format('c');
+    $dt = new \DateTime('now', $timezone);
+    $dt->setTimestamp($date->getTimestamp());
+    return $dt->format('c');
   }
 
   private function calculateNextDose(array $daysConfig, array $timesConfig, ?\DateTimeInterface $startDate = null): ?\DateTimeInterface
   {
     $timezone = new \DateTimeZone('Europe/Amsterdam');
-    $now = new \DateTime('now', $timezone);
-    $searchDate = $startDate ? clone $startDate : clone $now;
+    if ($startDate) {
+      $searchDate = new \DateTime('now', $timezone);
+      $searchDate->setTimestamp($startDate->getTimestamp());
+    } else {
+      $searchDate = new \DateTime('now', $timezone);
+    }
     $comparisonBase = clone $searchDate;
 
     $dayMap = [
@@ -357,9 +357,8 @@ class GebruikerMedicijnSchemaController extends AbstractController
 
       if ($currentDayName && ($daysConfig[$currentDayName] ?? false) === true) {
         foreach ($timesConfig as $timeStr) {
-          $slot = clone $searchDate;
-          [$hour, $minute] = explode(':', $timeStr);
-          $slot->setTime((int) $hour, (int) $minute);
+          // Create date explicitly in Amsterdam timezone to avoid any offset issues
+          $slot = new \DateTime($searchDate->format('Y-m-d') . ' ' . $timeStr, $timezone);
 
           // Must be strictly in the future
           if ($slot > $comparisonBase) {
@@ -369,7 +368,6 @@ class GebruikerMedicijnSchemaController extends AbstractController
       }
 
       $searchDate->modify('+1 day');
-      $searchDate->setTime(0, 0); // Check from beginning of next day
     }
 
     return null;
