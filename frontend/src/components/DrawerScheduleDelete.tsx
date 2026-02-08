@@ -1,17 +1,7 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 type DrawerScheduleDeleteProps = {
   scheduleLabel: string;
@@ -30,30 +20,23 @@ export default function DrawerScheduleDelete({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={setOpen}
+      trigger={
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <Trash2 className="h-4 w-4" />
         </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className="bg-[#1b2441] border-border/60">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Schema verwijderen?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Hiermee verwijder je <strong>{scheduleLabel}</strong> permanent uit
-            je schema&apos;s. Deze actie kan niet ongedaan worden gemaakt.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuleren</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-red-600 text-white hover:bg-red-700"
-            onClick={handleConfirm}
-          >
-            Verwijderen
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      }
+      title="Schema verwijderen?"
+      description={
+        <>
+          Hiermee verwijder je <strong>{scheduleLabel}</strong> permanent uit je
+          schema&apos;s. Deze actie kan niet ongedaan worden gemaakt.
+        </>
+      }
+      confirmLabel="Verwijderen"
+      onConfirm={handleConfirm}
+    />
   );
 }

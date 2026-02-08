@@ -1,7 +1,7 @@
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import DrawerScheduleDelete from "@/components/DrawerScheduleDelete";
-import DrawerScheduleEdit from "@/components/DrawerScheduleEdit";
+import { TableCell, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import DrawerScheduleDelete from '@/components/DrawerScheduleDelete';
+import DrawerScheduleEdit from '@/components/DrawerScheduleEdit';
 
 export type ScheduleRow = {
   id?: string;
@@ -18,7 +18,9 @@ type ScheduleTableRowProps = {
   intervalLabel: string;
   onEdit?: (schedule: ScheduleRow) => Promise<boolean> | boolean | void;
   onDelete?: () => Promise<boolean> | boolean | void;
-  onStatusChange?: (status: "optijd" | "gemist") => Promise<boolean> | boolean | void;
+  onStatusChange?: (
+    status: 'optijd' | 'gemist',
+  ) => Promise<boolean> | boolean | void;
 };
 
 export default function ScheduleTableRow({
@@ -40,7 +42,7 @@ export default function ScheduleTableRow({
             type="button"
             size="sm"
             className="h-8 bg-green-500/15 text-green-200 hover:bg-green-500/25"
-            onClick={() => onStatusChange?.("optijd")}
+            onClick={() => onStatusChange?.('optijd')}
           >
             Op tijd
           </Button>
@@ -48,12 +50,15 @@ export default function ScheduleTableRow({
             type="button"
             size="sm"
             className="h-8 bg-red-500/15 text-red-200 hover:bg-red-500/25"
-            onClick={() => onStatusChange?.("gemist")}
+            onClick={() => onStatusChange?.('gemist')}
           >
             Gemist
           </Button>
           <DrawerScheduleEdit schedule={schedule} onSave={onEdit} />
-          <DrawerScheduleDelete scheduleLabel={schedule.medicine} onConfirm={onDelete} />
+          <DrawerScheduleDelete
+            scheduleLabel={schedule.medicine}
+            onConfirm={onDelete}
+          />
         </div>
       </TableCell>
     </TableRow>

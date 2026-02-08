@@ -27,6 +27,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { pairingApi, type PairingType } from '@/lib/api';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 type Viewer = {
   connection_id: string;
@@ -86,10 +87,12 @@ export default function Koppelingen() {
       const processedViewers: Viewer[] = [
         ...viewersData.therapists.map((v: any) => ({
           ...v,
+          connection_id: v.id ?? v.connection_id,
           relation: 'Zorgverlener',
         })),
         ...viewersData.trusted.map((v: any) => ({
           ...v,
+          connection_id: v.id ?? v.connection_id,
           relation: 'Vertrouweling',
         })),
       ];
@@ -99,10 +102,12 @@ export default function Koppelingen() {
       const processedSubjects: Subject[] = [
         ...subjectsData.full_access.map((s: any) => ({
           ...s,
+          connection_id: s.id ?? s.connection_id,
           accessLevel: 'full_access' as const,
         })),
         ...subjectsData.read_only.map((s: any) => ({
           ...s,
+          connection_id: s.id ?? s.connection_id,
           accessLevel: 'read_only' as const,
         })),
       ];
@@ -171,12 +176,14 @@ export default function Koppelingen() {
 
   // --- Handlers for Actions ---
 
-  const handleRemoveConnection = async (connectionId: string) => {
-    if (!confirm('Weet je zeker dat je deze koppeling wilt verwijderen?'))
+  const handleRemoveConnection = async (userId: string) => {
+    if (!userId) {
+      toast.error('Kan gebruiker niet vinden (ID ontbreekt).');
       return;
+    }
 
     try {
-      await pairingApi.unlink(connectionId);
+      await pairingApi.unlink(userId);
       toast.success('Koppeling verwijderd.');
       await loadPairingData();
     } catch (error) {
@@ -364,17 +371,24 @@ export default function Koppelingen() {
                             </span>
                           </td>
                           <td className="p-3 text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                              onClick={() =>
-                                handleRemoveConnection(viewer.connection_id)
+                            <ConfirmDialog
+                              trigger={
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                                  title="Verwijder koppeling"
+                                >
+                                  <span className="fas fa-trash" />
+                                </Button>
                               }
-                              title="Verwijder koppeling"
-                            >
-                              <span className="fas fa-trash" />
-                            </Button>
+                              title="Koppeling verwijderen?"
+                              description="Weet je zeker dat je deze koppeling wilt verwijderen?"
+                              confirmLabel="Verwijderen"
+                              onConfirm={() =>
+                                handleRemoveConnection(viewer.user_id)
+                              }
+                            />
                           </td>
                         </tr>
                       ))}

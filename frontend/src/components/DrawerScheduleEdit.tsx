@@ -1,7 +1,7 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Drawer,
   DrawerClose,
@@ -11,37 +11,37 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
+} from '@/components/ui/drawer';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Pencil, X } from "lucide-react";
+} from '@/components/ui/select';
+import { Pencil, X } from 'lucide-react';
 
 type DrawerScheduleEditProps = {
-  schedule: import("@/components/ScheduleTableRow").ScheduleRow;
-  onSave?: (next: import("@/components/ScheduleTableRow").ScheduleRow) => Promise<boolean> | boolean | void;
-  medicineOptions?: { id: string; label: string }[];
+  schedule: import('@/components/ScheduleTableRow').ScheduleRow;
+  onSave?: (
+    next: import('@/components/ScheduleTableRow').ScheduleRow,
+  ) => Promise<boolean> | boolean | void;
 };
 
-const countOptions = ["1x", "2x", "3x"];
+const countOptions = ['1x', '2x', '3x'];
 const dayOptions = [
-  "Maandag",
-  "Dinsdag",
-  "Woensdag",
-  "Donderdag",
-  "Vrijdag",
-  "Zaterdag",
-  "Zondag",
+  'Maandag',
+  'Dinsdag',
+  'Woensdag',
+  'Donderdag',
+  'Vrijdag',
+  'Zaterdag',
+  'Zondag',
 ];
 
 export default function DrawerScheduleEdit({
   schedule,
   onSave,
-  medicineOptions = [],
 }: DrawerScheduleEditProps) {
   const [open, setOpen] = React.useState(false);
   const [form, setForm] = React.useState(schedule);
@@ -86,7 +86,7 @@ export default function DrawerScheduleEdit({
   };
 
   const addTime = () =>
-    setForm((prev) => ({ ...prev, times: [...prev.times, "12:00"] }));
+    setForm((prev) => ({ ...prev, times: [...prev.times, '12:00'] }));
 
   const removeTime = (index: number) =>
     setForm((prev) => ({
@@ -105,7 +105,9 @@ export default function DrawerScheduleEdit({
         <div className="mx-auto w-full max-w-2xl pb-2">
           <div className="relative">
             <DrawerHeader className="dialog-text-color">
-              <DrawerTitle className="text-white/90">Schema bewerken</DrawerTitle>
+              <DrawerTitle className="text-white/90">
+                Schema bewerken
+              </DrawerTitle>
               <DrawerDescription className="text-white/50">
                 Pas het schema aan voor dit medicijn
               </DrawerDescription>
@@ -124,32 +126,11 @@ export default function DrawerScheduleEdit({
           <div className="space-y-6 px-4 pb-4">
             <div className="grid gap-2">
               <Label className="text-white/80">Medicijn</Label>
-              <Select
-                value={form.gmnId ?? ""}
-                onValueChange={(value) => {
-                  const selected = medicineOptions.find((opt) => opt.id === value);
-                  setForm((prev) => ({
-                    ...prev,
-                    gmnId: value,
-                    medicine: selected?.label ?? prev.medicine,
-                  }));
-                }}
-              >
-                <SelectTrigger className="bg-white/5 border-white/15 text-white/90">
-                  <SelectValue placeholder="Selecteer medicijn" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#141c33] text-foreground border-white/15">
-                  {medicineOptions.map((option) => (
-                    <SelectItem
-                      key={option.id}
-                      value={option.id}
-                      className="text-white/90 data-[highlighted]:bg-white/10 data-[highlighted]:text-white/90 data-[state=checked]:bg-white/10"
-                    >
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={form.medicine}
+                disabled
+                className="bg-white/5 border-white/15 text-white/50 cursor-not-allowed"
+              />
             </div>
 
             <div className="grid gap-2">
@@ -159,7 +140,7 @@ export default function DrawerScheduleEdit({
                 onValueChange={(value) =>
                   setForm((prev) => ({
                     ...prev,
-                    count: Number(value.replace("x", "")),
+                    count: Number(value.replace('x', '')),
                   }))
                 }
               >
@@ -201,11 +182,11 @@ export default function DrawerScheduleEdit({
                   <Button
                     key={day}
                     type="button"
-                    variant={form.days.includes(day) ? "secondary" : "outline"}
+                    variant={form.days.includes(day) ? 'secondary' : 'outline'}
                     className={
                       form.days.includes(day)
-                        ? "bg-white/30 border border-white/50 text-white/90 hover:bg-white/35 hover:text-white/90"
-                        : "bg-white/5 border border-white/15 text-white/90 hover:bg-white/15 hover:text-white/90"
+                        ? 'bg-white/30 border border-white/50 text-white/90 hover:bg-white/35 hover:text-white/90'
+                        : 'bg-white/5 border border-white/15 text-white/90 hover:bg-white/15 hover:text-white/90'
                     }
                     onClick={() => toggleDay(day)}
                   >
@@ -219,11 +200,16 @@ export default function DrawerScheduleEdit({
               <Label className="text-white/80">Hoe laat?</Label>
               <div className="grid gap-2">
                 {form.times.map((time, index) => (
-                  <div key={`${time}-${index}`} className="flex items-center gap-2">
+                  <div
+                    key={`${time}-${index}`}
+                    className="flex items-center gap-2"
+                  >
                     <Input
                       type="time"
                       value={time}
-                      onChange={(event) => updateTime(index, event.target.value)}
+                      onChange={(event) =>
+                        updateTime(index, event.target.value)
+                      }
                       className="bg-white/5 border-white/15 text-white/90"
                     />
                     <Button
@@ -258,7 +244,7 @@ export default function DrawerScheduleEdit({
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? "Opslaan..." : "Opslaan"}
+              {saving ? 'Opslaan...' : 'Opslaan'}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" className="main-button-nb">

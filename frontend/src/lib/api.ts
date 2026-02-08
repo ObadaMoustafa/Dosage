@@ -606,6 +606,13 @@ export type SchedulePayload = {
   beschrijving: string;
 };
 
+export type ScheduleUpdatePayload = {
+  dagen: Record<string, boolean>;
+  tijden: string[];
+  aantal: number;
+  beschrijving: string;
+};
+
 export const schedulesApi = {
   async list(filters: { user_id?: string } = {}) {
     const params = new URLSearchParams();
@@ -642,7 +649,7 @@ export const schedulesApi = {
     return data.id;
   },
 
-  async update(id: string, payload: SchedulePayload) {
+  async update(id: string, payload: ScheduleUpdatePayload) {
     const { res, data } = await apiRequest<ApiErrorBody>(
       `/schema/${id}`,
       { method: 'PUT', body: JSON.stringify(payload) },

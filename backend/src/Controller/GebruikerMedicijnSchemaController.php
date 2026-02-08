@@ -162,8 +162,21 @@ class GebruikerMedicijnSchemaController extends AbstractController
 
     $schema = $em->getRepository(GebruikerMedicijnSchema::class)->find($id);
 
-    if (!$schema || $schema->getGebruikerMedicijn()->getGebruiker() !== $user) {
-      return $this->json(['error' => 'Niet gevonden of geen toegang.'], 404);
+    if (!$schema) {
+      return $this->json(['error' => 'Niet gevonden.'], 404);
+    }
+
+    $schemaOwner = $schema->getGebruikerMedicijn()->getGebruiker();
+
+    // Check Access: Allow if Self OR if Connected (Carer)
+    if ($schemaOwner !== $user) {
+      $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+        'gekoppelde_gebruiker' => $user,
+        'gebruiker' => $schemaOwner
+      ]);
+      if (!$connection) {
+        return $this->json(['error' => 'Geen toegang.'], 403);
+      }
     }
 
     // Step A: Handle gmn_id Change
@@ -171,7 +184,7 @@ class GebruikerMedicijnSchemaController extends AbstractController
     if ($newGmnId && $newGmnId !== $schema->getGebruikerMedicijn()->getId()->toRfc4122()) {
       $newMed = $em->getRepository(GebruikerMedicijn::class)->findOneBy([
         'id' => $newGmnId,
-        'gebruiker' => $user
+        'gebruiker' => $schemaOwner // Look for medicine belonging to the Patient (Owner), not the Carer
       ]);
       if (!$newMed) {
         return $this->json(['error' => 'Nieuw medicijn niet gevonden.'], 404);

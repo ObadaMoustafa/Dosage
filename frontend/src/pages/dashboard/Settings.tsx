@@ -13,18 +13,9 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/lib/toast';
 import { useAuth } from '@/auth/AuthProvider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { authApi } from '@/lib/api';
+import ConfirmDialog from '@/components/ConfirmDialog';
+
 type ProfileForm = {
   firstName: string;
   lastName: string;
@@ -136,7 +127,7 @@ export default function DashboardSettings() {
     }
   };
 
-  const handleDeleteAccount = async (e: FormEvent) => {
+  const handleDeleteAccount = async (e: React.MouseEvent) => {
     e.preventDefault();
     setDeletingAccount(true);
     try {
@@ -316,43 +307,18 @@ export default function DashboardSettings() {
               </div>
 
               {/* New Alert Dialog Implementation */}
-              <AlertDialog
+              <ConfirmDialog
                 open={isDeleteDialogOpen}
                 onOpenChange={setIsDeleteDialogOpen}
-              >
-                <AlertDialogTrigger asChild>
+                trigger={
                   <Button variant="destructive">Account verwijderen</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="bg-[#1b2441] border-border/60">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white/90">
-                      Weet je het zeker?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription className="text-white/70">
-                      Deze actie kan niet ongedaan worden gemaakt. Je account en
-                      al je gegevens worden permanent verwijderd van onze
-                      servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel
-                      disabled={deletingAccount}
-                      className="bg-transparent text-white hover:bg-white/10 border-white/20"
-                    >
-                      Annuleren
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDeleteAccount}
-                      disabled={deletingAccount}
-                      className="bg-red-900 text-red-100 hover:bg-red-950 border border-red-800"
-                    >
-                      {deletingAccount
-                        ? 'Bezig met verwijderen...'
-                        : 'Ja, verwijder account'}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                }
+                title="Weet je het zeker?"
+                description="Deze actie kan niet ongedaan worden gemaakt. Je account en al je gegevens worden permanent verwijderd van onze servers."
+                confirmLabel="Ja, verwijder account"
+                onConfirm={handleDeleteAccount}
+                loading={deletingAccount}
+              />
             </div>
           </CardContent>
         </Card>

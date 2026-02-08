@@ -1,18 +1,7 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
-import { Spinner } from "@/components/ui/spinner";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 type DrawerMedicineDeleteProps = {
   medicineName: string;
@@ -26,7 +15,8 @@ export default function DrawerMedicineDelete({
   const [open, setOpen] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Keep dialog open while loading
     if (!onConfirm) {
       setOpen(false);
       return;
@@ -43,33 +33,24 @@ export default function DrawerMedicineDelete({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
+    <ConfirmDialog
+      open={open}
+      onOpenChange={setOpen}
+      trigger={
         <Button variant="ghost" size="icon" className="h-8 w-8">
           <Trash2 className="h-4 w-4" />
         </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className="dialog-main">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-white/80">{medicineName} verwijderen?</AlertDialogTitle>
-          <AlertDialogDescription className="text-white/50">
-            Hiermee verwijder je <strong>{medicineName}</strong> permanent uit je
-            lijst. Deze actie kan niet ongedaan worden gemaakt.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel className="main-button-nb" disabled={loading}>
-            Annuleren
-          </AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-red-600 text-white hover:bg-red-700"
-            onClick={handleConfirm}
-            disabled={loading}
-          >
-            {loading ? <Spinner className="h-4 w-4 text-white" /> : "Verwijderen"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      }
+      title={`${medicineName} verwijderen?`}
+      description={
+        <>
+          Hiermee verwijder je <strong>{medicineName}</strong> permanent uit je
+          lijst. Deze actie kan niet ongedaan worden gemaakt.
+        </>
+      }
+      confirmLabel="Verwijderen"
+      onConfirm={handleConfirm}
+      loading={loading}
+    />
   );
 }

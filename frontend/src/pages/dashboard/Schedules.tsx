@@ -170,7 +170,6 @@ export default function DashboardSchedules() {
     }
     try {
       await schedulesApi.update(next.id, {
-        gmn_id: next.gmnId,
         aantal: next.count,
         beschrijving: next.description,
         dagen: buildDaysObject(next.days),
