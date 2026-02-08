@@ -16,7 +16,12 @@ import DrawerMedicineCreate, {
 } from '@/components/DrawerMedicineCreate';
 import MedicineTableRow from '@/components/MedicineTableRow';
 import { formatStockLabel, type StockItem } from '@/data/stock';
-import { medicinesApi, stockApi, type ApiMedicine } from '@/lib/api';
+import {
+  medicinesApi,
+  stockApi,
+  pairingApi,
+  type ApiMedicine,
+} from '@/lib/api';
 import { toast } from '@/lib/toast';
 
 const mapApiMedicine = (medicine: ApiMedicine): MedicineRow => ({
@@ -34,6 +39,7 @@ export default function DashboardMedicines() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [medicines, setMedicines] = React.useState<MedicineRow[]>([]);
+  const [viewingName, setViewingName] = React.useState<string | null>(null);
   const [stockItems, setStockItems] = React.useState<StockItem[]>([]);
   const stockById = React.useMemo(
     () => new Map(stockItems.map((item) => [item.id, item])),
@@ -93,17 +99,43 @@ export default function DashboardMedicines() {
         if (!mounted) return;
       }
     };
+
+    const loadViewingName = async () => {
+      const viewingUserId =
+        localStorage.getItem('turfje:viewing-user') ?? 'self';
+      if (viewingUserId === 'self') {
+        if (mounted) setViewingName(null);
+        return;
+      }
+      try {
+        const data = await pairingApi.subjects();
+        if (!mounted) return;
+        const all = [...(data.full_access || []), ...(data.read_only || [])];
+        const found = all.find((s: any) => s.user_id === viewingUserId);
+        if (found) {
+          setViewingName(found.name);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     void loadMedicines();
     void loadStock();
+    void loadViewingName();
+
     const handleStockUpdate = () => {
       void loadStock();
     };
     window.addEventListener('turfje:stock-updated', handleStockUpdate);
+
     const handleViewingChange = () => {
       void loadMedicines();
       void loadStock();
+      void loadViewingName();
     };
     window.addEventListener('turfje:viewing-user-changed', handleViewingChange);
+
     return () => {
       mounted = false;
       window.removeEventListener('turfje:stock-updated', handleStockUpdate);
@@ -206,7 +238,9 @@ export default function DashboardMedicines() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Medicijnen</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Medicijnen{viewingName ? ` - ${viewingName}` : ''}
+        </h1>
         <p className="text-sm text-muted-foreground">
           Beheer je medicijnen en voeg nieuwe toe.
         </p>

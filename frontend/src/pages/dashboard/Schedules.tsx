@@ -14,7 +14,12 @@ import DrawerScheduleCreate from '@/components/DrawerScheduleCreate';
 import ScheduleTableRow, {
   type ScheduleRow,
 } from '@/components/ScheduleTableRow';
-import { medicinesApi, schedulesApi, type ScheduleApi } from '@/lib/api';
+import {
+  medicinesApi,
+  schedulesApi,
+  pairingApi,
+  type ScheduleApi,
+} from '@/lib/api';
 import { toast } from '@/lib/toast';
 
 const allDays = [
@@ -40,6 +45,7 @@ export default function DashboardSchedules() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [loading, setLoading] = React.useState(true);
   const [schedules, setSchedules] = React.useState<ScheduleRow[]>([]);
+  const [viewingName, setViewingName] = React.useState<string | null>(null);
   const [medicineOptions, setMedicineOptions] = React.useState<
     { id: string; label: string }[]
   >([]);
@@ -108,14 +114,34 @@ export default function DashboardSchedules() {
     }
   };
 
+  const loadViewingName = async () => {
+    const viewingUserId = localStorage.getItem('turfje:viewing-user') ?? 'self';
+    if (viewingUserId === 'self') {
+      setViewingName(null);
+      return;
+    }
+    try {
+      const data = await pairingApi.subjects();
+      const all = [...(data.full_access || []), ...(data.read_only || [])];
+      const found = all.find((s: any) => s.user_id === viewingUserId);
+      if (found) {
+        setViewingName(found.name);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   React.useEffect(() => {
     void loadSchedules();
     void loadMedicines();
+    void loadViewingName();
   }, []);
   React.useEffect(() => {
     const handleViewingChange = () => {
       void loadSchedules();
       void loadMedicines();
+      void loadViewingName();
     };
     window.addEventListener('turfje:viewing-user-changed', handleViewingChange);
     return () => {
@@ -239,7 +265,9 @@ export default function DashboardSchedules() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Schema&apos;s</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Schema&apos;s{viewingName ? ` - ${viewingName}` : ''}
+        </h1>
         <p className="text-sm text-muted-foreground">
           Beheer je schema&apos;s en voeg nieuwe toe.
         </p>

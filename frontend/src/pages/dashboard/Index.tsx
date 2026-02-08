@@ -5,7 +5,7 @@ import RemainingMedsCard from '@/components/dashboard/RemainingMedsCard';
 import HistoryCard from '@/components/dashboard/HistoryCard';
 import HistoryLineChart from '@/components/dashboard/HistoryLineChart';
 import { useAuth } from '@/auth/AuthProvider';
-import { logsApi, schedulesApi, stockApi } from '@/lib/api';
+import { logsApi, schedulesApi, stockApi, pairingApi } from '@/lib/api';
 import { toast } from '@/lib/toast';
 
 type HistoryCardItem = {
@@ -31,6 +31,7 @@ export default function DashboardHome() {
   const [viewingUserId, setViewingUserId] = useState(
     () => localStorage.getItem('turfje:viewing-user') ?? 'self',
   );
+  const [viewingName, setViewingName] = useState<string | null>(null);
   const isViewingSelf = viewingUserId === 'self';
   const [recentHistory, setRecentHistory] = useState<HistoryCardItem[]>([]);
   const [stockSummary, setStockSummary] = useState({
@@ -137,6 +138,23 @@ export default function DashboardHome() {
       toast.error(
         (error as Error).message || 'Aankomende inname laden mislukt.',
       );
+    }
+  };
+
+  const loadViewingName = async (targetUserId = viewingUserId) => {
+    if (targetUserId === 'self') {
+      setViewingName(null);
+      return;
+    }
+    try {
+      const data = await pairingApi.subjects();
+      const all = [...(data.full_access || []), ...(data.read_only || [])];
+      const found = all.find((s: any) => s.user_id === targetUserId);
+      if (found) {
+        setViewingName(found.name);
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -313,6 +331,7 @@ export default function DashboardHome() {
     void loadRecentHistory(stored);
     void loadStockSummary();
     void loadUpcomingDose(stored);
+    void loadViewingName(stored);
     const handleLogCreated = () => {
       void loadRecentHistory();
       void loadUpcomingDose();
@@ -322,6 +341,7 @@ export default function DashboardHome() {
       setViewingUserId(next);
       void loadRecentHistory(next);
       void loadUpcomingDose(next);
+      void loadViewingName(next);
     };
     window.addEventListener('turfje:log-created', handleLogCreated);
     window.addEventListener('turfje:viewing-user-changed', handleViewingChange);
@@ -337,7 +357,9 @@ export default function DashboardHome() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Overview{viewingName ? ` - ${viewingName}` : ''}
+        </h1>
         <p className="text-sm text-muted-foreground">
           Welkom terug {firstName}. Hier is je dashboard
         </p>

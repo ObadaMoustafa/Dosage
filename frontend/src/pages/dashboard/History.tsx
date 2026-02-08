@@ -21,7 +21,7 @@ import HistoryTableRow, {
   type HistoryEntry,
 } from '@/components/HistoryTableRow';
 import HistoryLineChart from '@/components/dashboard/HistoryLineChart';
-import { logsApi } from '@/lib/api';
+import { logsApi, pairingApi } from '@/lib/api';
 import { toast } from '@/lib/toast';
 
 const formatLogTimestamp = (value: string) => {
@@ -130,6 +130,7 @@ export default function DashboardHistory() {
   >('all');
   const [loading, setLoading] = useState(true);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
+  const [viewingName, setViewingName] = useState<string | null>(null);
   const [logs, setLogs] = useState<
     {
       id: string;
@@ -175,6 +176,24 @@ export default function DashboardHistory() {
     }
   };
 
+  const loadViewingName = async () => {
+    const viewingUserId = localStorage.getItem('turfje:viewing-user') ?? 'self';
+    if (viewingUserId === 'self') {
+      setViewingName(null);
+      return;
+    }
+    try {
+      const data = await pairingApi.subjects();
+      const all = [...(data.full_access || []), ...(data.read_only || [])];
+      const found = all.find((s: any) => s.user_id === viewingUserId);
+      if (found) {
+        setViewingName(found.name);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleDeleteLog = async (id: string) => {
     try {
       await logsApi.remove(id);
@@ -192,6 +211,7 @@ export default function DashboardHistory() {
     const runLoad = async () => {
       if (!mounted) return;
       await loadLogs();
+      await loadViewingName();
     };
 
     const handleLogCreated = () => {
@@ -234,7 +254,9 @@ export default function DashboardHistory() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Historie</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Historie{viewingName ? ` - ${viewingName}` : ''}
+        </h1>
         <p className="text-sm text-muted-foreground">
           Bekijk je recente innames en gemiste momenten.
         </p>
