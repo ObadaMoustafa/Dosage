@@ -37,7 +37,11 @@ export default function DrawerMedicineDelete({
       open={open}
       onOpenChange={setOpen}
       trigger={
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+        >
           <Trash2 className="h-4 w-4" />
         </Button>
       }

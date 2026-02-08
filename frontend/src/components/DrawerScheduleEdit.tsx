@@ -97,7 +97,11 @@ export default function DrawerScheduleEdit({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+        >
           <Pencil className="h-4 w-4" />
         </Button>
       </DrawerTrigger>

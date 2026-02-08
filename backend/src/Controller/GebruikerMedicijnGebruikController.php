@@ -35,8 +35,17 @@ class GebruikerMedicijnGebruikController extends AbstractController
     $gebruikerMedicijn = $em->getRepository(GebruikerMedicijn::class)->find($gmnId);
     if (!$gebruikerMedicijn)
       return $this->json(['error' => 'Medicijn niet gevonden.'], 404);
-    if ($gebruikerMedicijn->getGebruiker() !== $currentUser)
-      return $this->json(['error' => 'Geen rechten.'], 403);
+
+    if ($gebruikerMedicijn->getGebruiker() !== $currentUser) {
+      $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+        'gekoppelde_gebruiker' => $currentUser,
+        'gebruiker' => $gebruikerMedicijn->getGebruiker()
+      ]);
+
+      if (!$connection || $connection->getConnectionType() === 'THERAPIST') {
+        return $this->json(['error' => 'Geen rechten om innames te registreren.'], 403);
+      }
+    }
 
     // Validate Status
     $rawStatus = $data['status'] ?? 'optijd';
@@ -256,7 +265,14 @@ class GebruikerMedicijnGebruikController extends AbstractController
     }
 
     if ($log->getGebruikerMedicijn()->getGebruiker() !== $currentUser) {
-      return $this->json(['error' => 'Geen rechten om dit te verwijderen.'], 403);
+      $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+        'gekoppelde_gebruiker' => $currentUser,
+        'gebruiker' => $log->getGebruikerMedicijn()->getGebruiker()
+      ]);
+
+      if (!$connection || $connection->getConnectionType() === 'THERAPIST') {
+        return $this->json(['error' => 'Geen rechten om dit te verwijderen.'], 403);
+      }
     }
 
     // 1. Capture Schema BEFORE deleting the log

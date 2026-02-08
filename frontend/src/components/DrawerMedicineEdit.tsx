@@ -1,8 +1,8 @@
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Drawer,
   DrawerClose,
@@ -12,15 +12,15 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer";
+} from '@/components/ui/drawer';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Pencil, X } from "lucide-react";
+} from '@/components/ui/select';
+import { Pencil, X } from 'lucide-react';
 
 export type MedicineRow = {
   id?: string;
@@ -39,7 +39,7 @@ type DrawerMedicineEditProps = {
   stockOptions?: { id: string; label: string }[];
 };
 
-const routeOptions = ["Oraal", "Anaal", "Spuit", "Anders"];
+const routeOptions = ['Oraal', 'Anaal', 'Spuit', 'Anders'];
 
 export default function DrawerMedicineEdit({
   medicine,
@@ -75,7 +75,11 @@ export default function DrawerMedicineEdit({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+        >
           <Pencil className="h-4 w-4" />
         </Button>
       </DrawerTrigger>
@@ -153,11 +157,11 @@ export default function DrawerMedicineEdit({
               <div className="grid gap-2">
                 <Label className="text-white/80">Voorraad koppelen</Label>
                 <Select
-                  value={form.stockId ?? "none"}
+                  value={form.stockId ?? 'none'}
                   onValueChange={(value) =>
                     setForm((prev) => ({
                       ...prev,
-                      stockId: value === "none" ? undefined : value,
+                      stockId: value === 'none' ? undefined : value,
                     }))
                   }
                 >
@@ -235,7 +239,7 @@ export default function DrawerMedicineEdit({
               onClick={handleSave}
               disabled={saving}
             >
-              {saving ? "Opslaan..." : "Opslaan"}
+              {saving ? 'Opslaan...' : 'Opslaan'}
             </Button>
             <DrawerClose asChild>
               <Button variant="outline" className="main-button-nb">

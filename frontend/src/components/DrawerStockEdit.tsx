@@ -1,10 +1,25 @@
 import * as React from 'react';
 import { Pencil, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { StockItem, StockStatus } from '@/data/stock';
 
 type DrawerStockEditProps = {
@@ -14,7 +29,10 @@ type DrawerStockEditProps = {
 
 const statusOptions: StockStatus[] = ['Op peil', 'Bijna op', 'Bijna leeg'];
 
-export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps) {
+export default function DrawerStockEdit({
+  stock,
+  onSave,
+}: DrawerStockEditProps) {
   const [open, setOpen] = React.useState(false);
   const [form, setForm] = React.useState<StockItem>(stock);
   const [saving, setSaving] = React.useState(false);
@@ -44,7 +62,11 @@ export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps)
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10"
+        >
           <Pencil className="h-4 w-4" />
         </Button>
       </DrawerTrigger>
@@ -60,7 +82,11 @@ export default function DrawerStockEdit({ stock, onSave }: DrawerStockEditProps)
               </DrawerDescription>
             </DrawerHeader>
             <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="absolute right-3 top-3 h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-3 top-3 h-8 w-8"
+              >
                 <X className="h-6 w-6 text-white/90" />
               </Button>
             </DrawerClose>

@@ -4,13 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -131,6 +124,7 @@ export default function DashboardHistory() {
   const [loading, setLoading] = useState(true);
   const [historyEntries, setHistoryEntries] = useState<HistoryEntry[]>([]);
   const [viewingName, setViewingName] = useState<string | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [logs, setLogs] = useState<
     {
       id: string;
@@ -180,14 +174,25 @@ export default function DashboardHistory() {
     const viewingUserId = localStorage.getItem('turfje:viewing-user') ?? 'self';
     if (viewingUserId === 'self') {
       setViewingName(null);
+      setIsReadOnly(false);
       return;
     }
     try {
       const data = await pairingApi.subjects();
-      const all = [...(data.full_access || []), ...(data.read_only || [])];
-      const found = all.find((s: any) => s.user_id === viewingUserId);
-      if (found) {
-        setViewingName(found.name);
+      const readOnly = (data.read_only || []).find(
+        (s: any) => s.user_id === viewingUserId,
+      );
+      if (readOnly) {
+        setViewingName(readOnly.name);
+        setIsReadOnly(true);
+      } else {
+        const fullAccess = (data.full_access || []).find(
+          (s: any) => s.user_id === viewingUserId,
+        );
+        if (fullAccess) {
+          setViewingName(fullAccess.name);
+          setIsReadOnly(false);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -297,26 +302,29 @@ export default function DashboardHistory() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Medicijn</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead>Moment</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                  <TableHead className="text-right">Acties</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEntries.map((entry) => (
-                  <HistoryTableRow
-                    key={entry.id}
-                    entry={entry}
-                    onDelete={handleDeleteLog}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+            <div className="rounded-md border border-white/10 overflow-hidden overflow-x-auto">
+              <table className="w-full text-sm text-left min-w-[600px]">
+                <thead className="bg-white/5 text-muted-foreground font-medium">
+                  <tr>
+                    <th className="p-3">Medicijn</th>
+                    <th className="p-3">Details</th>
+                    <th className="p-3">Moment</th>
+                    <th className="p-3 text-right">Status</th>
+                    {!isReadOnly && <th className="p-3 text-right">Acties</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {filteredEntries.map((entry) => (
+                    <HistoryTableRow
+                      key={entry.id}
+                      entry={entry}
+                      onDelete={isReadOnly ? undefined : handleDeleteLog}
+                      isReadOnly={isReadOnly}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="text-xs text-muted-foreground">
               {loading
                 ? 'Historie laden...'

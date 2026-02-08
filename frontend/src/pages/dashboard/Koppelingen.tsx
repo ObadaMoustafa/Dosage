@@ -167,6 +167,7 @@ export default function Koppelingen() {
       toast.success('Verbinding gemaakt.');
       setOtpValue('');
       await loadPairingData();
+      window.dispatchEvent(new Event('turfje:pairing-updated'));
     } catch (error) {
       toast.error((error as Error).message || 'Koppelen mislukt.');
     } finally {
@@ -186,6 +187,7 @@ export default function Koppelingen() {
       await pairingApi.unlink(userId);
       toast.success('Koppeling verwijderd.');
       await loadPairingData();
+      window.dispatchEvent(new Event('turfje:pairing-updated'));
     } catch (error) {
       toast.error((error as Error).message || 'Verwijderen mislukt.');
     }

@@ -1,13 +1,6 @@
-import * as React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { Search } from 'lucide-react';
 import DrawerScheduleCreate from '@/components/DrawerScheduleCreate';
@@ -42,11 +35,13 @@ const formatInterval = (days: string[], times: string[]) => {
 };
 
 export default function DashboardSchedules() {
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [loading, setLoading] = React.useState(true);
-  const [schedules, setSchedules] = React.useState<ScheduleRow[]>([]);
-  const [viewingName, setViewingName] = React.useState<string | null>(null);
-  const [medicineOptions, setMedicineOptions] = React.useState<
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [schedules, setSchedules] = useState<ScheduleRow[]>([]);
+  const [viewingName, setViewingName] = useState<string | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [isTherapist, setIsTherapist] = useState(false);
+  const [medicineOptions, setMedicineOptions] = useState<
     { id: string; label: string }[]
   >([]);
 
@@ -118,14 +113,28 @@ export default function DashboardSchedules() {
     const viewingUserId = localStorage.getItem('turfje:viewing-user') ?? 'self';
     if (viewingUserId === 'self') {
       setViewingName(null);
+      setIsReadOnly(false);
+      setIsTherapist(false);
       return;
     }
     try {
       const data = await pairingApi.subjects();
-      const all = [...(data.full_access || []), ...(data.read_only || [])];
-      const found = all.find((s: any) => s.user_id === viewingUserId);
-      if (found) {
-        setViewingName(found.name);
+      const readOnly = (data.read_only || []).find(
+        (s: any) => s.user_id === viewingUserId,
+      );
+      if (readOnly) {
+        setViewingName(readOnly.name);
+        setIsReadOnly(true);
+        setIsTherapist(false);
+      } else {
+        const fullAccess = (data.full_access || []).find(
+          (s: any) => s.user_id === viewingUserId,
+        );
+        if (fullAccess) {
+          setViewingName(fullAccess.name);
+          setIsReadOnly(false);
+          setIsTherapist(true);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -278,10 +287,12 @@ export default function DashboardSchedules() {
         <CardHeader className="space-y-3 pb-3">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <CardTitle className="text-base">Je schema&apos;s</CardTitle>
-            <DrawerScheduleCreate
-              onSubmit={handleCreate}
-              medicineOptions={medicineOptions}
-            />
+            {!isReadOnly && (
+              <DrawerScheduleCreate
+                onSubmit={handleCreate}
+                medicineOptions={medicineOptions}
+              />
+            )}
           </div>
           <div className="relative w-full md:max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -294,35 +305,45 @@ export default function DashboardSchedules() {
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Medicijn</TableHead>
-                <TableHead>Aantal</TableHead>
-                <TableHead>Beschrijving</TableHead>
-                <TableHead>Interval</TableHead>
-                <TableHead className="text-right">Acties</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSchedules.map((schedule) => {
-                const intervalLabel = formatInterval(
-                  schedule.days,
-                  schedule.times,
-                );
-                return (
-                  <ScheduleTableRow
-                    key={schedule.id ?? `${schedule.medicine}-${intervalLabel}`}
-                    schedule={schedule}
-                    intervalLabel={intervalLabel}
-                    onEdit={handleUpdate}
-                    onDelete={() => handleDelete(schedule)}
-                    onStatusChange={(status) => handleStatus(schedule, status)}
-                  />
-                );
-              })}
-            </TableBody>
-          </Table>
+          <div className="rounded-md border border-white/10 overflow-hidden overflow-x-auto">
+            <table className="w-full text-sm text-left min-w-[600px]">
+              <thead className="bg-white/5 text-muted-foreground font-medium">
+                <tr>
+                  <th className="p-3">Medicijn</th>
+                  <th className="p-3">Aantal</th>
+                  <th className="p-3">Beschrijving</th>
+                  <th className="p-3">Interval</th>
+                  <th className="p-3 text-right">Acties</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {filteredSchedules.map((schedule) => {
+                  const intervalLabel = formatInterval(
+                    schedule.days,
+                    schedule.times,
+                  );
+                  return (
+                    <ScheduleTableRow
+                      key={
+                        schedule.id ?? `${schedule.medicine}-${intervalLabel}`
+                      }
+                      schedule={schedule}
+                      intervalLabel={intervalLabel}
+                      onEdit={isReadOnly ? undefined : handleUpdate}
+                      onDelete={
+                        isReadOnly ? undefined : () => handleDelete(schedule)
+                      }
+                      onStatusChange={
+                        isTherapist
+                          ? undefined
+                          : (status) => handleStatus(schedule, status)
+                      }
+                    />
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           <div className="text-xs text-muted-foreground">
             {loading

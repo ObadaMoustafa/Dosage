@@ -71,8 +71,8 @@ export default function DashboardLayout() {
   const pathname = location.pathname;
   const [viewingUserId, setViewingUserId] = useState('self');
   const [viewingOptions, setViewingOptions] = useState<
-    { id: string; label: string }[]
-  >([{ id: 'self', label: 'Jij' }]);
+    { id: string; label: string; type: string }[]
+  >([{ id: 'self', label: 'Jij', type: 'self' }]);
 
   const user =
     auth.status === 'authed'
@@ -104,14 +104,16 @@ export default function DashboardLayout() {
         const userRole = auth.user.role || '';
         const selfLabel = userRole ? `Jij - ${userRole}` : 'Jij';
         const options = [
-          { id: 'self', label: selfLabel },
+          { id: 'self', label: selfLabel, type: 'self' },
           ...subjects.full_access.map((subject) => ({
             id: subject.user_id,
-            label: `${subject.name} (volledige toegang)`,
+            label: subject.name,
+            type: 'full_access',
           })),
           ...subjects.read_only.map((subject) => ({
             id: subject.user_id,
-            label: `${subject.name} (alleen lezen)`,
+            label: subject.name,
+            type: 'read_only',
           })),
         ];
         if (!mounted) return;
@@ -120,13 +122,20 @@ export default function DashboardLayout() {
         if (!mounted) return;
         const userRole = auth.user.role || '';
         const selfLabel = userRole ? `Jij - ${userRole}` : 'Jij';
-        setViewingOptions([{ id: 'self', label: selfLabel }]);
+        setViewingOptions([{ id: 'self', label: selfLabel, type: 'self' }]);
       }
     };
 
     void loadViewingOptions();
+
+    const handlePairingUpdate = () => {
+      void loadViewingOptions();
+    };
+    window.addEventListener('turfje:pairing-updated', handlePairingUpdate);
+
     return () => {
       mounted = false;
+      window.removeEventListener('turfje:pairing-updated', handlePairingUpdate);
     };
   }, [auth.status]);
   useEffect(() => {
@@ -156,9 +165,11 @@ export default function DashboardLayout() {
       }),
     );
   }, [viewingUserId]);
-  const viewingLabel =
-    viewingOptions.find((option) => option.id === viewingUserId)?.label ??
-    'Jij';
+  const selectedOption = viewingOptions.find(
+    (option) => option.id === viewingUserId,
+  );
+  const viewingLabel = selectedOption?.label ?? 'Jij';
+  const viewingType = selectedOption?.type ?? 'self';
 
   const userInfoContent = (
     <>
@@ -371,7 +382,10 @@ export default function DashboardLayout() {
             </div>
             {viewingUserId !== 'self' && (
               <span className="hidden rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-muted-foreground md:inline-flex">
-                Alleen lezen: {viewingLabel}
+                {viewingType === 'full_access'
+                  ? 'Volledige toegang: '
+                  : 'Alleen lezen: '}
+                {viewingLabel}
               </span>
             )}
             <QuickMedicineUse />

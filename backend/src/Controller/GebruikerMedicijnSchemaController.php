@@ -86,13 +86,21 @@ class GebruikerMedicijnSchemaController extends AbstractController
       return $this->json(['error' => 'gmn_id is verplicht.'], 400);
     }
 
-    $med = $em->getRepository(GebruikerMedicijn::class)->findOneBy([
-      'id' => $gmnId,
-      'gebruiker' => $user
-    ]);
+    $med = $em->getRepository(GebruikerMedicijn::class)->find($gmnId);
 
     if (!$med) {
       return $this->json(['error' => 'Medicijn niet gevonden.'], 404);
+    }
+
+    if ($med->getGebruiker() !== $user) {
+      $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+        'gekoppelde_gebruiker' => $user,
+        'gebruiker' => $med->getGebruiker()
+      ]);
+
+      if (!$connection || $connection->getConnectionType() !== 'THERAPIST') {
+        return $this->json(['error' => 'Geen rechten om schema aan te maken.'], 403);
+      }
     }
 
     // Prevent Duplicate Schemas
@@ -174,7 +182,7 @@ class GebruikerMedicijnSchemaController extends AbstractController
         'gekoppelde_gebruiker' => $user,
         'gebruiker' => $schemaOwner
       ]);
-      if (!$connection) {
+      if (!$connection || $connection->getConnectionType() !== 'THERAPIST') {
         return $this->json(['error' => 'Geen toegang.'], 403);
       }
     }
@@ -239,8 +247,20 @@ class GebruikerMedicijnSchemaController extends AbstractController
     $user = $this->getUser();
     $schema = $em->getRepository(GebruikerMedicijnSchema::class)->find($id);
 
-    if (!$schema || $schema->getGebruikerMedicijn()->getGebruiker() !== $user) {
-      return $this->json(['error' => 'Geen toegang.'], 403);
+    if (!$schema) {
+      return $this->json(['error' => 'Niet gevonden.'], 404);
+    }
+
+    $schemaOwner = $schema->getGebruikerMedicijn()->getGebruiker();
+    if ($schemaOwner !== $user) {
+      $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+        'gekoppelde_gebruiker' => $user,
+        'gebruiker' => $schemaOwner
+      ]);
+
+      if (!$connection || $connection->getConnectionType() !== 'THERAPIST') {
+        return $this->json(['error' => 'Geen toegang.'], 403);
+      }
     }
 
     $em->remove($schema);
@@ -273,8 +293,20 @@ class GebruikerMedicijnSchemaController extends AbstractController
     }
 
     $schema = $em->getRepository(GebruikerMedicijnSchema::class)->find($schemaId);
-    if (!$schema || $schema->getGebruikerMedicijn()->getGebruiker() !== $user) {
-      return $this->json(['error' => 'Niet gevonden of geen toegang.'], 404);
+    if (!$schema) {
+      return $this->json(['error' => 'Niet gevonden.'], 404);
+    }
+
+    $schemaOwner = $schema->getGebruikerMedicijn()->getGebruiker();
+    if ($schemaOwner !== $user) {
+      $connection = $em->getRepository(GebruikerKoppelingen::class)->findOneBy([
+        'gekoppelde_gebruiker' => $user,
+        'gebruiker' => $schemaOwner
+      ]);
+
+      if (!$connection || $connection->getConnectionType() === 'THERAPIST') {
+        return $this->json(['error' => 'Geen toegang.'], 403);
+      }
     }
 
     $medicijn = $schema->getGebruikerMedicijn();

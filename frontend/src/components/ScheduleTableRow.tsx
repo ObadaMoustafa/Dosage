@@ -1,4 +1,3 @@
-import { TableCell, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import DrawerScheduleDelete from '@/components/DrawerScheduleDelete';
 import DrawerScheduleEdit from '@/components/DrawerScheduleEdit';
@@ -31,36 +30,42 @@ export default function ScheduleTableRow({
   onStatusChange,
 }: ScheduleTableRowProps) {
   return (
-    <TableRow>
-      <TableCell className="font-medium">{schedule.medicine}</TableCell>
-      <TableCell>{`${schedule.count}x`}</TableCell>
-      <TableCell>{schedule.description}</TableCell>
-      <TableCell>{intervalLabel}</TableCell>
-      <TableCell className="text-right">
+    <tr className="hover:bg-white/5 transition-colors">
+      <td className="p-3 font-medium">{schedule.medicine}</td>
+      <td className="p-3">{`${schedule.count}x`}</td>
+      <td className="p-3">{schedule.description}</td>
+      <td className="p-3">{intervalLabel}</td>
+      <td className="p-3 text-right">
         <div className="flex items-center justify-end gap-2">
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 bg-green-500/15 text-green-200 hover:bg-green-500/25"
-            onClick={() => onStatusChange?.('optijd')}
-          >
-            Op tijd
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 bg-red-500/15 text-red-200 hover:bg-red-500/25"
-            onClick={() => onStatusChange?.('gemist')}
-          >
-            Gemist
-          </Button>
-          <DrawerScheduleEdit schedule={schedule} onSave={onEdit} />
-          <DrawerScheduleDelete
-            scheduleLabel={schedule.medicine}
-            onConfirm={onDelete}
-          />
+          {onStatusChange && (
+            <>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 bg-green-500/15 text-green-200 hover:bg-green-500/25"
+                onClick={() => onStatusChange('optijd')}
+              >
+                Op tijd
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 bg-red-500/15 text-red-200 hover:bg-red-500/25"
+                onClick={() => onStatusChange('gemist')}
+              >
+                Gemist
+              </Button>
+            </>
+          )}
+          {onEdit && <DrawerScheduleEdit schedule={schedule} onSave={onEdit} />}
+          {onDelete && (
+            <DrawerScheduleDelete
+              scheduleLabel={schedule.medicine}
+              onConfirm={onDelete}
+            />
+          )}
         </div>
-      </TableCell>
-    </TableRow>
+      </td>
+    </tr>
   );
 }

@@ -32,7 +32,7 @@ export default function DashboardHome() {
     () => localStorage.getItem('turfje:viewing-user') ?? 'self',
   );
   const [viewingName, setViewingName] = useState<string | null>(null);
-  const isViewingSelf = viewingUserId === 'self';
+  const [isTherapist, setIsTherapist] = useState(false);
   const [recentHistory, setRecentHistory] = useState<HistoryCardItem[]>([]);
   const [stockSummary, setStockSummary] = useState({
     deltaLabel: '0 stuks',
@@ -80,8 +80,6 @@ export default function DashboardHome() {
   };
 
   const formatTimeLabel = (value: string) => {
-    console.log('time', value);
-
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
     return parsed.toLocaleTimeString('nl-NL', {
@@ -144,14 +142,25 @@ export default function DashboardHome() {
   const loadViewingName = async (targetUserId = viewingUserId) => {
     if (targetUserId === 'self') {
       setViewingName(null);
+      setIsTherapist(false);
       return;
     }
     try {
       const data = await pairingApi.subjects();
-      const all = [...(data.full_access || []), ...(data.read_only || [])];
-      const found = all.find((s: any) => s.user_id === targetUserId);
-      if (found) {
-        setViewingName(found.name);
+      const fullAccess = (data.full_access || []).find(
+        (s: any) => s.user_id === targetUserId,
+      );
+      if (fullAccess) {
+        setViewingName(fullAccess.name);
+        setIsTherapist(true);
+      } else {
+        const readOnly = (data.read_only || []).find(
+          (s: any) => s.user_id === targetUserId,
+        );
+        if (readOnly) {
+          setViewingName(readOnly.name);
+          setIsTherapist(false);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -160,10 +169,6 @@ export default function DashboardHome() {
 
   const handleUpcomingStatus = async (status: 'optijd' | 'gemist') => {
     if (!upcomingDose) return;
-    if (!isViewingSelf) {
-      toast.info('Je kunt alleen je eigen inname bijwerken.');
-      return;
-    }
     try {
       await schedulesApi.updateStatus(upcomingDose.id, status);
       toast.success(
@@ -269,10 +274,6 @@ export default function DashboardHome() {
     }
   };
 
-  useEffect(() => {
-    console.log('recent', recentHistory);
-  }, [recentHistory]);
-
   const loadStockSummary = async () => {
     try {
       const data = await stockApi.list();
@@ -375,7 +376,7 @@ export default function DashboardHome() {
           hasUpcoming={Boolean(upcomingDose)}
           onTaken={() => handleUpcomingStatus('optijd')}
           onMissed={() => handleUpcomingStatus('gemist')}
-          actionsDisabled={!upcomingDose || !isViewingSelf}
+          actionsDisabled={!upcomingDose || isTherapist}
         />
         <RemainingMedsCard
           title="Medicijnen over"
